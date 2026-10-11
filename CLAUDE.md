@@ -373,6 +373,14 @@ treatments ─┘                     staff ───┘ (assigned_to)
 - שרת ה-MCP של Supabase מוגדר ב-`.mcp.json` (רק כתובת ומזהה פרויקט, בלי סוד). ההתחברות דרך `/mcp` בדפדפן.
 - עובדים רק מול הפרויקט `wzcycscbelrcwbjbhsvt`. לא נוגעים בפרויקט אחר באותו חשבון (`merhav-crm`).
 
+### Vercel
+- הגישה דרך טוקן שנשמר במשתנה הסביבה `VERCEL_TOKEN` של משתמשת Windows (לא בקובץ ולא בריפו). ענבל יצרה אותו ומנהלת אותו. Claude לא מדפיס את הערך.
+- הטוקן מוגבל לצוות, ולכן Vercel CLI לא עובד איתו (שגיאת "User not found"). עובדים מול ה-REST API (`https://api.vercel.com`) עם `Authorization: Bearer $VERCEL_TOKEN` ו-`teamId` בכל קריאה.
+- מזהים: פרויקט `prj_UeR7aT8rIqXURmcOpATkaHSiYPj1`, צוות `team_pDUFVeXnYhMAbJpj6Vfchmze`.
+- אם `VERCEL_TOKEN` לא נטען בסשן, קוראים אותו מהמשתנה של המשתמשת בלי להציג אותו: `powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('VERCEL_TOKEN','User')"`.
+- קריאות שימושיות: פריסות `v6/deployments?projectId=…&teamId=…`, אירועי בנייה `v3/deployments/<id>/events?teamId=…`, משתני סביבה (שמות בלבד) `v10/projects/<id>/env?teamId=…`.
+- פריסה ושינוי הגדרות או משתני סביבה: רק אחרי אישור של ענבל. הפריסה הרגילה היא דחיפה ל-`main`.
+
 ### פקודות
 - `npm install`, ואז `npm run dev` ופותחים http://localhost:3000.
 - לפני כל commit: `npm run typecheck` ו-`npm run build`.
