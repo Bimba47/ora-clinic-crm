@@ -3,7 +3,7 @@
 מערכת CRM פנימית לצוות קליניקת אורה. כל הכללים, מבנה הנתונים והעיצוב נמצאים ב-[CLAUDE.md](CLAUDE.md).
 
 ## הרצה מקומית
-1. מעתיקים את `.env.example` ל-`.env.local` וממלאים ערכים.
+1. מעתיקים את `.env.example` ל-`.env.local` וממלאים ערכים (או מעתיקים `.env.local` קיים).
 2. `npm install`
 3. `npm run dev` ופותחים את http://localhost:3000
 
@@ -13,3 +13,8 @@
 - `src/lib/supabase.ts`: לקוח ה-Supabase היחיד במערכת.
 - `supabase/migrations`: שינויי מסד הנתונים, כל אחד עם קובץ ביטול `_down.sql`.
 - `versions`, `VERSIONS.md`: יומן גרסאות.
+- `docs`: האפיון (`prd.html`), תוכנית המסד ופירוט השדות.
+- `.mcp.json`: חיבור Claude Code ל-Supabase (בלי סודות).
+
+## Claude Code
+פותחים טרמינל בתיקיית הריפו ומריצים `claude`. בפעם הראשונה: `/mcp`, בוחרים `supabase` ומתחברים בדפדפן.

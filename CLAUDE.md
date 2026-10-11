@@ -1,7 +1,7 @@
 # CRM קליניקת אורה
 
 זה הזיכרון הקבוע של הפרויקט. קוראים אותו לפני כל שלב עבודה.
-מקור האמת לדרישות: האפיון `exam/q2-prd-final.html`.
+מקור האמת לדרישות: האפיון `docs/prd.html` (עותק של `exam/q2-prd-final.html`). תוכנית המסד: `docs/database-plan.html`.
 
 ## 1. מה המערכת ועבור איזה עסק
 
@@ -363,3 +363,41 @@ treatments ─┘                     staff ───┘ (assigned_to)
 - תצוגה משותפת: מטפלת לא שומרת בה שינויים, רק משכפלת. תצוגה פרטית גלויה רק לבעלים.
 - שדה חדש לתצוגות: מוסיפים שורה ל-`object_fields` במיגרציה, בלי שינוי קוד.
 - רכיב המסך: `src/components/views/ObjectViews.tsx`. כל עמוד רק מעביר `objectKey`.
+
+## 9. עבודה ב-Claude Code
+מכאן העבודה ממשיכה ב-Claude Code על המחשב של ענבל, מתוך הריפו המשובט.
+
+### סביבה
+- תיקיית העבודה: `C:\Users\inbal\AI\Course\ora-clinic-crm` (שיבוט של הריפו). התיקייה הישנה `ora-crm` היא ארכיון בלבד, ולא עובדים בה.
+- `.env.local` בתיקיית העבודה, מועתק מ-`ora-crm`. ענבל מנהלת אותו. Claude לא קורא, לא מדפיס ולא כותב ערכים ממנו.
+- שרת ה-MCP של Supabase מוגדר ב-`.mcp.json` (רק כתובת ומזהה פרויקט, בלי סוד). ההתחברות דרך `/mcp` בדפדפן.
+- עובדים רק מול הפרויקט `wzcycscbelrcwbjbhsvt`. לא נוגעים בפרויקט אחר באותו חשבון (`merhav-crm`).
+
+### פקודות
+- `npm install`, ואז `npm run dev` ופותחים http://localhost:3000.
+- לפני כל commit: `npm run typecheck` ו-`npm run build`.
+- דחיפה ל-`main` נפרסת אוטומטית ל-Vercel. דוחפים רק אחרי אישור של ענבל.
+
+### שינוי במסד
+1. כותבים `supabase/migrations/000N_name.sql` ו-`000N_name_down.sql`.
+2. מריצים דרך כלי ה-MCP `apply_migration`.
+3. מריצים `get_advisors` (security) ובודקים שאין אזהרה חדשה. שתי אזהרות קיימות ומוכרות: `get_staff_address` (מכוון) ו-Leaked password protection (הגדרה בדשבורד).
+4. מעדכנים את `docs/schema.md`, את סעיף 7 כאן ואת `VERSIONS.md`.
+
+### בדיקת הרשאות מול המסד החי
+מדמים משתמשת בתוך טרנזקציה אחת, למשל:
+```sql
+begin;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"<staff.id>","role":"authenticated"}', true);
+select count(*) from notifications;  -- רואה רק את שלה
+commit;
+```
+מנהלת לבדיקה: `rotem@ora-clinic.co.il`. מטפלת: `liat@ora-clinic.co.il`. את ה-id לוקחים מ-`staff` לפי האימייל.
+
+### פתוח
+- **כניסה לאתר החי:** למשתמשות הדמו אין סיסמה. ענבל יוצרת סיסמה בעצמה בדשבורד של Supabase (Authentication ← Users). Claude לא יוצר ולא מגדיר סיסמאות.
+- **דשבורד** (`/`): עוד ריק.
+- **מסכים שעוד לא נבנו:** לקוחה חדשה (`/clients/new`), כרטיס לקוח (`/clients/[id]`), יומן תורים ויזואלי (`/appointments`), חיפוש לפי טלפון ופעמון התראות בכותרת, כפתור "+" צף.
+- **אוטומציות** (סעיף 4, "נשאר לשלב האוטומציות").
+- הגשה: עוד צריך קישור צפייה לבודק.

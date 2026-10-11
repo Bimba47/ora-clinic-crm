@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מבנה מסד הנתונים</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAF6F0;--card:#FFFFFF;--soft:#F1D6D0;--line:#EDE5DC;--inset:#FAF6F0;--text:#2C2520;--muted:#6F635B;--primary:#E3BFA8;--accent:#8A6240;--bronze:#A67C52;--tan:#C99A7A;--rose:#9E5F6A;--err:#B5533C;--sh:0 8px 30px rgba(44,37,32,.06)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2C2520;--card:#3A312B;--soft:#5A4740;--line:#4A3F38;--inset:#332B26;--text:#FAF6F0;--muted:#CDBFB4;--accent:#E3BFA8;--sh:0 8px 30px rgba(20,16,14,.35)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Heebo,Arial,sans-serif;font-size:14px;line-height:1.7}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:28px;margin:8px 0 4px}
+.sub{color:var(--muted);margin:0 0 32px}
+h2{font-size:20px;margin:40px 0 16px;display:flex;gap:12px;align-items:center}
+.n{width:36px;height:36px;border-radius:12px;background:var(--primary);color:#2C2520;display:grid;place-items:center;font-weight:700;font-size:16px;flex:none}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+.card{background:var(--card);border-radius:24px;box-shadow:var(--sh);padding:20px 24px}
+.card h3{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3 code{font-size:12px}
+.card p{margin:0 0 12px;color:var(--muted);font-size:13px}
+code{direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,Consolas,monospace;font-size:12px;background:var(--inset);padding:1px 8px;border-radius:999px}
+table{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:13px}
+th{font-size:12px;color:var(--muted);text-align:right;font-weight:600;padding:0 10px}
+td{background:var(--inset);padding:8px 10px;vertical-align:top}
+td:first-child{border-radius:0 12px 12px 0;direction:ltr;text-align:right;font-weight:600;white-space:nowrap}
+td:last-child{border-radius:12px 0 0 12px}
+.key{font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--primary);color:#2C2520;margin-inline-start:4px}
+.link{background:var(--soft);color:var(--text)}
+ul{margin:0;padding-inline-start:20px}
+li{margin-bottom:6px}
+.diagram{background:var(--card);border-radius:24px;box-shadow:var(--sh);padding:16px;overflow-x:auto}
+.diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}
+.box rect{fill:var(--inset);stroke:var(--tan);stroke-width:1.5}
+.box text{fill:var(--text);font-family:Heebo,Arial,sans-serif}
+.box .t{font-weight:700;font-size:15px}
+.box .s{font-size:12px;fill:var(--muted)}
+.ln{stroke:var(--bronze);stroke-width:1.6;fill:none}
+.lbl{font-size:11px;fill:var(--accent);font-family:Heebo,Arial,sans-serif}
+.risk{border-inline-start:6px solid var(--rose)}
+.risk.mid{border-inline-start-color:var(--tan)}
+.risk.low{border-inline-start-color:var(--primary)}
+.lvl{font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;color:#fff;background:var(--rose)}
+.lvl.mid{background:var(--tan);color:#2C2520}.lvl.low{background:var(--primary);color:#2C2520}
+.rel td:first-child{direction:rtl;font-weight:400;white-space:normal}
+.note{background:var(--soft);border-radius:16px;padding:12px 16px;margin-top:16px}
+</style>
+</head>
+<body>
+<main>
+<h1>מבנה מסד הנתונים · CRM קליניקת אורה</h1>
+<p class="sub">הצעה לאישור לפני כתיבת קוד. מבוסס על ה-PRD הסופי. 6 טבלאות ב-Supabase.</p>
+
+<h2><span class="n">1</span>הטבלאות</h2>
+<div class="grid">
+  <div class="card"><h3>👩‍⚕️ צוות <code>staff</code></h3><p>רותם, ליאת ונטע. כל שורה מחוברת למשתמשת שנכנסת למערכת.</p></div>
+  <div class="card"><h3>👥 לקוחות <code>clients</code></h3><p>כרטיס לקוח. הטלפון ייחודי, כך שאין כפילויות.</p></div>
+  <div class="card"><h3>💆 טיפולים <code>treatments</code></h3><p>מחירון הקליניקה: שם, מחיר ומשך.</p></div>
+  <div class="card"><h3>📅 תורים <code>appointments</code></h3><p>תור של לקוחה, לטיפול מסוים, אצל מטפלת מסוימת.</p></div>
+  <div class="card"><h3>🎫 קריאות שירות <code>service_requests</code></h3><p>פנייה של לקוחה, עם סטטוס ואחראית.</p></div>
+  <div class="card"><h3>🔔 התראות <code>notifications</code></h3><p>"שויכה אלייך קריאה". פנימי בלבד.</p></div>
+</div>
+<div class="note">אחוז ההמרה, "התור הבא" וסימון 48 השעות <b>לא צריכים טבלה משלהם</b>. מחשבים אותם מהנתונים הקיימים.</div>
+
+<h2><span class="n">2</span>העמודות בכל טבלה</h2>
+<div class="grid">
+  <div class="card"><h3>👩‍⚕️ staff</h3><table><thead><tr><th>עמודה</th><th>מה זה</th></tr></thead><tbody>
+    <tr><td>id <span class="key">key</span></td><td>מזהה, זהה למזהה ההתחברות</td></tr>
+    <tr><td>full name</td><td>שם מלא</td></tr>
+    <tr><td>email</td><td>אימייל ההתחברות</td></tr>
+    <tr><td>role</td><td>manager או therapist</td></tr>
+    <tr><td>is active</td><td>פעילה או מושבתת</td></tr>
+    <tr><td>created at</td><td>מתי נוספה</td></tr>
+  </tbody></table></div>
+
+  <div class="card"><h3>👥 clients</h3><table><thead><tr><th>עמודה</th><th>מה זה</th></tr></thead><tbody>
+    <tr><td>id <span class="key">key</span></td><td>מזהה</td></tr>
+    <tr><td>full name</td><td>שם מלא (חובה)</td></tr>
+    <tr><td>phone</td><td>טלפון (חובה, ייחודי, מנורמל)</td></tr>
+    <tr><td>source</td><td>instagram / facebook / website / referral / other</td></tr>
+    <tr><td>created by <span class="key link">→ staff</span></td><td>מי יצרה</td></tr>
+    <tr><td>created at · updated at</td><td>מתי נוצרה ועודכנה</td></tr>
+  </tbody></table></div>
+
+  <div class="card"><h3>💆 treatments</h3><table><thead><tr><th>עמודה</th><th>מה זה</th></tr></thead><tbody>
+    <tr><td>id <span class="key">key</span></td><td>מזהה</td></tr>
+    <tr><td>name</td><td>שם הטיפול</td></tr>
+    <tr><td>price</td><td>מחיר</td></tr>
+    <tr><td>duration minutes</td><td>משך בדקות</td></tr>
+    <tr><td>is active</td><td>פעיל במחירון</td></tr>
+  </tbody></table></div>
+
+  <div class="card"><h3>📅 appointments</h3><table><thead><tr><th>עמודה</th><th>מה זה</th></tr></thead><tbody>
+    <tr><td>id <span class="key">key</span></td><td>מזהה</td></tr>
+    <tr><td>client <span class="key link">→ clients</span></td><td>הלקוחה (חובה)</td></tr>
+    <tr><td>treatment <span class="key link">→ treatments</span></td><td>סוג הטיפול</td></tr>
+    <tr><td>therapist <span class="key link">→ staff</span></td><td>המטפלת</td></tr>
+    <tr><td>starts at</td><td>תאריך ושעה</td></tr>
+    <tr><td>duration minutes · price</td><td>מועתקים מהמחירון בזמן הקביעה</td></tr>
+    <tr><td>status</td><td>upcoming / done / cancelled</td></tr>
+    <tr><td>notes</td><td>הערה</td></tr>
+    <tr><td>created by <span class="key link">→ staff</span></td><td>מי קבעה</td></tr>
+    <tr><td>created at · updated at</td><td>מתי נוצר ועודכן</td></tr>
+  </tbody></table></div>
+
+  <div class="card"><h3>🎫 service_requests</h3><table><thead><tr><th>עמודה</th><th>מה זה</th></tr></thead><tbody>
+    <tr><td>id <span class="key">key</span></td><td>מזהה</td></tr>
+    <tr><td>client <span class="key link">→ clients</span></td><td>הלקוחה (חובה)</td></tr>
+    <tr><td>description</td><td>תיאור הפנייה (חובה)</td></tr>
+    <tr><td>status</td><td>new / in progress / closed</td></tr>
+    <tr><td>assigned to <span class="key link">→ staff</span></td><td>האחראית</td></tr>
+    <tr><td>created by <span class="key link">→ staff</span></td><td>מי פתחה</td></tr>
+    <tr><td>created at · updated at</td><td>מתי נפתחה ועודכנה</td></tr>
+    <tr><td>closed at</td><td>מתי נסגרה (אוטומטי)</td></tr>
+  </tbody></table></div>
+
+  <div class="card"><h3>🔔 notifications</h3><table><thead><tr><th>עמודה</th><th>מה זה</th></tr></thead><tbody>
+    <tr><td>id <span class="key">key</span></td><td>מזהה</td></tr>
+    <tr><td>recipient <span class="key link">→ staff</span></td><td>למי ההתראה</td></tr>
+    <tr><td>request <span class="key link">→ service_requests</span></td><td>על איזו קריאה</td></tr>
+    <tr><td>message</td><td>הטקסט</td></tr>
+    <tr><td>is read</td><td>נקראה או לא</td></tr>
+    <tr><td>created at</td><td>מתי נוצרה</td></tr>
+  </tbody></table></div>
+</div>
+
+<h2><span class="n">3</span>איך הטבלאות מתחברות</h2>
+<div class="card rel"><table><thead><tr><th>קשר</th><th>בפועל</th></tr></thead><tbody>
+  <tr><td><b>לקוחה אחת</b> ← הרבה תורים</td><td>כל ההיסטוריה בכרטיס שלה</td></tr>
+  <tr><td><b>לקוחה אחת</b> ← הרבה קריאות שירות</td><td>כל הפניות בכרטיס שלה</td></tr>
+  <tr><td><b>טיפול אחד</b> ← הרבה תורים</td><td>כל תור הוא סוג טיפול אחד מהמחירון</td></tr>
+  <tr><td><b>מטפלת אחת</b> ← הרבה תורים</td><td>היומן שלה</td></tr>
+  <tr><td><b>חברת צוות אחת</b> ← הרבה קריאות (כאחראית)</td><td>"המשימות שלי"</td></tr>
+  <tr><td><b>קריאה אחת</b> ← הרבה התראות</td><td>כל שיוך מחדש יוצר התראה</td></tr>
+  <tr><td><b>חברת צוות אחת</b> ← הרבה התראות</td><td>הפעמון שלה</td></tr>
+</tbody></table></div>
+
+<h2><span class="n">4</span>תרשים</h2>
+<div class="diagram">
+<svg viewBox="0 0 900 470" direction="ltr" width="900" role="img" aria-label="תרשים קשרים בין הטבלאות">
+  <defs><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#A67C52"/></marker></defs>
+  <!-- lines -->
+  <path class="ln" d="M400,95 L260,190" marker-end="url(#m)"/>
+  <path class="ln" d="M500,95 L630,190" marker-end="url(#m)"/>
+  <path class="ln" d="M130,95 L170,190" marker-end="url(#m)"/>
+  <path class="ln" d="M690,75 C 520,120 360,150 292,205" marker-end="url(#m)"/>
+  <path class="ln" d="M770,95 L720,190" marker-end="url(#m)"/>
+  <path class="ln" d="M610,255 C 560,330 380,370 292,390" marker-end="url(#m)"/>
+  <path class="ln" d="M850,95 C 900,320 650,440 292,412" marker-end="url(#m)"/>
+  <text class="lbl" x="290" y="140" text-anchor="middle">לקוחה ← תורים</text>
+  <text class="lbl" x="610" y="135" text-anchor="middle">לקוחה ← קריאות</text>
+  <text class="lbl" x="95" y="148" text-anchor="middle">טיפול ← תורים</text>
+  <text class="lbl" x="470" y="165" text-anchor="middle">מטפלת ← תורים</text>
+  <text class="lbl" x="668" y="168" text-anchor="middle">אחראית ← קריאות</text>
+  <text class="lbl" x="430" y="318" text-anchor="middle">קריאה ← התראות</text>
+  <text class="lbl" x="720" y="415" text-anchor="middle">צוות ← התראות</text>
+  <!-- boxes -->
+  <g class="box"><rect x="360" y="30" width="180" height="65" rx="16"/><text class="t" x="450" y="58" text-anchor="middle">👥 לקוחות</text><text class="s" x="450" y="80" text-anchor="middle">clients</text></g>
+  <g class="box"><rect x="40" y="30" width="180" height="65" rx="16"/><text class="t" x="130" y="58" text-anchor="middle">💆 טיפולים</text><text class="s" x="130" y="80" text-anchor="middle">treatments</text></g>
+  <g class="box"><rect x="680" y="30" width="180" height="65" rx="16"/><text class="t" x="770" y="58" text-anchor="middle">👩‍⚕️ צוות</text><text class="s" x="770" y="80" text-anchor="middle">staff</text></g>
+  <g class="box"><rect x="110" y="190" width="180" height="65" rx="16"/><text class="t" x="200" y="218" text-anchor="middle">📅 תורים</text><text class="s" x="200" y="240" text-anchor="middle">appointments</text></g>
+  <g class="box"><rect x="560" y="190" width="200" height="65" rx="16"/><text class="t" x="660" y="218" text-anchor="middle">🎫 קריאות שירות</text><text class="s" x="660" y="240" text-anchor="middle">service_requests</text></g>
+  <g class="box"><rect x="110" y="365" width="180" height="65" rx="16"/><text class="t" x="200" y="393" text-anchor="middle">🔔 התראות</text><text class="s" x="200" y="415" text-anchor="middle">notifications</text></g>
+</svg>
+</div>
+<p class="sub" style="margin-top:8px">החץ מצביע מ"אחד" אל "הרבה". הלקוחה במרכז: תורים וקריאות תלויים בה.</p>
+
+<h2><span class="n">5</span>טבלאות שעלולות לסבך בהמשך</h2>
+<div class="grid">
+  <div class="card risk"><h3>📅 appointments <span class="lvl">גבוה</span></h3><ul>
+    <li><b>מניעת חפיפה:</b> חייבת להיאכף במסד הנתונים עצמו, לא רק במסך. אחרת שתי מטפלות שקובעות בו-זמנית יוצרות כפילות.</li>
+    <li><b>שעון ואזור זמן:</b> שומרים זמן מלא עם אזור זמן ומציגים לפי ישראל. אחרת שעון קיץ יזיז תורים בשעה.</li>
+    <li><b>שעות פעילות:</b> כלל נוסף שבודק שהטיפול מסתיים עד הסגירה.</li>
+  </ul></div>
+  <div class="card risk"><h3>👩‍⚕️ staff <span class="lvl">גבוה</span></h3><ul>
+    <li><b>מחובר להתחברות:</b> הוספת משתמשת היא הזמנה דרך Supabase Auth, עם מפתח מנהל שחייב להישאר בצד השרת ובמשתני סביבה בלבד.</li>
+    <li><b>ההרשאות תלויות בה:</b> כל כללי האבטחה בודקים "מה התפקיד שלי" בטבלה הזו. כלל שכתוב לא נכון יכול לחסום את כולן או לפתוח יותר מדי.</li>
+  </ul></div>
+  <div class="card risk mid"><h3>🎫 service_requests <span class="lvl mid">בינוני</span></h3><ul>
+    <li>"מטפלת משייכת רק לעצמה" ו"אין בטיפול בלי אחראית" צריכים להיאכף בשרת.</li>
+    <li>סגירה ופתיחה מחדש מעדכנות את תאריך הסגירה אוטומטית.</li>
+  </ul></div>
+  <div class="card risk mid"><h3>🔔 notifications <span class="lvl mid">בינוני</span></h3><ul>
+    <li>נוצרות אוטומטית מתוך שינוי בקריאה, ולכן צריך לבדוק שאין כפילויות ושכל אחת רואה רק את שלה.</li>
+    <li>אפשר לבנות אותה אחרונה, כי שום דבר אחר לא תלוי בה.</li>
+  </ul></div>
+  <div class="card risk low"><h3>👥 clients <span class="lvl low">נמוך</span></h3><ul>
+    <li>נרמול הטלפון חייב לרוץ לפני כל שמירה, אחרת <span class="ltr">054-1234567</span> ו-<span class="ltr">0541234567</span> ייחשבו שתי לקוחות.</li>
+    <li>לקוחה עם תורים או קריאות לא נמחקת, וזה נאכף בקשר בין הטבלאות.</li>
+  </ul></div>
+  <div class="card risk low"><h3>💆 treatments <span class="lvl low">נמוך</span></h3><ul>
+    <li>פשוטה. המחיר והמשך מועתקים לתור, כך ששינוי במחירון לא משנה תורים קיימים.</li>
+  </ul></div>
+</div>
+</main>
+</body>
+</html>

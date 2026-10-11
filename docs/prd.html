@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="he" dir="rtl" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRD · קליניקת אורה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF6F0; --card:#FFFFFF; --soft:#F1D6D0; --line:#EDE5DC; --inset:#FAF6F0;
+  --text:#2C2520; --muted:#6F635B; --ph:#A39A93;
+  --primary:#E3BFA8; --accent:#8A6240; --bronze:#A67C52; --tan:#C99A7A; --sand:#EADFD2;
+  --ok:#9E5F6A; --err:#B5533C; --onp:#2C2520;
+  --sh:0 8px 30px rgba(44,37,32,.06); --sh2:0 16px 48px rgba(44,37,32,.10);
+}
+[data-theme="dark"]{
+  --bg:#2C2520; --card:#3A312B; --soft:#5A4740; --line:#4A3F38; --inset:#332B26;
+  --text:#FAF6F0; --muted:#CDBFB4; --ph:#A39A93;
+  --accent:#E3BFA8; --sand:#4A3F38;
+  --sh:0 8px 30px rgba(20,16,14,.35); --sh2:0 16px 48px rgba(20,16,14,.45);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Heebo,Arial,sans-serif;font-size:14px;line-height:1.7;transition:background .2s,color .2s}
+a{color:var(--accent);text-decoration:none}
+.ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}
+code{direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,Consolas,monospace;font-size:12px;background:var(--inset);padding:1px 8px;border-radius:999px}
+
+header{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px)}
+.bar{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.brand{font-weight:700;white-space:nowrap}
+.brand span{color:var(--bronze)}
+nav.top{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1}
+nav.top::-webkit-scrollbar{display:none}
+nav.top a{color:var(--muted);font-size:12px;padding:6px 12px;border-radius:999px;white-space:nowrap}
+nav.top a:hover{background:var(--soft);color:var(--text)}
+.ready{font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;background:var(--ok);color:#fff;white-space:nowrap}
+.toggle{border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;background:var(--soft);color:var(--text);white-space:nowrap}
+
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:4px 14px;border-radius:999px;background:var(--soft);color:var(--text);white-space:nowrap}
+.pill.must{background:var(--primary);color:var(--onp)}
+.pill.high{background:var(--tan);color:var(--onp)}
+.pill.new{background:var(--ok);color:#fff}
+.pill.sand{background:var(--sand)}
+.pill.gray{background:var(--ph);color:#fff}
+
+main{max-width:1100px;margin:0 auto;padding:0 16px 64px}
+.hero{background:var(--card);border-radius:32px;box-shadow:var(--sh);padding:48px 32px;margin:24px 0 56px;text-align:center}
+.hero h1{font-size:30px;font-weight:700;margin:12px 0 8px;line-height:1.35}
+.hero h1 small{display:block;font-size:18px;font-weight:600;color:var(--muted)}
+.hero p{color:var(--muted);max-width:640px;margin:0 auto 24px;font-size:16px}
+.stats{display:flex;flex-wrap:wrap;gap:16px;justify-content:center}
+.stat{background:var(--inset);border-radius:16px;padding:12px 24px;min-width:140px}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:12px;color:var(--muted)}
+
+section{scroll-margin-top:72px;margin-bottom:64px}
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.num{width:44px;height:44px;border-radius:16px;background:var(--primary);color:var(--onp);display:grid;place-items:center;font-weight:700;flex:none}
+.sh h2{font-size:24px;margin:0;line-height:1.3}
+.sh p{margin:0;color:var(--muted);font-size:12px}
+h3{font-size:18px;margin:0 0 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+h4{font-size:16px;margin:0 0 8px}
+h5{font-size:14px;margin:16px 0 8px;color:var(--accent)}
+
+.grid{display:grid;gap:24px}
+.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--card);border-radius:24px;box-shadow:var(--sh);padding:24px;transition:box-shadow .2s}
+.card:hover{box-shadow:var(--sh2)}
+.card p{margin:0;color:var(--muted)}
+.card ul,.card ol{margin:0;padding-inline-start:20px}
+.card li{margin-bottom:4px}
+.tile{width:44px;height:44px;border-radius:16px;background:var(--inset);display:grid;place-items:center;font-size:20px;flex:none}
+.mcard{color:var(--text);display:flex;flex-direction:column;gap:12px}
+.mcard .top{display:flex;justify-content:space-between;align-items:center}
+.mcard p{font-size:12px}
+.mod{margin-top:24px}
+.mod .head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.mod .head h3{margin:0}
+.widgets{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:8px}
+.widget{background:var(--inset);border-radius:16px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start}
+.widget b{display:block}
+.widget span{font-size:12px;color:var(--muted)}
+.rule{background:var(--soft);border-radius:16px;padding:12px 16px;margin-top:12px}
+.rule b{color:var(--text)}
+
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:14px}
+th{font-size:12px;font-weight:600;color:var(--muted);text-align:right;padding:0 16px;white-space:nowrap}
+td{background:var(--card);padding:12px 16px;vertical-align:top}
+tbody tr td:first-child{border-radius:0 16px 16px 0}
+tbody tr td:last-child{border-radius:16px 0 0 16px}
+.card td{background:var(--inset)}
+td.f{font-weight:600}
+.req{color:var(--ok);font-weight:700}
+[data-theme="dark"] .req{color:#E3A9B1}
+
+.tl{list-style:none;margin:0;padding:0;counter-reset:s}
+.tl li{position:relative;padding:0 56px 24px 0}
+.tl li:before{content:counter(s);counter-increment:s;position:absolute;right:0;top:0;width:36px;height:36px;border-radius:999px;background:var(--primary);color:var(--onp);display:grid;place-items:center;font-weight:700}
+.tl li:after{content:"";position:absolute;right:17px;top:40px;bottom:4px;width:2px;background:var(--line)}
+.tl li:last-child:after{display:none}
+.tl b{display:block}
+
+.ux h4{margin-top:16px}
+.ux h4:first-of-type{margin-top:8px}
+.ux p b{color:var(--text)}
+.sw{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.sw i{width:28px;height:28px;border-radius:999px;display:inline-block;box-shadow:inset 0 0 0 1px rgba(44,37,32,.12)}
+
+.steps{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.step{display:flex;gap:12px;align-items:flex-start}
+.step .n{width:36px;height:36px;border-radius:999px;background:var(--inset);color:var(--bronze);display:grid;place-items:center;font-weight:700;flex:none}
+.step h4{margin:0 0 4px}
+.step p{font-size:12px;margin-bottom:8px}
+.x{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.x li{background:var(--inset);border-radius:16px;padding:8px 16px}
+.x li:before{content:"✕";color:var(--err);font-weight:700;margin-left:8px}
+
+.no{color:var(--err);font-weight:700}
+.scr h4{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.scr h5{margin-top:12px}
+.scr ul{font-size:14px;color:var(--muted)}
+.br{list-style:none;margin:0;padding:0;counter-reset:r;display:grid;gap:8px}
+.br li{counter-increment:r;background:var(--inset);border-radius:16px;padding:12px 16px 12px 16px;position:relative;padding-inline-start:52px}
+.br li:before{content:counter(r);position:absolute;right:12px;top:12px;width:28px;height:28px;border-radius:999px;background:var(--primary);color:var(--onp);display:grid;place-items:center;font-weight:700;font-size:12px}
+.br li b{color:var(--text)}
+.dot{width:16px;height:16px;border-radius:999px;display:inline-block;vertical-align:middle;margin-inline-end:8px;box-shadow:inset 0 0 0 1px rgba(44,37,32,.15)}
+.spec .grid{grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))}
+.spec h4{margin-top:24px}.spec h4:first-of-type{margin-top:0}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:32px 16px}
+@media (max-width:640px){
+  .hero{padding:32px 16px;border-radius:24px}
+  .hero h1{font-size:24px}
+  .ready{display:none}
+  .stat{min-width:0;flex:1 1 40%}
+}
+@media print{header{position:static}.card,.hero{box-shadow:none;border:1px solid var(--line)}.toggle{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">קליניקת אורה <span>PRD</span></div>
+    <nav class="top">
+      <a href="#overview">סקירה</a><a href="#modules">מודולים</a><a href="#screens">מסכים</a><a href="#logic">לוגיקה</a><a href="#data">נתונים</a><a href="#auto">התראות</a><a href="#ux">UX</a><a href="#roadmap">מפת דרך</a>
+    </nav>
+    <span class="ready">Claude Code Ready</span>
+    <button class="toggle" id="tg" type="button">בהיר</button>
+  </div>
+</header>
+
+<main>
+
+<div class="hero">
+  <span class="pill">גרסה 1.1</span>
+  <h1>קליניקת אורה<small>מערכת CRM לניהול לקוחות, תורים וקריאות שירות</small></h1>
+  <p>מסמך אפיון מלא למערכת פנימית לצוות הקליניקה: כרטיס לקוח אחד, תורים וקריאות שירות מקושרים אליו, ומסך ראשי שנותן לרותם תמונת מצב מיידית.</p>
+  <div class="stats">
+    <div class="stat"><b>9 מודולים</b><span>4 חובה · 1 גבוהה · 4 חדשים</span></div>
+    <div class="stat"><b>React + Supabase</b><span>Vercel · GitHub</span></div>
+    <div class="stat"><b>בסיסי עד בינוני</b><span>רמת מורכבות</span></div>
+  </div>
+</div>
+
+<!-- 1 -->
+<section id="overview">
+  <div class="sh"><div class="num">1</div><div><h2>תיאור המוצר</h2><p>הבעיה, הפתרון, ולמי זה מיועד</p></div></div>
+  <div class="grid g3">
+    <div class="card"><div class="tile" style="margin-bottom:12px">⚠️</div><h4>הבעיה</h4>
+      <p>פרטי הלקוחות, התורים והפניות מפוזרים בין כמה מקומות. יש כפילויות, פניות הולכות לאיבוד, ואין לרותם תמונת מצב. הקליניקה מקבלת 40-50 פניות בשבוע, אבל רק כ-30% מתאמות טיפול ניסיון, אחוז ההברזות הוא כ-35%, וזמן התגובה ללידים הוא 6-12 שעות.</p></div>
+    <div class="card"><div class="tile" style="margin-bottom:12px">✨</div><h4>הפתרון</h4>
+      <p>מערכת CRM אחת, בעברית ומותאמת לטלפון, שבה כל לקוחה מזוהה לפי טלפון, וכל תור וכל קריאת שירות מקושרים לכרטיס שלה. לכל קריאה יש סטטוס ואחראית, והמסך הראשי מראה מה פתוח, מה בטיפול ומי אחראית.</p></div>
+    <div class="card"><div class="tile" style="margin-bottom:12px">👩‍⚕️</div><h4>קהל יעד</h4>
+      <p><b>רותם ברנע</b>, הבעלים והמנהלת: תמונת מצב, חלוקת אחריות וניהול צוות. <b>ליאת כהן</b> (לייזר) ו<b>נטע אדרי</b> (בוטוקס וחומצה), המטפלות: עדכון לקוחות, תורים וקריאות מהנייד בין טיפולים. לקוחות הקליניקה לא משתמשות במערכת.</p></div>
+  </div>
+
+</section>
+
+<!-- 2 -->
+<section id="modules">
+  <div class="sh"><div class="num">2</div><div><h2>מודולים ופיצ'רים</h2><p>4 אזורי חובה מהמפרט, ניהול צוות, ו-4 פיצ'רים חדשים</p></div></div>
+
+  <div class="grid g4">
+    <a class="card mcard" href="#m1"><div class="top"><div class="tile">📊</div><span class="pill must">חובה</span></div><h4>דשבורד</h4><p>סיכום פניות פתוחות ובטיפול והאחראיות</p></a>
+    <a class="card mcard" href="#m2"><div class="top"><div class="tile">👥</div><span class="pill must">חובה</span></div><h4>לקוחות</h4><p>רשימה, כרטיס לקוח וחיפוש לפי טלפון</p></a>
+    <a class="card mcard" href="#m3"><div class="top"><div class="tile">📅</div><span class="pill must">חובה</span></div><h4>תורים</h4><p>תור מקושר ללקוחה, סטטוס והיסטוריה</p></a>
+    <a class="card mcard" href="#m4"><div class="top"><div class="tile">🎫</div><span class="pill must">חובה</span></div><h4>קריאות שירות</h4><p>תיאור, סטטוס ואחראית מהצוות</p></a>
+    <a class="card mcard" href="#m5"><div class="top"><div class="tile">⚙️</div><span class="pill high">גבוהה</span></div><h4>ניהול צוות והרשאות</h4><p>מנהלת ומטפלת, הזמנה והשבתה</p></a>
+    <a class="card mcard" href="#m6"><div class="top"><div class="tile">🗓️</div><span class="pill new">חדש</span></div><h4>יומן תורים ויזואלי</h4><p>תצוגה יומית ושבועית לפי שעות</p></a>
+    <a class="card mcard" href="#m7"><div class="top"><div class="tile">✅</div><span class="pill new">חדש</span></div><h4>המשימות שלי והתראות</h4><p>פאנל אישי ופעמון שיוך</p></a>
+    <a class="card mcard" href="#m8"><div class="top"><div class="tile">💬</div><span class="pill new">חדש</span></div><h4>תורים למחר + וואטסאפ</h4><p>תזכורת ידנית בלחיצה</p></a>
+    <a class="card mcard" href="#m9"><div class="top"><div class="tile">📈</div><span class="pill new">חדש</span></div><h4>מקור הגעה ואחוז המרה</h4><p>מאיזה ערוץ מגיעות לקוחות שקובעות</p></a>
+  </div>
+
+  <!-- m1 -->
+  <div class="card mod" id="m1">
+    <div class="head"><div class="tile">📊</div><h3>מודול 1: דשבורד <span class="pill must">חובה</span></h3></div>
+    <p>המסך הראשי אחרי התחברות. מנהלת רואה את כל הצוות, ומטפלת רואה כברירת מחדל את מה ששלה.</p>
+    <div class="widgets">
+      <div class="widget"><div class="tile">👋</div><div><b>ברכה</b><span>"בוקר טוב, רותם" + התאריך של היום</span></div></div>
+      <div class="widget"><div class="tile">🆕</div><div><b>קריאות חדשות</b><span>מספר, עם מעבר לרשימה מסוננת</span></div></div>
+      <div class="widget"><div class="tile">⏳</div><div><b>קריאות בטיפול</b><span>מספר, עם מעבר לרשימה מסוננת</span></div></div>
+      <div class="widget"><div class="tile">🚩</div><div><b>פתוחות מעל 48 שעות</b><span>מונה באדום</span></div></div>
+      <div class="widget"><div class="tile">👩‍💼</div><div><b>טבלת אחראיות</b><span>לכל אחת: כמה חדשות וכמה בטיפול</span></div></div>
+      <div class="widget"><div class="tile">📅</div><div><b>התורים של היום</b><span>שעה, לקוחה, טיפול ומטפלת</span></div></div>
+      <div class="widget"><div class="tile">🕑</div><div><b>הקריאות האחרונות</b><span>5 הפתוחות האחרונות</span></div></div>
+      <div class="widget"><div class="tile">➕</div><div><b>יצירה מהירה</b><span>כפתור "+" ללקוחה, תור או קריאה</span></div></div>
+    </div>
+    <p style="margin-top:12px">ווידג'טים נוספים מגיעים מהמודולים החדשים: המשימות שלי (7), תורים למחר (8) ואחוז המרה (9).</p>
+  </div>
+
+  <!-- m2 -->
+  <div class="card mod" id="m2">
+    <div class="head"><div class="tile">👥</div><h3>מודול 2: לקוחות <span class="pill must">חובה</span></h3></div>
+    <h5>יכולות</h5>
+    <ul>
+      <li>יצירה, עדכון וצפייה בכרטיס לקוח.</li>
+      <li>רשימת לקוחות עם שם, טלפון, מקור הגעה, תור הבא ומספר קריאות פתוחות.</li>
+      <li>חיפוש לפי טלפון (גם חלקי) או שם, זמין גם מהכותרת העליונה בכל מסך.</li>
+      <li>כרטיס לקוח: פרטים, תור הבא מודגש, לשונית תורים (היסטוריה מהחדש לישן) ולשונית קריאות שירות.</li>
+      <li>מהכרטיס: "תור חדש" ו"קריאה חדשה" כשהלקוחה כבר מסומנת, וכפתור וואטסאפ.</li>
+    </ul>
+    <h5>לוגיקה</h5>
+    <ul>
+      <li><b>טלפון ייחודי:</b> אם המספר קיים, מוצג "לקוחה קיימת" עם קישור לכרטיס.</li>
+      <li><b>נרמול:</b> לפני שמירה וחיפוש מסירים מקפים ורווחים, ו-<span class="ltr">+972</span> הופך ל-0.</li>
+    </ul>
+    <h5>שדות</h5>
+    <div class="tw"><table><thead><tr><th>שדה</th><th>סוג</th><th>חובה</th><th>הערות</th></tr></thead><tbody>
+      <tr><td class="f">שם מלא</td><td>טקסט</td><td class="req">✓</td><td></td></tr>
+      <tr><td class="f">טלפון</td><td>טקסט</td><td class="req">✓</td><td>ייחודי, מנורמל, מקלדת מספרית</td></tr>
+      <tr><td class="f">מקור הגעה</td><td>בחירה</td><td></td><td>אינסטגרם / פייסבוק / אתר / המלצה / אחר</td></tr>
+      <tr><td class="f">נוצרה על ידי, תאריך</td><td>אוטומטי</td><td></td><td>נשמר בשמירה</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- m3 -->
+  <div class="card mod" id="m3">
+    <div class="head"><div class="tile">📅</div><h3>מודול 3: תורים <span class="pill must">חובה</span></h3></div>
+    <h5>יכולות</h5>
+    <ul>
+      <li>יצירה, עדכון וצפייה בתור המקושר ללקוחה.</li>
+      <li>רשימה לפי תאריך, עם סינון לפי טווח (היום, השבוע, הכול), סטטוס ומטפלת.</li>
+      <li>שינוי סטטוס בלחיצה: בוצע או בוטל.</li>
+      <li>היסטוריית התורים של הלקוחה מוצגת בכרטיס שלה.</li>
+    </ul>
+    <h5>לוגיקה</h5>
+    <ul>
+      <li><b>סטטוסים:</b> עתידי (ברירת מחדל), בוצע, בוטל. אי אפשר לסמן "בוצע" לתור שעוד לא הגיע.</li>
+      <li><b>תור הבא:</b> הקרוב ביותר בעתיד שאינו "בוטל".</li>
+      <li><b>מניעת חפיפה:</b> לא ניתן לקבוע לאותה מטפלת שני תורים חופפים לפי משך הטיפול.</li>
+      <li><b>מחירון:</b> בחירת סוג טיפול ממלאת משך ומחיר אוטומטית.</li>
+    </ul>
+    <h5>שדות</h5>
+    <div class="tw"><table><thead><tr><th>שדה</th><th>סוג</th><th>חובה</th><th>הערות</th></tr></thead><tbody>
+      <tr><td class="f">לקוחה</td><td>קישור</td><td class="req">✓</td><td>חיפוש לפי טלפון</td></tr>
+      <tr><td class="f">סוג טיפול</td><td>בחירה</td><td class="req">✓</td><td>מתוך מחירון הקליניקה</td></tr>
+      <tr><td class="f">תאריך ושעה</td><td>תאריך-שעה</td><td class="req">✓</td><td></td></tr>
+      <tr><td class="f">מטפלת</td><td>בחירה</td><td class="req">✓</td><td>רותם / ליאת / נטע</td></tr>
+      <tr><td class="f">סטטוס</td><td>בחירה</td><td class="req">✓</td><td>עתידי / בוצע / בוטל</td></tr>
+      <tr><td class="f">הערה</td><td>טקסט</td><td></td><td></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- m4 -->
+  <div class="card mod" id="m4">
+    <div class="head"><div class="tile">🎫</div><h3>מודול 4: קריאות שירות <span class="pill must">חובה</span></h3></div>
+    <h5>יכולות</h5>
+    <ul>
+      <li>יצירה, עדכון וצפייה בקריאה המקושרת ללקוחה.</li>
+      <li>רשימה עם לקוחה, תיאור מקוצר, סטטוס, אחראית, תאריך פתיחה וזמן שעבר.</li>
+      <li>סינון לפי סטטוס, אחראית ו"שלי בלבד".</li>
+      <li>שיוך אחראית ושינוי סטטוס מתוך הרשימה.</li>
+    </ul>
+    <h5>לוגיקה</h5>
+    <ul>
+      <li><b>סטטוסים:</b> חדשה (ברירת מחדל), בטיפול, נסגרה. אי אפשר להעביר ל"בטיפול" בלי אחראית.</li>
+      <li><b>קריאה ותיקה:</b> קריאה שלא נסגרה תוך 48 שעות מסומנת באדום.</li>
+      <li><b>סגירה:</b> תאריך הסגירה נשמר אוטומטית.</li>
+    </ul>
+    <h5>שדות</h5>
+    <div class="tw"><table><thead><tr><th>שדה</th><th>סוג</th><th>חובה</th><th>הערות</th></tr></thead><tbody>
+      <tr><td class="f">לקוחה</td><td>קישור</td><td class="req">✓</td><td>חיפוש לפי טלפון</td></tr>
+      <tr><td class="f">תיאור הפנייה</td><td>טקסט ארוך</td><td class="req">✓</td><td></td></tr>
+      <tr><td class="f">סטטוס</td><td>בחירה</td><td class="req">✓</td><td>חדשה / בטיפול / נסגרה</td></tr>
+      <tr><td class="f">אחראית</td><td>בחירה</td><td></td><td>חובה במעבר ל"בטיפול"</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- m5 -->
+  <div class="card mod" id="m5">
+    <div class="head"><div class="tile">⚙️</div><h3>מודול 5: ניהול צוות והרשאות <span class="pill high">גבוהה</span></h3></div>
+    <ul>
+      <li>מסך משתמשות (מנהלת בלבד): רשימה עם תפקיד וסטטוס, הזמנה, שינוי תפקיד והשבתה.</li>
+      <li><b>מנהלת (רותם):</b> הכול, כולל מחיקת רשומות, שיוך לכל אחת וניהול צוות.</li>
+      <li><b>מטפלת (ליאת, נטע):</b> צפייה, יצירה ועריכה של לקוחות, תורים וקריאות, ושיוך קריאה רק לעצמה. בלי מחיקה ובלי ניהול צוות.</li>
+      <li>ההרשאות נאכפות גם בצד השרת (Row Level Security), לא רק בממשק.</li>
+    </ul>
+  </div>
+
+  <!-- m6 -->
+  <div class="card mod" id="m6">
+    <div class="head"><div class="tile">🗓️</div><h3>מודול 6: יומן תורים ויזואלי <span class="pill new">חדש</span></h3></div>
+    <ul>
+      <li>תצוגה יומית ושבועית לפי שעות, בשעות הפעילות (א'-ה' 09:00-19:00, ו' 09:00-13:00).</li>
+      <li>כל תור הוא בלוק צבעוני לפי מטפלת. לחיצה על משבצת ריקה יוצרת תור בשעה הזו, ולחיצה על תור פותחת אותו לעריכה.</li>
+      <li>סינון לפי מטפלת וסוג טיפול.</li>
+      <li>בנייד נפתחת תצוגה יומית, ובמחשב תצוגה שבועית. השבוע מתחיל ביום ראשון.</li>
+    </ul>
+    <div class="rule"><b>ערך עסקי:</b> זיהוי מהיר של חלונות פנויים ומניעת תורים חופפים.</div>
+  </div>
+
+  <!-- m7 -->
+  <div class="card mod" id="m7">
+    <div class="head"><div class="tile">✅</div><h3>מודול 7: המשימות שלי והתראות שיוך <span class="pill new">חדש</span></h3></div>
+    <ul>
+      <li>פאנל "המשימות שלי" בדשבורד: הקריאות הפתוחות שמשויכות אלייך, מהישנה לחדשה, עם שינוי סטטוס בלחיצה.</li>
+      <li>כשקריאה משויכת אלייך מופיע פעמון עם מונה בכותרת. לחיצה פותחת את רשימת ההתראות, ולחיצה על התראה פותחת את הקריאה ומסמנת אותה כנקראה.</li>
+      <li>אין התראה כשמשייכים לעצמך. ההתראות פנימיות בלבד, בלי אימייל.</li>
+    </ul>
+    <div class="rule"><b>ערך עסקי:</b> אף פנייה לא נופלת בין הכיסאות, וכל אחת יודעת מה באחריותה.</div>
+  </div>
+
+  <!-- m8 -->
+  <div class="card mod" id="m8">
+    <div class="head"><div class="tile">💬</div><h3>מודול 8: תורים למחר + וואטסאפ <span class="pill new">חדש</span></h3></div>
+    <ul>
+      <li>ווידג'ט בדשבורד עם כל התורים של מחר: לקוחה, שעה וטיפול.</li>
+      <li>לכל לקוחה כפתור וואטסאפ שפותח שיחה עם הודעת תזכורת מוכנה (קישור <span class="ltr">wa.me</span>). השליחה ידנית.</li>
+      <li>בשלב 2 (עתידי): תזכורת אוטומטית כל יום ב-18:00. תשובת "מבטלת" מעדכנת את התור ל"בוטל" ופותחת קריאת שירות לתיאום מחדש.</li>
+    </ul>
+    <div class="rule"><b>ערך עסקי:</b> הורדת אחוז ההברזות מ-35%, בלי עלות ובלי אינטגרציה חיצונית.</div>
+  </div>
+
+  <!-- m9 -->
+  <div class="card mod" id="m9">
+    <div class="head"><div class="tile">📈</div><h3>מודול 9: מקור הגעה ואחוז המרה <span class="pill new">חדש</span></h3></div>
+    <ul>
+      <li>שדה "מקור הגעה" בכל כרטיס לקוח.</li>
+      <li>מונה בדשבורד: אחוז הלקוחות שקבעו לפחות תור אחד (בכל סטטוס), חלקי כל הלקוחות.</li>
+      <li>פילוח לפי מקור: אינסטגרם, פייסבוק, אתר, המלצה ואחר.</li>
+    </ul>
+    <div class="rule"><b>ערך עסקי:</b> מראה לרותם מאיזה ערוץ מגיעות לקוחות שבאמת קובעות טיפול (כיום כ-30%).</div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="screens">
+  <div class="sh"><div class="num">3</div><div><h2>מסכים, ניווט וזרימת משתמש</h2><p>מבנה המסכים, המידע והפעולות בכל מסך, והזרימות המרכזיות</p></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>מסך</th><th>נתיב</th><th>תיאור</th><th>גישה</th></tr></thead>
+    <tbody>
+      <tr><td class="f">כניסה</td><td><code>/login</code></td><td>אימייל, סיסמה ו"שכחתי סיסמה"</td><td><span class="pill sand">פתוח</span></td></tr>
+      <tr><td class="f">דשבורד</td><td><code>/</code></td><td>מונים, המשימות שלי, תורים להיום ולמחר, אחוז המרה</td><td><span class="pill">מחוברת</span></td></tr>
+      <tr><td class="f">לקוחות</td><td><code>/clients</code></td><td>רשימה, חיפוש לפי טלפון וסינון לפי מקור</td><td><span class="pill">מחוברת</span></td></tr>
+      <tr><td class="f">לקוחה חדשה</td><td><code>/clients/new</code></td><td>טופס יצירה עם בדיקת כפילות</td><td><span class="pill">מחוברת</span></td></tr>
+      <tr><td class="f">כרטיס לקוח</td><td><code>/clients/:id</code></td><td>פרטים, תור הבא, תורים וקריאות</td><td><span class="pill">מחוברת</span></td></tr>
+      <tr><td class="f">יומן תורים</td><td><code>/appointments</code></td><td>תצוגה יומית ושבועית</td><td><span class="pill">מחוברת</span></td></tr>
+      <tr><td class="f">רשימת תורים</td><td><code>/appointments/list</code></td><td>רשימה עם סינון</td><td><span class="pill">מחוברת</span></td></tr>
+      <tr><td class="f">קריאות שירות</td><td><code>/requests</code></td><td>רשימה, סינון ושיוך</td><td><span class="pill">מחוברת</span></td></tr>
+      <tr><td class="f">התראות</td><td><code>/notifications</code></td><td>התראות השיוך שלי</td><td><span class="pill">מחוברת</span></td></tr>
+      <tr><td class="f">ניהול צוות</td><td><code>/team</code></td><td>משתמשות, תפקידים והשבתה</td><td><span class="pill must">מנהלת</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h4>זרימת המשתמש המרכזית – פתיחת קריאת שירות:</h4>
+      <ol class="tl" style="margin-top:16px">
+        <li><b>חיפוש לפי טלפון</b>מגיעה פנייה, והמטפלת מקלידה את הטלפון בשדה החיפוש העליון.</li>
+        <li><b>כרטיס לקוח</b>אם הלקוחה קיימת נפתח הכרטיס שלה. אם לא, יוצרים לקוחה חדשה עם שם, טלפון ומקור.</li>
+        <li><b>קריאה חדשה</b>מהכרטיס לוחצים "קריאה חדשה", כותבים תיאור ובוחרים אחראית. הקריאה נשמרת בסטטוס "חדשה".</li>
+        <li><b>טיפול וסגירה</b>האחראית מקבלת התראה, מעבירה ל"בטיפול", ובסיום ל"נסגרה". רותם רואה הכול בדשבורד.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h4>זרימה שנייה – קביעת תור ותזכורת:</h4>
+      <ol class="tl" style="margin-top:16px">
+        <li><b>איתור הלקוחה</b>חיפוש לפי טלפון בכותרת, או לחיצה על משבצת פנויה ביומן.</li>
+        <li><b>תור חדש</b>בוחרים טיפול (משך ומחיר מתמלאים), מטפלת, תאריך ושעה. המערכת בודקת חפיפה ושעות פעילות.</li>
+        <li><b>שמירה</b>התור נשמר בסטטוס "עתידי", מופיע ביומן ובכרטיס הלקוחה, ו-Toast "התור נקבע".</li>
+        <li><b>יום לפני</b>התור מופיע בווידג'ט "תורים למחר", ולוחצים על וואטסאפ לשליחת תזכורת.</li>
+        <li><b>אחרי התור</b>מסמנים "בוצע" או "בוטל", והתור עובר להיסטוריה של הלקוחה.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h4>ניווט</h4>
+      <ul>
+        <li><b>מחשב:</b> תפריט צד קבוע בצד ימין.</li>
+        <li><b>נייד:</b> סרגל תחתון עם 4 לשוניות: ראשי, לקוחות, תורים, קריאות.</li>
+        <li><b>כותרת עליונה:</b> חיפוש לפי טלפון ופעמון התראות, בכל מסך.</li>
+        <li><b>באדג' "חדש":</b> ליד "קריאות" בתפריט, מספר הקריאות החדשות שמשויכות אלייך.</li>
+        <li><b>כפתור "+" צף:</b> לקוחה, תור או קריאה חדשים.</li>
+        <li>משתמשת לא מחוברת מופנית תמיד למסך הכניסה.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:32px"><span class="tile">🖥️</span> פירוט מסכים: מידע ופעולות</h3>
+  <div class="grid g2">
+    <div class="card scr"><h4>📊 דשבורד <code>/</code></h4>
+      <h5>מידע</h5><ul><li>מונים: קריאות חדשות, בטיפול, ופתוחות מעל 48 שעות (באדום).</li><li>טבלת אחראיות: לכל אחת כמה חדשות וכמה בטיפול.</li><li>המשימות שלי, התורים של היום, תורים למחר, 5 הקריאות האחרונות ואחוז המרה.</li></ul>
+      <h5>פעולות</h5><ul><li>לחיצה על מונה או על שם אחראית פותחת את רשימת הקריאות המסוננת.</li><li>שינוי סטטוס מהמשימות שלי, וואטסאפ מתורים למחר, וכפתור "+".</li><li>מנהלת: מעבר בין "כל הצוות" ל"שלי".</li></ul></div>
+    <div class="card scr"><h4>👥 רשימת לקוחות <code>/clients</code></h4>
+      <h5>מידע</h5><ul><li>שם, טלפון, מקור הגעה, תור הבא ומספר קריאות פתוחות.</li><li>מיון לפי שם או תאריך יצירה. בנייד כל לקוחה היא כרטיס.</li></ul>
+      <h5>פעולות</h5><ul><li>חיפוש לפי טלפון (גם חלקי) או שם, וסינון לפי מקור.</li><li>לחיצה על שורה פותחת את הכרטיס, ו"לקוחה חדשה" פותח טופס.</li></ul></div>
+    <div class="card scr"><h4>🪪 כרטיס לקוח <code>/clients/:id</code></h4>
+      <h5>מידע</h5><ul><li>שם, טלפון, מקור, נוצרה על ידי ומתי.</li><li>התור הבא מודגש בראש הכרטיס.</li><li>לשונית תורים: כל ההיסטוריה מהחדש לישן, עם סטטוס, טיפול ומטפלת.</li><li>לשונית קריאות: כל הקריאות, עם סטטוס ואחראית.</li></ul>
+      <h5>פעולות</h5><ul><li>עריכת פרטים, "תור חדש" ו"קריאה חדשה" כשהלקוחה כבר מסומנת.</li><li>כפתור וואטסאפ ושינוי סטטוס של תור או קריאה מתוך הלשונית.</li></ul></div>
+    <div class="card scr"><h4>➕ לקוחה חדשה <code>/clients/new</code></h4>
+      <h5>מידע</h5><ul><li>טופס: שם מלא, טלפון ומקור הגעה.</li></ul>
+      <h5>פעולות</h5><ul><li>בדיקת כפילות בזמן ההקלדה: אם הטלפון קיים מוצג "לקוחה קיימת" עם קישור לכרטיס.</li><li>שמירה מעבירה לכרטיס החדש.</li></ul></div>
+    <div class="card scr"><h4>🗓️ יומן ורשימת תורים <code>/appointments</code></h4>
+      <h5>מידע</h5><ul><li>יומן: בלוקים לפי מטפלת בשעות הפעילות (יומי בנייד, שבועי במחשב).</li><li>רשימה: תאריך, שעה, לקוחה, טיפול, מטפלת וסטטוס.</li></ul>
+      <h5>פעולות</h5><ul><li>מעבר בין יומן לרשימה, וסינון לפי טווח, סטטוס, מטפלת וטיפול.</li><li>משבצת ריקה יוצרת תור, ולחיצה על תור פותחת עריכה.</li><li>סימון "בוצע" או "בוטל" בלחיצה.</li></ul></div>
+    <div class="card scr"><h4>🎫 קריאות שירות <code>/requests</code></h4>
+      <h5>מידע</h5><ul><li>לקוחה, תיאור מקוצר, סטטוס, אחראית, תאריך פתיחה וזמן שעבר.</li><li>קריאה מעל 48 שעות מסומנת באדום.</li></ul>
+      <h5>פעולות</h5><ul><li>סינון לפי סטטוס, אחראית ו"שלי בלבד".</li><li>פתיחת קריאה, שיוך אחראית ושינוי סטטוס מהרשימה.</li><li>לחיצה על שם הלקוחה פותחת את הכרטיס שלה.</li></ul></div>
+    <div class="card scr"><h4>🔔 התראות <code>/notifications</code></h4>
+      <h5>מידע</h5><ul><li>התראות השיוך שלי, מהחדשה לישנה. לא נקראות מודגשות.</li></ul>
+      <h5>פעולות</h5><ul><li>לחיצה פותחת את הקריאה ומסמנת כנקראה, ו"סמני הכול כנקרא".</li></ul></div>
+    <div class="card scr"><h4>⚙️ ניהול צוות <code>/team</code> <span class="pill must">מנהלת</span></h4>
+      <h5>מידע</h5><ul><li>משתמשות: שם, אימייל, תפקיד וסטטוס (פעילה או מושבתת).</li><li>לשונית מחירון: טיפולים, מחיר, משך ופעיל.</li></ul>
+      <h5>פעולות</h5><ul><li>הזמנת משתמשת, שינוי תפקיד והשבתה.</li><li>הוספה ועריכה של טיפול במחירון, והוצאה משימוש בלי מחיקה.</li></ul></div>
+    <div class="card scr"><h4>🔐 כניסה <code>/login</code></h4>
+      <h5>מידע</h5><ul><li>לוגו, אימייל וסיסמה.</li></ul>
+      <h5>פעולות</h5><ul><li>כניסה, ו"שכחתי סיסמה". משתמשת מושבתת לא יכולה להיכנס.</li></ul></div>
+  </div>
+</section>
+
+<!-- logic -->
+<section id="logic">
+  <div class="sh"><div class="num">4</div><div><h2>הרשאות ולוגיקה עסקית</h2><p>מי יכולה לעשות מה, והכללים שהמערכת אוכפת</p></div></div>
+  <div class="card">
+    <h4>טבלת הרשאות</h4>
+    <div class="tw"><table><thead><tr><th>פעולה</th><th>מנהלת (רותם)</th><th>מטפלת (ליאת, נטע)</th></tr></thead><tbody>
+      <tr><td class="f">צפייה בכל הלקוחות, התורים והקריאות</td><td class="req">✓</td><td class="req">✓</td></tr>
+      <tr><td class="f">יצירה ועריכה של לקוחה, תור וקריאה</td><td class="req">✓</td><td class="req">✓</td></tr>
+      <tr><td class="f">שינוי סטטוס של תור וקריאה</td><td class="req">✓</td><td class="req">✓</td></tr>
+      <tr><td class="f">שיוך קריאה</td><td class="req">✓ לכל אחת</td><td>רק לעצמה</td></tr>
+      <tr><td class="f">דשבורד</td><td class="req">✓ כל הצוות</td><td>ברירת מחדל: שלי</td></tr>
+      <tr><td class="f">מחיקת רשומות</td><td class="req">✓</td><td class="no">✕</td></tr>
+      <tr><td class="f">ניהול צוות ומחירון</td><td class="req">✓</td><td class="no">✕</td></tr>
+    </tbody></table></div>
+    <p style="margin-top:8px">ההרשאות נאכפות בצד השרת (Row Level Security ב-Supabase), לא רק בהסתרת כפתורים.</p>
+  </div>
+  <div class="card" style="margin-top:24px">
+    <h4>כללים עסקיים</h4>
+    <ol class="br">
+      <li><b>הלקוחה במרכז:</b> אין תור ואין קריאה בלי לקוחה. כל תור וכל קריאה נשמרים עם <code>client_id</code> ומוצגים בכרטיס שלה.</li>
+      <li><b>טלפון ייחודי ומנורמל:</b> מסירים מקפים ורווחים, ו-<span class="ltr">+972</span> הופך ל-0. אותו מספר לא נשמר פעמיים.</li>
+      <li><b>חיפוש לפי טלפון:</b> גם לפי חלק מהמספר, מהכותרת בכל מסך, ומוביל ישר לכרטיס.</li>
+      <li><b>היסטוריית תורים:</b> בכרטיס הלקוחה, מהחדש לישן, כולל תורים שבוטלו.</li>
+      <li><b>תור הבא:</b> התור הקרוב ביותר בעתיד שאינו "בוטל".</li>
+      <li><b>סטטוס תור:</b> עתידי כברירת מחדל. "בוצע" רק אחרי מועד התור. תור לא נמחק אלא מבוטל, כדי לשמור היסטוריה.</li>
+      <li><b>מניעת חפיפה:</b> לאותה מטפלת אין שני תורים חופפים לפי משך הטיפול. תור שבוטל לא נחשב.</li>
+      <li><b>שעות פעילות:</b> אפשר לקבוע תור רק בא'-ה' 09:00-19:00 ובו' 09:00-13:00, כך שהטיפול מסתיים עד הסגירה.</li>
+      <li><b>מחירון:</b> בחירת טיפול ממלאת משך ומחיר. המחיר נשמר בתור, כך ששינוי במחירון לא משנה תורים קיימים.</li>
+      <li><b>סטטוס קריאה:</b> חדשה כברירת מחדל. אי אפשר לעבור ל"בטיפול" בלי אחראית. ב"נסגרה" נשמר תאריך סגירה, ופתיחה מחדש מנקה אותו.</li>
+      <li><b>קריאה ותיקה:</b> קריאה שאינה סגורה ונפתחה לפני יותר מ-48 שעות מסומנת באדום.</li>
+      <li><b>שיוך:</b> מטפלת משייכת רק לעצמה, ומנהלת לכל אחת. רק משתמשות פעילות מופיעות ברשימת האחראיות.</li>
+      <li><b>אחוז המרה:</b> לקוחות שקבעו לפחות תור אחד (בכל סטטוס), חלקי כל הלקוחות, בפילוח לפי מקור.</li>
+      <li><b>מחיקה:</b> מנהלת בלבד, עם אישור. לקוחה שיש לה תורים או קריאות לא נמחקת.</li>
+      <li><b>השבתת משתמשת:</b> היא לא יכולה להיכנס, אבל ההיסטוריה שלה (תורים וקריאות) נשמרת.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="data">
+  <div class="sh"><div class="num">5</div><div><h2>מודל הנתונים</h2><p>Supabase (PostgreSQL), עם Row Level Security על כל הטבלאות לפי תפקיד</p></div></div>
+  <div class="grid g2">
+    <div class="card"><h3><span class="tile">👩‍⚕️</span> staff</h3><div class="tw"><table><thead><tr><th>שדה</th><th>סוג</th><th>הערה</th></tr></thead><tbody>
+      <tr><td><code>id</code></td><td>uuid</td><td>מקושר ל-Auth</td></tr>
+      <tr><td><code>full_name</code></td><td>text</td><td></td></tr>
+      <tr><td><code>role</code></td><td>enum</td><td>admin / staff</td></tr>
+      <tr><td><code>email</code></td><td>text</td><td>מ-Auth, לתצוגה בניהול צוות</td></tr>
+      <tr><td><code>is_active</code></td><td>boolean</td><td>מושבתת לא נכנסת ולא מופיעה בשיוך</td></tr></tbody></table></div></div>
+
+    <div class="card"><h3><span class="tile">👥</span> clients</h3><div class="tw"><table><thead><tr><th>שדה</th><th>סוג</th><th>הערה</th></tr></thead><tbody>
+      <tr><td><code>id</code></td><td>uuid</td><td>PK</td></tr>
+      <tr><td><code>full_name</code></td><td>text</td><td>חובה</td></tr>
+      <tr><td><code>phone</code></td><td>text</td><td>חובה, unique</td></tr>
+      <tr><td><code>source</code></td><td>enum</td><td>instagram / facebook / website / referral / other</td></tr>
+      <tr><td><code>created_by</code></td><td>uuid</td><td>FK → staff</td></tr>
+      <tr><td><code>created_at, updated_at</code></td><td>timestamptz</td><td></td></tr></tbody></table></div></div>
+
+    <div class="card"><h3><span class="tile">💆</span> treatments</h3><div class="tw"><table><thead><tr><th>שדה</th><th>סוג</th><th>הערה</th></tr></thead><tbody>
+      <tr><td><code>id</code></td><td>uuid</td><td>PK</td></tr>
+      <tr><td><code>name</code></td><td>text</td><td>חובה</td></tr>
+      <tr><td><code>price</code></td><td>numeric</td><td>מהמחירון</td></tr>
+      <tr><td><code>duration_min</code></td><td>int</td><td>מהמחירון</td></tr>
+      <tr><td><code>is_active</code></td><td>boolean</td><td>הוצאה משימוש בלי מחיקה</td></tr></tbody></table></div></div>
+
+    <div class="card"><h3><span class="tile">📅</span> appointments</h3><div class="tw"><table><thead><tr><th>שדה</th><th>סוג</th><th>הערה</th></tr></thead><tbody>
+      <tr><td><code>id</code></td><td>uuid</td><td>PK</td></tr>
+      <tr><td><code>client_id</code></td><td>uuid</td><td>FK → clients, חובה</td></tr>
+      <tr><td><code>treatment_id</code></td><td>uuid</td><td>FK → treatments, חובה</td></tr>
+      <tr><td><code>staff_id</code></td><td>uuid</td><td>FK → staff, חובה</td></tr>
+      <tr><td><code>starts_at</code></td><td>timestamptz</td><td>חובה</td></tr>
+      <tr><td><code>duration_min, price</code></td><td>int, numeric</td><td>מועתקים מהמחירון בשמירה</td></tr>
+      <tr><td><code>status</code></td><td>enum</td><td>upcoming / done / cancelled</td></tr>
+      <tr><td><code>notes</code></td><td>text</td><td></td></tr>
+      <tr><td><code>created_by</code></td><td>uuid</td><td>FK → staff</td></tr>
+      <tr><td><code>created_at, updated_at</code></td><td>timestamptz</td><td>אוטומטי</td></tr></tbody></table></div></div>
+
+    <div class="card"><h3><span class="tile">🎫</span> service_requests</h3><div class="tw"><table><thead><tr><th>שדה</th><th>סוג</th><th>הערה</th></tr></thead><tbody>
+      <tr><td><code>id</code></td><td>uuid</td><td>PK</td></tr>
+      <tr><td><code>client_id</code></td><td>uuid</td><td>FK → clients, חובה</td></tr>
+      <tr><td><code>description</code></td><td>text</td><td>חובה</td></tr>
+      <tr><td><code>status</code></td><td>enum</td><td>new / in_progress / closed</td></tr>
+      <tr><td><code>assignee_id</code></td><td>uuid</td><td>FK → staff, חובה ב-in_progress</td></tr>
+      <tr><td><code>created_by</code></td><td>uuid</td><td>FK → staff</td></tr>
+      <tr><td><code>created_at</code></td><td>timestamptz</td><td>אוטומטי, בסיס לסימון 48 שעות</td></tr>
+      <tr><td><code>updated_at</code></td><td>timestamptz</td><td>אוטומטי</td></tr>
+      <tr><td><code>closed_at</code></td><td>timestamptz</td><td>אוטומטי בסגירה</td></tr></tbody></table></div></div>
+
+    <div class="card"><h3><span class="tile">🔔</span> notifications</h3><div class="tw"><table><thead><tr><th>שדה</th><th>סוג</th><th>הערה</th></tr></thead><tbody>
+      <tr><td><code>id</code></td><td>uuid</td><td>PK</td></tr>
+      <tr><td><code>user_id</code></td><td>uuid</td><td>FK → staff, מי מקבלת</td></tr>
+      <tr><td><code>request_id</code></td><td>uuid</td><td>FK → service_requests</td></tr>
+      <tr><td><code>message</code></td><td>text</td><td></td></tr>
+      <tr><td><code>is_read</code></td><td>boolean</td><td>ברירת מחדל false</td></tr>
+      <tr><td><code>created_at</code></td><td>timestamptz</td><td>אוטומטי</td></tr></tbody></table></div></div>
+  </div>
+  <div class="rule" style="margin-top:24px"><b>קשרים:</b> לקוחה אחת ← הרבה תורים, ולקוחה אחת ← הרבה קריאות. כל תור מקושר לטיפול אחד ולמטפלת אחת, וכל קריאה לאחראית אחת. מפתחות וסיסמאות נשמרים במשתני סביבה בלבד, לא בקוד.</div>
+</section>
+
+<!-- auto -->
+<section id="auto">
+  <div class="sh"><div class="num">6</div><div><h2>אוטומציות, אינטגרציות והתראות</h2><p>מה המערכת עושה לבד, עם מה היא מתחברת, ואיזה הודעות מוצגות</p></div></div>
+  <div class="grid g2">
+    <div class="card"><h4>⚙️ אוטומציות פנימיות</h4><ul>
+      <li><b>נרמול טלפון</b> לפני כל שמירה וחיפוש.</li>
+      <li><b>מילוי משך ומחיר</b> מהמחירון בבחירת טיפול.</li>
+      <li><b>תאריך סגירה</b> נשמר כשקריאה עוברת ל"נסגרה", ומתנקה בפתיחה מחדש.</li>
+      <li><b>יצירת התראה</b> כשקריאה משויכת למישהי אחרת (טריגר במסד הנתונים).</li>
+      <li><b>סימון 48 שעות</b> מחושב אוטומטית בכל טעינה של רשימה ודשבורד.</li>
+      <li><b>updated_at</b> מתעדכן בכל שינוי.</li>
+    </ul></div>
+    <div class="card"><h4>🔌 אינטגרציות</h4><ul>
+      <li><b>Supabase:</b> מסד נתונים, התחברות והרשאות.</li>
+      <li><b>Vercel + GitHub:</b> אחסון ופריסה אוטומטית מכל שמירת גרסה.</li>
+      <li><b>וואטסאפ:</b> קישור <span class="ltr">wa.me</span> עם הודעה מוכנה. השליחה ידנית, בלי API ובלי עלות.</li>
+      <li><b>שלב 2 (עתידי):</b> WhatsApp Business API עם תבנית הודעה מאושרת ותזמון יומי. כל יום ב-18:00 נשלחת תזכורת לכל מי שיש לה תור "עתידי" למחרת (שם, טיפול, שעה וכתובת). הלקוחה משיבה "מאשרת" או "מבטלת". תשובת ביטול מעדכנת את התור ל"בוטל" ופותחת קריאת שירות לצוות לתיאום מחדש. המפתחות נשמרים במשתני סביבה בלבד. היעד: הברזות מ-35% ל-15%.</li>
+      <li><b>לא בגרסה הזו:</b> יומן חיצוני, סליקה ואימיילים.</li>
+    </ul></div>
+  </div>
+  <div class="card" style="margin-top:24px"><h4>🔔 התראות והודעות</h4>
+    <div class="tw"><table><thead><tr><th>מתי</th><th>למי</th><th>איפה</th><th>נוסח</th></tr></thead><tbody>
+      <tr><td class="f">קריאה שויכה אלייך</td><td>האחראית</td><td>פעמון + מונה, /notifications</td><td>"רותם שייכה אלייך קריאה: דנה לוי"</td></tr>
+      <tr><td class="f">יש לך קריאות חדשות</td><td>האחראית</td><td>באדג' ליד "קריאות" בתפריט</td><td>מספר, למשל "3"</td></tr>
+      <tr><td class="f">קריאה פתוחה מעל 48 שעות</td><td>כולן</td><td>דשבורד ורשימה, באדום</td><td>"פתוחה 3 ימים"</td></tr>
+      <tr><td class="f">תורים למחר</td><td>כולן</td><td>ווידג'ט בדשבורד</td><td>"4 תורים מחר"</td></tr>
+      <tr><td class="f">שמירה הצליחה</td><td>המשתמשת</td><td>Toast</td><td>"הלקוחה נשמרה", "התור נקבע", "הקריאה נפתחה"</td></tr>
+      <tr><td class="f">טלפון קיים</td><td>המשתמשת</td><td>ליד השדה</td><td>"לקוחה קיימת" + קישור לכרטיס</td></tr>
+      <tr><td class="f">תור חופף</td><td>המשתמשת</td><td>ליד השדה</td><td>"לליאת יש תור ב-11:00 עד 11:45"</td></tr>
+      <tr><td class="f">מחוץ לשעות הפעילות</td><td>המשתמשת</td><td>ליד השדה</td><td>"הקליניקה סגורה בשעה הזו"</td></tr>
+      <tr><td class="f">שמירה נכשלה</td><td>המשתמשת</td><td>Toast</td><td>"השמירה נכשלה, נסי שוב"</td></tr>
+      <tr><td class="f">ביטול או מחיקה</td><td>המשתמשת</td><td>חלון אישור</td><td>"לבטל את התור של דנה ביום ג'?"</td></tr>
+      <tr><td class="f">תזכורת ללקוחה</td><td>הלקוחה</td><td>וואטסאפ (ידני)</td><td>"היי דנה, תזכורת לתור שלך מחר ב-11:00 בקליניקת אורה, סוקולוב 48 הרצליה. נשמח לאישור"</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="ux">
+  <div class="sh"><div class="num">7</div><div><h2>הנחיות עיצוב וחווית משתמש</h2><p>רך, חמים ויוקרתי: כרטיסים לבנים שצפים על רקע שמנת</p></div></div>
+  <div class="grid g3">
+    <div class="card ux"><div class="tile">🎨</div>
+      <h4>מדרג ויזואלי וצבעוניות</h4>
+      <p><b>כפתור ראשי אחד בכל מסך,</b> ברקע <code>#E3BFA8</code> עם טקסט <code>#2C2520</code>, לעולם לא לבן. רקע <code>#FAF6F0</code>, כרטיסים לבנים, ברונזה <code>#A67C52</code> לאייקונים. אין שחור מוחלט בשום מקום.</p>
+      <div class="sw"><i style="background:#FAF6F0"></i><i style="background:#FFFFFF"></i><i style="background:#F1D6D0"></i><i style="background:#E3BFA8"></i><i style="background:#C99A7A"></i><i style="background:#A67C52"></i><i style="background:#8A6240"></i><i style="background:#2C2520"></i></div>
+      <h4>צבעי סטטוס קבועים</h4>
+      <div class="sw"><span class="pill must">חדשה / עתידי</span><span class="pill high">בטיפול</span><span class="pill new">נסגרה / בוצע</span><span class="pill gray">בוטל</span></div>
+      <h4>טיפוגרפיה וריווח</h4>
+      <p><b>Heebo, מינימום 12px.</b> כותרת עמוד 30, KPI 28, מקטע 18, כרטיס 16, גוף 14, משני וכפתורים 12. רשת של 8px, 24px בין כרטיסים ובתוכם.</p>
+      <h4>פינות וצללים</h4>
+      <p><b>בלי מסגרות על כרטיסים.</b> כרטיסים 24px, שדות ושורות 16px, כפתורים ותגיות pill. צל <code>0 8px 30px rgba(44,37,32,.06)</code>, וב-hover <code>.10</code>.</p>
+    </div>
+    <div class="card ux"><div class="tile">👆</div>
+      <h4>משוב על כל פעולה</h4>
+      <p><b>Toast אחרי כל שמירה:</b> "הלקוחה נשמרה", "התור נקבע", "הקריאה נפתחה".</p>
+      <h4>Optimistic UI</h4>
+      <p><b>שינוי סטטוס מתעדכן מיד</b> במסך, וחוזר אחורה עם הודעת שגיאה אם השמירה נכשלה.</p>
+      <h4>טעינה</h4>
+      <p><b>Skeleton במקום ספינר</b> ברשימות, ביומן ובדשבורד.</p>
+      <h4>Hover</h4>
+      <p><b>כרטיס מתרומם בצל,</b> כפתור אייקון מקבל עיגול <code>#F1D6D0</code>, ושורה מסומנת מקבלת רקע <code>#F1D6D0</code>.</p>
+    </div>
+    <div class="card ux"><div class="tile">📱</div>
+      <h4>Mobile-first, לא afterthought</h4>
+      <p><b>העיצוב מתחיל מ-375px.</b> המטפלות עובדות בעיקר מהטלפון, בין טיפולים.</p>
+      <h4>ניווט תחתון בנייד</h4>
+      <p><b>מתחת ל-768px</b> סרגל הצד מוחלף בסרגל תחתון עם 4 לשוניות, והטבלאות הופכות לכרטיסים.</p>
+      <h4>אזורי מגע</h4>
+      <p><b>44px לפחות</b> לכל כפתור ושורה, ושדה טלפון פותח מקלדת מספרית.</p>
+      <h4>בלי גלילה לרוחב</h4>
+      <p><b>אף מסך לא נגלל הצידה,</b> כולל היומן שנפתח בתצוגה יומית בנייד.</p>
+    </div>
+    <div class="card ux"><div class="tile">✍️</div>
+      <h4>מצבים ריקים</h4>
+      <p><b>כל מצב ריק מציע פעולה:</b> "לא נמצאה לקוחה עם הטלפון הזה" + "צרי לקוחה חדשה". "אין תורים היום". "אין קריאות פתוחות".</p>
+      <h4>Placeholders ספציפיים</h4>
+      <p><b>דוגמה אמיתית בכל שדה:</b> "<span class="ltr">054-1234567</span>", "למשל: מבקשת להזיז את התור".</p>
+      <h4>אישור לפני פעולה</h4>
+      <p><b>שאלה ברורה:</b> "לבטל את התור של דנה ביום ג'?", "למחוק את הרשומה?" (מנהלת בלבד).</p>
+      <h4>שגיאות ברורות</h4>
+      <p><b>מה קרה ומה לעשות:</b> "מספר הטלפון כבר קיים במערכת", "יש לבחור אחראית", "השמירה נכשלה, נסי שוב".</p>
+    </div>
+    <div class="card ux"><div class="tile">⚡</div>
+      <h4>אנימציות קצרות</h4>
+      <p><b>עד 200ms,</b> לפתיחת מודאלים ולמעברי hover בלבד.</p>
+      <h4>RTL נכון</h4>
+      <p><b>הכול מימין לשמאל,</b> סרגל הצד בימין, וחיצים מתהפכים. טלפונים, תאריכים ושעות נשארים בסדר הרגיל שלהם בתוך הטקסט.</p>
+      <h4>מהירות</h4>
+      <p><b>חיפוש לפי טלפון מחזיר תוצאה מיד,</b> ואיתור לקוחה לוקח פחות מ-10 שניות.</p>
+      <h4>מקלדת</h4>
+      <p><b>Tab עובר בין השדות לפי הסדר,</b> Enter שומר ו-Esc סוגר מודאל.</p>
+    </div>
+    <div class="card ux"><div class="tile">📝</div>
+      <h4>ולידציה בשורה</h4>
+      <p><b>שגיאה מוצגת ליד השדה</b> במסגרת וטקסט עזר ב-<code>#B5533C</code>, ולא רק בראש הטופס.</p>
+      <h4>פוקוס אוטומטי</h4>
+      <p><b>הסמן עומד בשדה הראשון</b> כשטופס נפתח. Focus מסומן במסגרת 2px <code>#A67C52</code>.</p>
+      <h4>שדות</h4>
+      <p><b>גובה 44px, רדיוס 16px,</b> מסגרת 1px <code>#EDE5DC</code>, placeholder ב-<code>#A39A93</code>.</p>
+      <h4>כפתור שמירה</h4>
+      <p><b>לא מושבת מראש.</b> לחיצה על טופס חסר מראה מה חסר.</p>
+    </div>
+  </div>
+
+  <div class="card spec" style="margin-top:24px">
+    <h3><span class="tile">📐</span> מפרט עיצוב מלא</h3>
+    <div class="grid g2">
+      <div>
+        <h4>צבעים</h4>
+        <div class="tw"><table><thead><tr><th>תפקיד</th><th>שימוש</th><th>צבע</th></tr></thead><tbody><tr><td class="f">רקע ראשי</td><td></td><td><i class="dot" style="background:#FAF6F0"></i><code>#FAF6F0</code></td></tr><tr><td class="f">כרטיסים ואזורי תוכן</td><td></td><td><i class="dot" style="background:#FFFFFF"></i><code>#FFFFFF</code></td></tr><tr><td class="f">משטח משני</td><td>פריט ניווט פעיל, שורה מסומנת, תגיות, hover, כפתור משני</td><td><i class="dot" style="background:#F1D6D0"></i><code>#F1D6D0</code></td></tr><tr><td class="f">קו מפריד</td><td>מסגרת שדות</td><td><i class="dot" style="background:#EDE5DC"></i><code>#EDE5DC</code></td></tr><tr><td class="f">טקסט ראשי</td><td>טקסט, כותרות, ניווט, טקסט על Primary</td><td><i class="dot" style="background:#2C2520"></i><code>#2C2520</code></td></tr><tr><td class="f">טקסט משני</td><td></td><td><i class="dot" style="background:#6F635B"></i><code>#6F635B</code></td></tr><tr><td class="f">Placeholder</td><td></td><td><i class="dot" style="background:#A39A93"></i><code>#A39A93</code></td></tr><tr><td class="f">Primary</td><td>כפתור ראשי, טאב פעיל</td><td><i class="dot" style="background:#E3BFA8"></i><code>#E3BFA8</code></td></tr><tr><td class="f">קישורים וטקסט דגש</td><td></td><td><i class="dot" style="background:#8A6240"></i><code>#8A6240</code></td></tr><tr><td class="f">אייקונים (ברונזה)</td><td>וגם מסגרת Focus</td><td><i class="dot" style="background:#A67C52"></i><code>#A67C52</code></td></tr><tr><td class="f">הצלחה</td><td>✓, Toast הצלחה, תגית "נסגרה / בוצע"</td><td><i class="dot" style="background:#9E5F6A"></i><code>#9E5F6A</code></td></tr><tr><td class="f">שגיאה</td><td>ולידציה והודעות שגיאה</td><td><i class="dot" style="background:#B5533C"></i><code>#B5533C</code></td></tr></tbody></table></div>
+        <p style="margin-top:8px">אין שחור מוחלט (<code>#000000</code>) בשום מקום, כולל טקסט, אייקונים וצללים.</p>
+      </div>
+      <div>
+        <h4>צבעי סטטוס</h4>
+        <div class="tw"><table><thead><tr><th>סטטוס</th><th>רקע</th><th>טקסט</th></tr></thead><tbody><tr><td class="f"><span class="pill" style="background:#E3BFA8;color:#2C2520">חדשה / עתידי</span></td><td><i class="dot" style="background:#E3BFA8"></i><code>#E3BFA8</code></td><td><i class="dot" style="background:#2C2520"></i><code>#2C2520</code></td></tr><tr><td class="f"><span class="pill" style="background:#C99A7A;color:#2C2520">בטיפול</span></td><td><i class="dot" style="background:#C99A7A"></i><code>#C99A7A</code></td><td><i class="dot" style="background:#2C2520"></i><code>#2C2520</code></td></tr><tr><td class="f"><span class="pill" style="background:#9E5F6A;color:#FFFFFF">נסגרה / בוצע</span></td><td><i class="dot" style="background:#9E5F6A"></i><code>#9E5F6A</code></td><td><i class="dot" style="background:#FFFFFF"></i><code>#FFFFFF</code></td></tr><tr><td class="f"><span class="pill" style="background:#A39A93;color:#FFFFFF">בוטל</span></td><td><i class="dot" style="background:#A39A93"></i><code>#A39A93</code></td><td><i class="dot" style="background:#FFFFFF"></i><code>#FFFFFF</code></td></tr></tbody></table></div>
+        <h4>גרפים</h4>
+        <p>לפי הסדר: <code>#E3BFA8</code> <code>#F1D6D0</code> <code>#C99A7A</code> <code>#A67C52</code> <code>#EADFD2</code> <code>#2C2520</code>. Tooltip ברקע <code>#2C2520</code> עם טקסט לבן.</p>
+        <h4>כפתורים</h4>
+        <ul>
+          <li><b>ראשי:</b> רקע <code>#E3BFA8</code>, טקסט <code>#2C2520</code> ב-Semibold, גובה 40px, pill, צל <code>0 4px 14px rgba(227,191,168,.45)</code>.</li>
+          <li><b>משני:</b> רקע <code>#F1D6D0</code>, טקסט <code>#2C2520</code>, בלי מסגרת ובלי צל.</li>
+          <li><b>קישור טקסט:</b> <code>#8A6240</code> עם חץ קטן.</li>
+          <li><b>כפתור אייקון:</b> אייקון ברונזה בלי רקע. ב-hover מופיע עיגול <code>#F1D6D0</code>.</li>
+          <li><b>Disabled:</b> שקיפות 50%. <b>Loading:</b> ספינר קטן בתוך הכפתור והטקסט נשאר.</li>
+        </ul>
+      </div>
+      <div>
+        <h4>אייקונים</h4>
+        <ul>
+          <li>קוויים ודקים, עובי קו 1.5px, קצוות מעוגלים, בצבע <code>#A67C52</code>.</li>
+          <li>20px בניווט ובכפתורים, 24px באריחי אייקון.</li>
+          <li>אייקון בפריט ניווט פעיל: <code>#2C2520</code>.</li>
+        </ul>
+        <h4>גדלים, ריווח ופינות</h4>
+        <div class="tw"><table><thead><tr><th>רכיב</th><th>ערך</th></tr></thead><tbody>
+          <tr><td class="f">רשת בסיס</td><td>8px</td></tr>
+          <tr><td class="f">בין כרטיסים / ריפוד כרטיס</td><td>24px / 24px</td></tr>
+          <tr><td class="f">בין פריטי רשימה ושורות טבלה</td><td>8px</td></tr>
+          <tr><td class="f">גובה שורת טבלה</td><td>48px</td></tr>
+          <tr><td class="f">גובה פריט ניווט</td><td>44px</td></tr>
+          <tr><td class="f">סרגל צד מכווץ</td><td>80px</td></tr>
+          <tr><td class="f">רדיוס: מיכל האפליקציה</td><td>32px</td></tr>
+          <tr><td class="f">רדיוס: כרטיסים ופאנלים</td><td>24px</td></tr>
+          <tr><td class="f">רדיוס: שדות, שורות, אריחים, פריטי ניווט</td><td>16px (מינימום בכל רכיב)</td></tr>
+          <tr><td class="f">כפתורים, תגיות ושדה חיפוש</td><td>pill מלא</td></tr>
+          <tr><td class="f">אווטאר</td><td>עיגול מלא</td></tr>
+        </tbody></table></div>
+      </div>
+      <div>
+        <h4>רכיבים</h4>
+        <ul>
+          <li><b>כרטיס KPI:</b> תווית, מספר גדול (28px), שינוי באחוזים בצבע סטטוס, ושורת הסבר בטקסט משני.</li>
+          <li><b>פריט רשימה:</b> אריח אייקון 44×44px ברקע <code>#FAF6F0</code> עם אייקון ברונזה, טקסט, ופעולה בקצה.</li>
+          <li><b>טבלה:</b> שורות לבנות נפרדות ברדיוס 16px. שורה מסומנת ברקע <code>#F1D6D0</code>.</li>
+          <li><b>טאבים:</b> קו תחתון <code>#E3BFA8</code> לטאב הפעיל, טקסט משני ללא-פעילים.</li>
+          <li><b>שדה חיפוש:</b> pill, עם אייקון ברונזה בצד.</li>
+          <li><b>Checkbox, radio ו-toggle:</b> במצב פעיל ברקע <code>#E3BFA8</code> עם סימון <code>#2C2520</code>, ובמצב כבוי מסגרת <code>#EDE5DC</code>.</li>
+        </ul>
+        <h4>צללים</h4>
+        <ul>
+          <li>גוון הצל מבוסס על צבע הטקסט, לא על שחור.</li>
+          <li>כרטיס: <code>0 8px 30px rgba(44,37,32,.06)</code>.</li>
+          <li>Hover, תפריטים ומודאלים: <code>0 16px 48px rgba(44,37,32,.10)</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="roadmap">
+  <div class="sh"><div class="num">8</div><div><h2>שלבי פיתוח מומלצים</h2><p>סדר הבנייה ב-Claude Code, עם שמירת גרסה ב-GitHub בסוף כל שלב</p></div></div>
+  <div class="steps">
+    <div class="card step"><div class="n">1</div><div><h4>הקמה והתחברות</h4><p>ריפו, CLAUDE.md, Supabase, Vercel, משתני סביבה ומסך כניסה.</p><span class="pill sand">בסיס</span></div></div>
+    <div class="card step"><div class="n">2</div><div><h4>מסד נתונים והרשאות</h4><p>כל הטבלאות, המחירון, הטריגרים ו-RLS לפי תפקיד.</p><span class="pill sand">בסיס</span></div></div>
+    <div class="card step"><div class="n">3</div><div><h4>Layout וניווט</h4><p>תפריט צד, סרגל תחתון בנייד, חיפוש עליון, RTL ועיצוב.</p><span class="pill sand">בסיס</span></div></div>
+    <div class="card step"><div class="n">4</div><div><h4>לקוחות</h4><p>רשימה, חיפוש לפי טלפון, יצירה ועריכה, מניעת כפילויות.</p><span class="pill must">ליבה</span></div></div>
+    <div class="card step"><div class="n">5</div><div><h4>כרטיס לקוח</h4><p>פרטים, תור הבא, לשוניות תורים וקריאות.</p><span class="pill must">ליבה</span></div></div>
+    <div class="card step"><div class="n">6</div><div><h4>תורים</h4><p>טופס, רשימה, סטטוסים ומניעת חפיפה.</p><span class="pill must">ליבה</span></div></div>
+    <div class="card step"><div class="n">7</div><div><h4>קריאות שירות</h4><p>טופס, רשימה, סטטוסים, שיוך וסימון 48 שעות.</p><span class="pill must">ליבה</span></div></div>
+    <div class="card step"><div class="n">8</div><div><h4>ניהול צוות</h4><p>מסך משתמשות, תפקידים והשבתה.</p><span class="pill high">הרחבה</span></div></div>
+    <div class="card step"><div class="n">9</div><div><h4>יומן תורים ויזואלי</h4><p>תצוגה יומית ושבועית עם סינון.</p><span class="pill new">חדש</span></div></div>
+    <div class="card step"><div class="n">10</div><div><h4>המשימות שלי והתראות</h4><p>פעמון, מונה ורשימת התראות.</p><span class="pill new">חדש</span></div></div>
+    <div class="card step"><div class="n">11</div><div><h4>דשבורד</h4><p>נבנה אחרון בכוונה, כי הוא מסכם את כל השאר: מונים, אחראיות, תורים למחר ואחוז המרה.</p><span class="pill gray">פינישינג</span></div></div>
+    <div class="card step"><div class="n">12</div><div><h4>ליטוש ובדיקות</h4><p>מצבים ריקים, Toasts, בדיקה בנייד, פרסום ב-Vercel וגישה לבודק.</p><span class="pill gray">פינישינג</span></div></div>
+  </div>
+
+  <div class="card" style="margin-top:24px">
+    <h4>לא בגרסה הראשונה</h4>
+    <ul class="x">
+      <li>תיאום תורים אוטומטי</li>
+      <li>סנכרון ליומן חיצוני (Google Calendar)</li>
+      <li>כספים, תשלומים וסליקה</li>
+      <li>שליחת אימיילים</li>
+      <li>תזכורות וואטסאפ אוטומטיות (שלב 2)</li>
+      <li>אזור אישי ללקוחות הקליניקה</li>
+      <li>אפליקציה נייטיב</li>
+      <li>עבודה ללא חיבור לאינטרנט</li>
+      <li>ייצוא לאקסל או PDF</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+<footer>קליניקת אורה PRD v1.1 · מבחן סיום, הכשרת מפתחי AI, בינה פלוס · מוכן לבנייה עם Claude Code</footer>
+
+<script>
+(function(){
+  var r=document.documentElement,b=document.getElementById('tg'),k='ora-prd-theme';
+  function set(t){r.setAttribute('data-theme',t);b.textContent=t==='dark'?'כהה':'בהיר';}
+  try{var s=localStorage.getItem(k);if(s)set(s);}catch(e){}
+  b.addEventListener('click',function(){var t=r.getAttribute('data-theme')==='dark'?'light':'dark';set(t);try{localStorage.setItem(k,t);}catch(e){}});
+})();
+</script>
+</body>
+</html>
