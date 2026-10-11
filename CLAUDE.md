@@ -342,12 +342,24 @@ treatments ─┘                     staff ───┘ (assigned_to)
   - `0001_tables`: טבלאות.
   - `0002_permissions`: הרשאות ומחירון.
   - `0003_schema`: טלפון וכתובת לצוות, ואלידציה במסד, `updated_at` אוטומטי, יומן פעילות, אינדקסים.
+  - `0004_views`: מנוע התצוגות.
+- דאטה לדוגמה: 20 שורות בכל טבלה. 20 המשתמשות לדוגמה הן בלי סיסמה.
 - שלד האפליקציה קיים (גרסה 5): Next.js 16 עם TypeScript ו-App Router.
   - `src/lib/supabase.ts`: לקוח ה-Supabase היחיד במערכת. כל הקוד מייבא אותו משם.
   - `src/components/AppShell.tsx`: תפריט צד במחשב, סרגל תחתון בנייד וכותרת עליונה.
-  - עמוד הבית ריק, והניווט עוד לא מוביל לשום מקום.
+  - עמוד הבית (דשבורד) עוד ריק. שאר המסכים בתפריט עובדים דרך מנוע התצוגות.
 - ריפו GitHub: `Bimba47/ora-clinic-crm` (פרטי), ענף `main`.
 - פריסה: Vercel, פרויקט `ora-clinic-crm`, מחובר לריפו. כל דחיפה ל-`main` נפרסת אוטומטית.
   - כתובת חיה: https://ora-clinic-crm-liart.vercel.app
   - משתני סביבה ב-Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_NAME`, `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY`. סיסמת המסד לא נמצאת ב-Vercel.
 - רשימת הגרסאות נמצאת ב-`VERSIONS.md`.
+
+## 8. מנוע התצוגות
+- אין תצוגה מקודדת. הכול נשמר במסד:
+  - קטלוג: `view_objects` (האובייקטים) ו-`object_fields` (השדות, סוג, תווית, אפשרויות).
+  - תצוגות: `views`, `view_columns`, `view_filters`, `view_sorts`.
+- הרצה דרך `run_view` ו-`run_view_groups` (security invoker, ולכן RLS חל גם בקאנבן). שמירה דרך `save_view`, יצירה ושכפול דרך `create_view`, ברירת מחדל דרך `set_default_view` (מנהלת בלבד).
+- אופרטורי סינון מוגבלים לפי סוג שדה, גם במסד וגם בממשק (`operatorsFor` ב-`src/lib/views.ts`).
+- תצוגה משותפת: מטפלת לא שומרת בה שינויים, רק משכפלת. תצוגה פרטית גלויה רק לבעלים.
+- שדה חדש לתצוגות: מוסיפים שורה ל-`object_fields` במיגרציה, בלי שינוי קוד.
+- רכיב המסך: `src/components/views/ObjectViews.tsx`. כל עמוד רק מעביר `objectKey`.
