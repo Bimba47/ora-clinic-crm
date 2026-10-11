@@ -318,5 +318,8 @@ treatments ─┘                     staff ───┘ (assigned_to)
   - `src/lib/supabase.ts`: לקוח ה-Supabase היחיד במערכת. כל הקוד מייבא אותו משם.
   - `src/components/AppShell.tsx`: תפריט צד במחשב, סרגל תחתון בנייד וכותרת עליונה.
   - עמוד הבית ריק, והניווט עוד לא מוביל לשום מקום.
-- ריפו GitHub: `ora-clinic-crm` (פרטי). פריסה: Vercel, מחובר לריפו.
+- ריפו GitHub: `Bimba47/ora-clinic-crm` (פרטי), ענף `main`.
+- פריסה: Vercel, פרויקט `ora-clinic-crm`, מחובר לריפו. כל דחיפה ל-`main` נפרסת אוטומטית.
+  - כתובת חיה: https://ora-clinic-crm-liart.vercel.app
+  - משתני סביבה ב-Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_NAME`, `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY`. סיסמת המסד לא נמצאת ב-Vercel.
 - רשימת הגרסאות נמצאת ב-`VERSIONS.md`.
