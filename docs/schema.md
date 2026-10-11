@@ -1,6 +1,7 @@
 # סכמת בסיס הנתונים: CRM קליניקת אורה
 
-מצב אחרי מיגרציה `0003_schema` (11.10.2026). כל הכללים כאן נאכפים במסד.
+מצב אחרי מיגרציה `0004_views` (11.10.2026). כל הכללים כאן נאכפים במסד.
+טבלאות העסק בטבלאות 1 ו-2. טבלאות מנוע התצוגות בטבלה 3.
 
 ## טבלה 1: האובייקטים והקשרים
 
@@ -115,6 +116,70 @@
 | new_values | ערך אחרי | jsonb | | ביצירה ובעדכון |
 | created_at | מתי | timestamptz | ✓ | אוטומטי |
 | updated_at | | timestamptz | ✓ | זהה ל-created_at |
+
+## טבלה 3: מנוע התצוגות (`0004_views`)
+
+טבלאות פנימיות של המערכת, לא של העסק. הן לא נכתבות ליומן הפעילות. RLS פעיל על כולן.
+
+### קשרים
+| טבלה | מקושר אל | מיושם כ- | במחיקת ההורה |
+|---|---|---|---|
+| `object_fields` | view_objects (האובייקט) | `object_fields.object_id` | נמחקים איתו |
+| | view_objects (אובייקט מקושר) | `object_fields.ref_object_id` | חסום |
+| `views` | view_objects | `views.object_id` | נמחקות איתו |
+| | staff (בעלים) | `views.owner_id` | נמחקות איתה |
+| | object_fields (שדה הקאנבן) | `views.kanban_field_id` | השדה מתרוקן |
+| `view_columns`, `view_filters`, `view_sorts` | views | `view_id` | נמחקים איתה |
+| | object_fields | `field_id` | נמחקים איתו |
+
+### view_objects (קטלוג אובייקטים)
+| שדה | סוג | חובה | ערכים / כלל |
+|---|---|---|---|
+| id | uuid | ✓ | אוטומטי |
+| object_key | text | ✓ | ייחודי. אחת משש טבלאות העסק (בלי `audit_log`) |
+| label, label_plural | text | ✓ | "לקוחה", "לקוחות" |
+| display_field | text | ✓ | השדה שמוצג כשהרשומה מקושרת ממקום אחר |
+| can_create | boolean | ✓ | ברירת מחדל `true` |
+| created_at, updated_at | timestamptz | ✓ | אוטומטי |
+
+### object_fields (קטלוג שדות)
+| שדה | סוג | חובה | ערכים / כלל |
+|---|---|---|---|
+| id | uuid | ✓ | אוטומטי |
+| object_id | uuid → view_objects | ✓ | |
+| field_key | text | ✓ | ייחודי באובייקט. חייב להיות עמודה אמיתית בטבלה (נבדק בטריגר) |
+| label | text | ✓ | התווית בעברית |
+| field_type | enum `field_type` | ✓ | `text`, `long_text`, `phone`, `email`, `number`, `money`, `date`, `datetime`, `boolean`, `choice`, `reference` |
+| options | jsonb | ב-`choice` וב-`boolean` | מערך `[{"value", "label"}]` |
+| ref_object_id | uuid → view_objects | ב-`reference` בלבד | |
+| position | int | ✓ | סדר השדות |
+| default_visible, is_searchable, is_required, is_editable | boolean | ✓ | |
+| created_at, updated_at | timestamptz | ✓ | אוטומטי |
+
+### views (תצוגות)
+| שדה | סוג | חובה | ערכים / כלל |
+|---|---|---|---|
+| id | uuid | ✓ | אוטומטי |
+| object_id | uuid → view_objects | ✓ | |
+| name | text | ✓ | לא ריק |
+| view_type | enum `view_type` | ✓ | `list` רשימה (ברירת מחדל), `kanban` קאנבן |
+| owner_id | uuid → staff | | אוטומטי. ריק = תצוגת מערכת, ואז חייבת להיות משותפת |
+| is_shared | boolean | ✓ | ברירת מחדל `false` |
+| is_default | boolean | ✓ | אחת לכל אובייקט, ורק תצוגה משותפת |
+| filter_match | enum `filter_match` | ✓ | `all` וגם (ברירת מחדל), `any` או |
+| kanban_field_id | uuid → object_fields | | שדה הקיבוץ בקאנבן |
+| created_at, updated_at | timestamptz | ✓ | אוטומטי |
+
+### view_columns, view_filters, view_sorts (הגדרת תצוגה)
+| טבלה | שדות מעבר ל-id, view_id, field_id, position ותאריכים | כלל |
+|---|---|---|
+| `view_columns` | width (60-800, ברירת מחדל 160), is_visible | שדה פעם אחת בתצוגה |
+| `view_filters` | operator (enum `filter_operator`), value | האופרטור חייב להתאים לסוג השדה |
+| `view_sorts` | direction (enum `sort_direction`: `asc`, `desc`) | |
+
+### פונקציות
+- `run_view`, `run_view_groups`: מריצות תצוגה (security invoker, ולכן RLS חל).
+- `save_view`, `create_view`, `set_default_view` (מנהלת בלבד): שמירה, יצירה ושכפול, ברירת מחדל.
 
 ## מחושב בתצוגה, לא נשמר
 - **התור הבא** של לקוחה: התור הקרוב בעתיד שלא בוטל.
