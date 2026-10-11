@@ -1,0 +1,22 @@
+# קבצים שגיט לא שומר ולא מעלה ל-GitHub
+
+# קובצי הגדרות מקומיים עם סודות: אף פעם לא עולים
+.env
+.env.local
+.env.*.local
+# קובץ הדוגמה (בלי ערכים) כן עולה
+!.env.example
+
+# תלויות ותוצרי בנייה (יגיעו כשיהיה קוד)
+node_modules/
+.next/
+out/
+.vercel/
+.supabase/
+
+# קבצי מערכת
+.DS_Store
+Thumbs.db
+*.log
+next-env.d.ts
+*.tsbuildinfo

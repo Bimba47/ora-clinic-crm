@@ -1,0 +1,158 @@
+/* עיצוב לפי האפיון (סעיף 7 ומפרט העיצוב המלא). אין שחור מוחלט בשום מקום. */
+:root {
+  --bg: #FAF6F0;          /* רקע ראשי */
+  --card: #FFFFFF;        /* כרטיסים */
+  --soft: #F1D6D0;        /* משטח משני: ניווט פעיל, hover, שורה מסומנת */
+  --line: #EDE5DC;        /* קווים ומסגרות שדות */
+  --text: #2C2520;        /* טקסט ראשי */
+  --muted: #6F635B;       /* טקסט משני */
+  --placeholder: #A39A93;
+  --primary: #E3BFA8;     /* כפתור ראשי, טאב פעיל */
+  --link: #8A6240;
+  --bronze: #A67C52;      /* אייקונים ו-Focus */
+  --ok: #9E5F6A;          /* הצלחה, "נסגרה / בוצע" */
+  --err: #B5533C;
+  --tan: #C99A7A;         /* "בטיפול" */
+  --shadow: 0 8px 30px rgba(44, 37, 32, 0.06);
+  --shadow-hover: 0 16px 48px rgba(44, 37, 32, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ===== מבנה ===== */
+.shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  padding: 24px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.brand {
+  font-size: 18px;
+  font-weight: 700;
+  padding: 0 12px 24px;
+}
+
+.sidebar nav { display: flex; flex-direction: column; gap: 8px; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 16px;
+  color: var(--muted);
+  cursor: default;
+  user-select: none;
+}
+.nav-item svg { color: var(--bronze); flex-shrink: 0; }
+.nav-item.active { background: var(--soft); color: var(--text); font-weight: 600; }
+.nav-item.active svg { color: var(--text); }
+.nav-item[aria-disabled="true"] { opacity: 0.8; }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+}
+
+.search {
+  flex: 1;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--bronze);
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--text);
+  outline: none;
+}
+.search input::placeholder { color: var(--placeholder); }
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bronze);
+  margin-inline-start: auto;
+}
+.icon-btn:hover:not(:disabled) { background: var(--soft); }
+
+.content { padding: 8px 24px 24px; }
+
+/* ===== תוכן ===== */
+.page-title { font-size: 30px; font-weight: 700; margin: 0 0 24px; }
+
+.card {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+.card.empty { text-align: center; padding: 48px 24px; }
+.card.empty p { margin: 0 0 8px; font-size: 16px; }
+.muted { color: var(--muted); font-size: 12px !important; }
+
+:focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
+
+/* ===== נייד: סרגל תחתון במקום תפריט צד ===== */
+.bottom-nav { display: none; }
+
+@media (max-width: 767px) {
+  .sidebar { display: none; }
+  .topbar { padding: 12px 16px; }
+  .content { padding: 8px 16px 96px; }
+  .page-title { font-size: 24px; }
+
+  .bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed;
+    inset: auto 0 0 0;
+    background: var(--card);
+    box-shadow: 0 -8px 30px rgba(44, 37, 32, 0.06);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .bottom-nav .nav-item {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px;
+    font-size: 12px;
+  }
+}
