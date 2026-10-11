@@ -255,7 +255,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 /* תגית אחידה לכל ערך בחירה (סטטוס, מקור הגעה, נקראה): אותו גובה, אותו רוחב מינימלי, טקסט במרכז */
 .tag {
   display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
-  height: 24px; min-width: 72px; padding: 0 12px; border-radius: 999px;
+  height: 24px; min-width: 88px; padding: 0 12px; border-radius: 999px;
   font-size: 12px; font-weight: 600; line-height: 1; white-space: nowrap; vertical-align: middle;
   background: var(--line);
 }
