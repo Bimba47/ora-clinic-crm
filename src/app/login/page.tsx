@@ -22,7 +22,7 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <form className="card login-card" onSubmit={submit}>
-        <h1 className="page-title">כניסה</h1>
+        <h1 className="page-title">ברוכה הבאה לקליניקת אורה</h1>
         <label className="field">
           <span>אימייל</span>
           <input type="email" dir="ltr" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />

@@ -251,6 +251,13 @@ export async function deleteRecords(objectKey: string, ids: string[]) {
   return data.length;
 }
 
+// רשומה אחת לעריכה. העמודות נבחרות במפורש (אף פעם לא select *, בגלל עמודות חסומות כמו כתובת הצוות).
+export async function loadRecord(objectKey: string, id: string, columns: string[]) {
+  const { data, error } = await supabase.from(objectKey).select(["id", ...columns].join(", ")).eq("id", id).single();
+  if (error) throw error;
+  return data as unknown as Record<string, unknown>;
+}
+
 export async function createRecord(objectKey: string, values: Record<string, unknown>) {
   const { error } = await supabase.from(objectKey).insert(values);
   if (error) throw error;

@@ -18,7 +18,8 @@ const NAV: NavItem[] = [
   { label: "תורים", href: "/appointments/list", icon: "calendar", mobile: true },
   { label: "קריאות שירות", short: "קריאות", href: "/requests", icon: "ticket", mobile: true },
   { label: "התראות", href: "/notifications", icon: "bell" },
-  { label: "ניהול צוות ומחירון", short: "צוות", href: "/team", icon: "settings", managerOnly: true },
+  { label: "ניהול צוות", short: "צוות", href: "/team", icon: "settings", managerOnly: true },
+  { label: "מחירון", href: "/treatments", icon: "tag", managerOnly: true },
 ];
 
 function isActive(pathname: string, href: string) {

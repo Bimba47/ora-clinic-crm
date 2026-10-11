@@ -1,6 +1,6 @@
 "use client";
 // תצוגת רשימה: טבלה עם העמודות שנבחרו, מיון בלחיצה על כותרת, שינוי רוחב בגרירה,
-// בחירה מרובה, מונה תוצאות ועימוד. בנייד השורות הופכות לכרטיסים.
+// לחיצה על שורה לעריכה, בחירה מרובה בתיבות סימון, מונה תוצאות ועימוד. בנייד השורות הופכות לכרטיסים.
 
 import { useRef } from "react";
 import type { FieldMeta, Row, ViewState } from "@/lib/views";
@@ -17,12 +17,13 @@ type Props = {
   selected: Set<string>;
   onSelect: (s: Set<string>) => void;
   onChange: (patch: Partial<ViewState>, opts?: { debounce?: boolean }) => void;
+  onOpen: (row: Row) => void;
   emptyAction?: () => void;
   emptyLabel: string;
 };
 
 export default function ListView({
-  fields, state, data, loading, page, pageSize, onPage, selected, onSelect, onChange, emptyAction, emptyLabel,
+  fields, state, data, loading, page, pageSize, onPage, selected, onSelect, onChange, onOpen, emptyAction, emptyLabel,
 }: Props) {
   const byKey = new Map(fields.map((f) => [f.field_key, f]));
   const cols = state.columns.filter((c) => c.visible && byKey.has(c.field));
@@ -120,8 +121,15 @@ export default function ListView({
                   </tr>
                 ))
               : rows.map((r) => (
-                  <tr key={r.id} className={selected.has(r.id) ? "selected" : ""}>
-                    <td className="check-col">
+                  <tr
+                    key={r.id}
+                    className={`row-link${selected.has(r.id) ? " selected" : ""}`}
+                    tabIndex={0}
+                    onClick={() => onOpen(r)}
+                    onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && onOpen(r)}
+                  >
+                    {/* תיבת הסימון לבחירה מרובה בלבד: לחיצה עליה לא פותחת את הרשומה */}
+                    <td className="check-col" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" aria-label="בחירת השורה" checked={selected.has(r.id)} onChange={() => toggleRow(r.id)} />
                     </td>
                     {cols.map((c) => {

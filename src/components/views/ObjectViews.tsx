@@ -28,6 +28,7 @@ type Dialog =
   | { kind: "delete-rows" }
   | { kind: "bulk-set" }
   | { kind: "create-record" }
+  | { kind: "edit-record"; row: Row }
   | null;
 
 function remember(objectKey: string, viewId?: string) {
@@ -374,6 +375,7 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
           selected={selected}
           onSelect={setSelected}
           onChange={update}
+          onOpen={(row) => setDialog({ kind: "edit-record", row })}
           emptyAction={obj.can_create ? () => setDialog({ kind: "create-record" }) : undefined}
           emptyLabel={obj.label}
         />
@@ -420,11 +422,13 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
       {dialog?.kind === "bulk-set" && (
         <BulkSetDialog fields={bulkFields} count={selected.size} onClose={() => setDialog(null)} onSave={doBulkSet} />
       )}
-      {dialog?.kind === "create-record" && (
+      {(dialog?.kind === "create-record" || dialog?.kind === "edit-record") && (
         <RecordForm
+          key={dialog.kind === "edit-record" ? dialog.row.id : "new"}
           obj={obj}
           fields={fields}
           catalog={catalog}
+          row={dialog.kind === "edit-record" ? dialog.row : undefined}
           onClose={() => setDialog(null)}
           onSaved={() => {
             setDialog(null);

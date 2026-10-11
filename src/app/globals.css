@@ -234,6 +234,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .data-table th { position: relative; font-size: 12px; color: var(--muted); font-weight: 600; }
 .data-table tbody tr:hover { background: var(--bg); }
 .data-table tbody tr.selected { background: var(--soft); }
+.data-table tbody tr.row-link { cursor: pointer; }
+.data-table tbody tr.row-link:focus-visible { outline: 2px solid var(--bronze); outline-offset: -2px; }
+.data-table .check-col { cursor: default; }
+
+/* שדות לקריאה בלבד בחלון העריכה (נוצרה, נוצרה על ידי וכו') */
+.record-meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; font-size: 12px; }
+.record-meta dt { color: var(--muted); }
+.record-meta dd { margin: 0; }
 .check-col { width: 48px; text-align: center !important; }
 .th-btn { border: 0; background: none; font: inherit; color: inherit; cursor: pointer; padding: 0; display: inline-flex; gap: 4px; align-items: center; min-height: 44px; }
 .sort-mark { font-size: 10px; color: var(--bronze); }
@@ -244,7 +252,13 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px; flex-wrap: wrap; }
 .pager-btns { display: flex; align-items: center; gap: 8px; }
 
-.tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--line); }
+/* תגית אחידה לכל ערך בחירה (סטטוס, מקור הגעה, נקראה): אותו גובה, אותו רוחב מינימלי, טקסט במרכז */
+.tag {
+  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+  height: 24px; min-width: 72px; padding: 0 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; line-height: 1; white-space: nowrap; vertical-align: middle;
+  background: var(--line);
+}
 .tag-new, .tag-upcoming { background: var(--primary); color: var(--text); }
 .tag-in_progress { background: var(--tan); color: var(--text); }
 .tag-closed, .tag-done { background: var(--ok); color: #FFFFFF; }
