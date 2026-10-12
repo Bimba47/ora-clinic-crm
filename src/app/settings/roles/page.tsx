@@ -128,11 +128,10 @@ export default function Page() {
                     {role.is_admin && <span className="tag tag-admin">מנהלת מערכת</span>}
                   </div>
                   {role.description && <div className="muted">{role.description}</div>}
-                  <div className="muted">{userCount[role.id] ?? 0} משתמשות</div>
-                  <div className="perm-role-actions">
+                  <div className="perm-role-actions stacked">
+                    <button type="button" className="link-btn" onClick={() => setFieldsFor(role)}>הרשאות שדות</button>
                     <button type="button" className="link-btn" onClick={() => setEditing(role)}>עריכה</button>
                     <button type="button" className="link-btn" onClick={() => setDuplicating(role)}>שכפול</button>
-                    <button type="button" className="link-btn" onClick={() => setFieldsFor(role)}>הרשאות שדות</button>
                     {!role.is_admin && (
                       <button
                         type="button"

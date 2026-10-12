@@ -434,7 +434,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
 
   // ===== שדות מחושבים (לקריאה בלבד) =====
   const now = Date.now();
-  const computed: { label: string; value: React.ReactNode; tone?: "highlight" | "warn" }[] = [];
+  const computed: { label: string; value: React.ReactNode; tone?: "highlight" | "warn" | "strong" }[] = [];
   const childRows = (object: string, fk: string) => children[`${object}:${fk}`] ?? [];
   const apptFields = catalog.fields.filter((f) => f.object_id === catalog.objects.find((o) => o.object_key === "appointments")?.id);
   const af = (k: string) => apptFields.find((f) => f.field_key === k)!;
@@ -458,7 +458,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
     }
     if (objectKey === "service_requests" && rec.status !== "closed") {
       const age = now - new Date(String(rec.created_at)).getTime();
-      computed.push({ label: "פתוחה כבר", value: ago(age), tone: age > OLD_REQUEST_MS ? "warn" : undefined });
+      computed.push({ label: "פתוחה כבר", value: ago(age), tone: age > OLD_REQUEST_MS ? "warn" : "strong" });
     }
     if (objectKey === "staff" || objectKey === "treatments") {
       const fk = objectKey === "staff" ? "therapist_id" : "treatment_id";
@@ -515,7 +515,8 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
             <span className="title-sub">
               {byKey.get(cfg.subtitle)!.label}:{" "}
               {byKey.get(cfg.subtitle)!.field_type === "datetime" ? (
-                <span dir="ltr">{formatDateTime(String(rec[cfg.subtitle]))}</span>
+                // קודם התאריך ואחריו השעה (בסדר הקריאה מימין)
+                <><span dir="ltr">{formatDate(String(rec[cfg.subtitle]))}</span>, <span dir="ltr">{formatTime(String(rec[cfg.subtitle]))}</span></>
               ) : (
                 renderValue(byKey.get(cfg.subtitle)!, rec)
               )}
@@ -647,7 +648,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
                   ) : isNew ? null : (
                     <div
                       key={f.field_key}
-                      className={`field-view${canEditField(f) ? " editable" : ""}`}
+                      className={`field-view field-${f.field_key}${canEditField(f) ? " editable" : ""}`}
                       title={canEditField(f) ? "לחיצה לעריכה" : undefined}
                       tabIndex={canEditField(f) ? 0 : undefined}
                       onClick={canEditField(f) ? () => startEdit(f.field_key) : undefined}
