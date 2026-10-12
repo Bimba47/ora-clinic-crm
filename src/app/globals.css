@@ -161,6 +161,12 @@ body {
 .btn:hover:not(:disabled) { box-shadow: var(--shadow); }
 .btn.primary { background: var(--primary); }
 .btn.on { background: var(--primary); }
+/* פעולה ראשית של המסך (אחת בכל מסך): הכפתור המלא והבולט ביותר */
+.btn.cta { min-height: 44px; padding: 0 24px; font-size: 14px; box-shadow: var(--shadow); }
+/* כלי טבלה ומצבים: רקע לבן עם מסגרת דקה, כדי שלא יתחרו בפעולה הראשית */
+.btn.outline { background: var(--card); border: 1px solid var(--line); }
+.btn.outline.on { background: var(--soft); border-color: var(--soft); }
+.btn.outline.danger { color: var(--err); }
 .btn.block { width: 100%; }
 .btn:disabled, button:disabled { opacity: 0.5; cursor: default; }
 .link-btn { border: 0; background: none; color: var(--link); font: inherit; font-size: 12px; cursor: pointer; padding: 8px; min-height: 44px; }
@@ -197,11 +203,22 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 /* ===== מנוע התצוגות ===== */
 .views-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .views-head .page-title { margin: 0; }
-.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
-.toolbar select { min-width: 180px; }
-.search.small { max-width: 240px; height: 40px; }
-.search.small input { min-height: 0; border: 0; padding: 0; }
-.search.small input:focus { border: 0; }
+/* שורת התצוגה: בחירת תצוגה + תפריט הפעולות שלה כקבוצה אחת, לצד רשימה/קאנבן */
+.view-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+.btn-group { display: inline-flex; align-items: center; gap: 2px; padding: 2px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; }
+.btn-group select { min-height: 36px; min-width: 180px; border: 0; border-radius: 999px; background: transparent; font-weight: 600; font-size: 12px; cursor: pointer; }
+.btn-group select:focus { border: 0; outline: 2px solid var(--bronze); outline-offset: 0; }
+.group-btn { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; color: var(--bronze); font-size: 18px; line-height: 1; cursor: pointer; list-style: none; }
+.group-btn::-webkit-details-marker { display: none; }
+.group-btn:hover { background: var(--soft); }
+.kanban-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.kanban-pick select { min-height: 36px; font-size: 12px; }
+
+/* שורת הטבלה: חיפוש מימין, כלים משמאל. כשיש בחירה היא הופכת לשורת פעולות על הנבחרות */
+.table-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 8px; padding: 8px 8px 8px 16px; background: var(--card); border-radius: 999px; box-shadow: var(--shadow); }
+.table-bar.bulk { background: var(--soft); padding-inline-start: 24px; }
+.table-bar .search { flex: 1 1 220px; max-width: 360px; height: 40px; border: 0; padding: 0 8px; }
+.table-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .segmented { display: inline-flex; background: var(--card); border-radius: 999px; padding: 4px; box-shadow: var(--shadow); }
 .segmented button { border: 0; background: none; font: inherit; font-size: 12px; font-weight: 600; min-height: 32px; padding: 0 14px; border-radius: 999px; color: var(--muted); cursor: pointer; }
 .segmented button.on { background: var(--primary); color: var(--text); }
@@ -225,7 +242,6 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .col-move { display: flex; }
 .col-move .icon-btn { width: 36px; height: 36px; margin: 0; }
 
-.bulk-bar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; margin-bottom: 16px; border-radius: 999px; background: var(--soft); }
 
 .list-card { padding: 8px 0 0; overflow: hidden; }
 .table-scroll { overflow-x: auto; }
@@ -281,7 +297,6 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .tag-closed, .tag-done { background: var(--ok); color: #FFFFFF; }
 .tag-cancelled { background: var(--placeholder); color: #FFFFFF; }
 
-.kanban-pick { margin-bottom: 16px; font-size: 12px; color: var(--muted); }
 .kanban { display: flex; gap: 16px; align-items: flex-start; overflow-x: auto; padding-bottom: 8px; }
 .lane { flex: 0 0 280px; background: var(--card); border-radius: 24px; box-shadow: var(--shadow); padding: 16px; transition: box-shadow 150ms; }
 .lane.over { box-shadow: 0 0 0 2px var(--bronze), var(--shadow-hover); }
@@ -324,8 +339,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
   .sidebar { display: none; }
   .banner { margin: 0 16px 16px; }
   .views-head { flex-wrap: wrap; }
-  .toolbar > * { flex: 1 1 auto; }
-  .search.small { max-width: none; }
+  .table-bar { border-radius: 24px; padding: 8px; }
+  .table-bar .search { max-width: none; flex-basis: 100%; }
   .record-form { grid-template-columns: 1fr; }
   .toasts { inset-inline: 16px; bottom: 96px; }
 

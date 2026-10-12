@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import Modal, { Confirm } from "@/components/Modal";
+import Icon from "@/components/Icon";
 import {
   type Catalog, type FieldMeta, type Row, type ViewRow, type ViewState,
   createView, deleteRecords, deleteView, errorText, loadCatalog, loadViewState, loadViews,
@@ -216,11 +217,13 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
     setRefreshKey((k) => k + 1);
   };
 
-  // ייצוא התוצאות הנוכחיות (כל העמודים, אחרי סינון וחיפוש) לקובץ CSV שנפתח באקסל
-  const doExport = async () => {
+  // ייצוא התוצאות הנוכחיות (כל העמודים, אחרי סינון וחיפוש) לקובץ CSV שנפתח באקסל.
+  // כשמועברות שורות מסומנות, מיוצאות רק הן.
+  const doExport = async (only?: Set<string>) => {
     if (!state || !obj) return;
     try {
-      const { rows } = await runView(objectKey, state, { search: debounced, limit: 5000 });
+      const all = (await runView(objectKey, state, { search: debounced, limit: 5000 })).rows;
+      const rows = only ? all.filter((r) => only.has(r.id)) : all;
       const cols = state.columns.filter((c) => c.visible).map((c) => fieldByKey.get(c.field)).filter(Boolean) as FieldMeta[];
       const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
       const lines = [cols.map((f) => esc(f.label)).join(","), ...rows.map((r) => cols.map((f) => esc(formatValue(f, r))).join(","))];
@@ -259,16 +262,15 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
       <div className="views-head">
         <h1 className="page-title">{obj.label_plural}</h1>
         {obj.can_create && (
-          <button type="button" className="btn primary" onClick={() => setDialog({ kind: "create-record" })}>
+          <button type="button" className="btn primary cta" onClick={() => setDialog({ kind: "create-record" })}>
             + הוספת {obj.label}
           </button>
         )}
       </div>
 
-      {/* שורת התצוגות */}
-      <div className="toolbar">
-        <label className="select-wrap">
-          <span className="sr-only">תצוגה</span>
+      {/* שורת התצוגה: איזו תצוגה ואיך מוצג המידע */}
+      <div className="view-bar">
+        <div className="btn-group" role="group" aria-label="תצוגה">
           <select value={view.id} onChange={(e) => setViewId(e.target.value)} aria-label="בחירת תצוגה">
             {views.map((v) => (
               <option key={v.id} value={v.id}>
@@ -277,28 +279,28 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
               </option>
             ))}
           </select>
-        </label>
-        <details className="menu">
-          <summary className="btn">פעולות תצוגה</summary>
-          <div className="menu-list" onClick={(e) => (e.currentTarget.parentElement as HTMLDetailsElement).removeAttribute("open")}>
-            <button type="button" onClick={() => setDialog({ kind: "new" })}>תצוגה חדשה</button>
-            <button type="button" onClick={() => setDialog({ kind: "duplicate" })}>שכפול התצוגה</button>
-            <button type="button" disabled={!canEditView} onClick={() => setDialog({ kind: "rename" })}>שינוי שם</button>
-            {canEditView && !view.is_default && (
-              <button type="button" onClick={() => run(() => setViewShared(view.id, !view.is_shared), view.is_shared ? "התצוגה פרטית עכשיו" : "התצוגה משותפת לכולן", view.id)}>
-                {view.is_shared ? "הפיכה לפרטית" : "שיתוף עם כל הצוות"}
+          <details className="menu">
+            <summary className="group-btn" aria-label="פעולות תצוגה" title="פעולות תצוגה">⋯</summary>
+            <div className="menu-list" onClick={(e) => (e.currentTarget.parentElement as HTMLDetailsElement).removeAttribute("open")}>
+              <button type="button" onClick={() => setDialog({ kind: "new" })}>תצוגה חדשה</button>
+              <button type="button" onClick={() => setDialog({ kind: "duplicate" })}>שכפול התצוגה</button>
+              <button type="button" disabled={!canEditView} onClick={() => setDialog({ kind: "rename" })}>שינוי שם</button>
+              {canEditView && !view.is_default && (
+                <button type="button" onClick={() => run(() => setViewShared(view.id, !view.is_shared), view.is_shared ? "התצוגה פרטית עכשיו" : "התצוגה משותפת לכולן", view.id)}>
+                  {view.is_shared ? "הפיכה לפרטית" : "שיתוף עם כל הצוות"}
+                </button>
+              )}
+              {isManager && !view.is_default && (
+                <button type="button" onClick={() => run(() => setDefaultView(view.id), "נקבעה תצוגת ברירת מחדל", view.id)}>
+                  קביעה כברירת מחדל
+                </button>
+              )}
+              <button type="button" className="danger" disabled={!canEditView || view.is_default} onClick={() => setDialog({ kind: "delete-view" })}>
+                מחיקת התצוגה
               </button>
-            )}
-            {isManager && !view.is_default && (
-              <button type="button" onClick={() => run(() => setDefaultView(view.id), "נקבעה תצוגת ברירת מחדל", view.id)}>
-                קביעה כברירת מחדל
-              </button>
-            )}
-            <button type="button" className="danger" disabled={!canEditView || view.is_default} onClick={() => setDialog({ kind: "delete-view" })}>
-              מחיקת התצוגה
-            </button>
-          </div>
-        </details>
+            </div>
+          </details>
+        </div>
 
         <div className="segmented" role="tablist" aria-label="סוג תצוגה">
           {(["list", "kanban"] as const).map((t) => (
@@ -322,46 +324,52 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
           ))}
         </div>
 
-        <label className="search small">
-          <span className="sr-only">חיפוש</span>
-          <input type="search" placeholder="חיפוש חופשי" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </label>
-
-        <button type="button" className={`btn${panel === "filters" ? " on" : ""}`} onClick={() => setPanel(panel === "filters" ? null : "filters")}>
-          סינון{activeFilters ? ` (${activeFilters})` : ""}
-        </button>
-        <button type="button" className={`btn${panel === "columns" ? " on" : ""}`} onClick={() => setPanel(panel === "columns" ? null : "columns")}>
-          עמודות
-        </button>
-        <button type="button" className="btn" onClick={doExport}>ייצוא</button>
-      </div>
-
-      {panel === "filters" && <FilterPanel fields={fields} catalog={catalog} state={state} onChange={(p) => update(p, { debounce: true })} />}
-      {panel === "columns" && <ColumnsPanel fields={fields} state={state} onChange={(p) => update(p)} />}
-
-      {state.view_type === "kanban" && (
-        <div className="kanban-pick">
-          <label>
-            קיבוץ לפי{" "}
+        {state.view_type === "kanban" && (
+          <label className="kanban-pick">
+            קיבוץ לפי
             <select value={state.kanban_field ?? ""} onChange={(e) => update({ kanban_field: e.target.value })}>
               {choiceFields.map((f) => (
                 <option key={f.field_key} value={f.field_key}>{f.label}</option>
               ))}
             </select>
           </label>
+        )}
+      </div>
+
+      {/* שורת הטבלה: חיפוש וכלים. כשיש שורות מסומנות היא מתחלפת בפעולות על הנבחרות */}
+      {selected.size > 0 && state.view_type === "list" ? (
+        <div className="table-bar bulk" role="region" aria-label="פעולות על הנבחרות">
+          <strong>נבחרו {selected.size}</strong>
+          <div className="table-tools">
+            {bulkFields.length > 0 && (
+              <button type="button" className="btn outline" onClick={() => setDialog({ kind: "bulk-set" })}>שינוי ערך</button>
+            )}
+            <button type="button" className="btn outline" onClick={() => doExport(selected)}>ייצוא הנבחרות</button>
+            <button type="button" className="btn outline danger" onClick={() => setDialog({ kind: "delete-rows" })}>מחיקה</button>
+            <button type="button" className="link-btn" onClick={() => setSelected(new Set())}>ניקוי הבחירה</button>
+          </div>
+        </div>
+      ) : (
+        <div className="table-bar">
+          <label className="search">
+            <Icon name="search" />
+            <span className="sr-only">חיפוש</span>
+            <input type="search" placeholder={`חיפוש ב${obj.label_plural}`} value={search} onChange={(e) => setSearch(e.target.value)} />
+          </label>
+          <div className="table-tools">
+            <button type="button" className={`btn outline${panel === "filters" || activeFilters ? " on" : ""}`} aria-pressed={panel === "filters"} onClick={() => setPanel(panel === "filters" ? null : "filters")}>
+              סינון{activeFilters ? ` (${activeFilters})` : ""}
+            </button>
+            <button type="button" className={`btn outline${panel === "columns" ? " on" : ""}`} aria-pressed={panel === "columns"} onClick={() => setPanel(panel === "columns" ? null : "columns")}>
+              עמודות
+            </button>
+            <button type="button" className="btn outline" onClick={() => doExport()}>ייצוא</button>
+          </div>
         </div>
       )}
 
-      {selected.size > 0 && state.view_type === "list" && (
-        <div className="bulk-bar" role="region" aria-label="פעולות על הנבחרות">
-          <strong>נבחרו {selected.size}</strong>
-          {bulkFields.length > 0 && (
-            <button type="button" className="btn" onClick={() => setDialog({ kind: "bulk-set" })}>שינוי ערך</button>
-          )}
-          <button type="button" className="btn" onClick={() => setDialog({ kind: "delete-rows" })}>מחיקה</button>
-          <button type="button" className="link-btn" onClick={() => setSelected(new Set())}>ניקוי הבחירה</button>
-        </div>
-      )}
+      {panel === "filters" && <FilterPanel fields={fields} catalog={catalog} state={state} onChange={(p) => update(p, { debounce: true })} />}
+      {panel === "columns" && <ColumnsPanel fields={fields} state={state} onChange={(p) => update(p)} />}
 
       {state.view_type === "list" ? (
         <ListView
