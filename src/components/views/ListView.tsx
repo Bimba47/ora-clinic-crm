@@ -146,7 +146,7 @@ export default function ListView({
                           {href ? (
                             <Link href={href} className="ref-link" onClick={(e) => e.stopPropagation()}>{text}</Link>
                           ) : f.field_type === "choice" || f.field_type === "boolean" ? (
-                            text && <span className={`tag tag-${String(r[f.field_key])}`}>{text}</span>
+                            text && <span className={`tag tag-${String(r[f.field_key])} tag-${f.field_key}-${String(r[f.field_key])}`}>{text}</span>
                           ) : (
                             <span dir={isLtr(f) ? "ltr" : undefined}>{text}</span>
                           )}

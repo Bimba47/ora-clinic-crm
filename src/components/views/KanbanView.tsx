@@ -97,7 +97,7 @@ export default function KanbanView({
             }}
           >
             <header className="lane-head">
-              <span className={`tag tag-${lane.value}`}>{lane.label}</span>
+              <span className={`tag tag-${lane.value} tag-${group.field_key}-${lane.value}`}>{lane.label}</span>
               <span className="count">{counts[lane.value] ?? 0}</span>
             </header>
             <div className="lane-body">

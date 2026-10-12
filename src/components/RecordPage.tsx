@@ -263,7 +263,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       const href = linkHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, raw, isManager);
       return href ? <Link href={href} className="ref-link" onClick={stop}>{text}</Link> : text;
     }
-    if (f.field_type === "choice" || f.field_type === "boolean") return <span className={`tag tag-${String(raw)}`}>{text}</span>;
+    if (f.field_type === "choice" || f.field_type === "boolean") return <span className={`tag tag-${String(raw)} tag-${f.field_key}-${String(raw)}`}>{text}</span>;
     if (f.field_type === "phone") return <a href={`tel:${raw}`} dir="ltr" className="ref-link" onClick={stop}>{text}</a>;
     if (f.field_type === "email") return <a href={`mailto:${raw}`} dir="ltr" className="ref-link" onClick={stop}>{text}</a>;
     if (f.field_type === "long_text") return <span className="long-text">{text}</span>;

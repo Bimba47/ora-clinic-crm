@@ -298,6 +298,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .tag-in_progress { background: var(--tan); color: var(--text); }
 .tag-closed, .tag-done { background: var(--ok); color: #FFFFFF; }
 .tag-cancelled { background: var(--placeholder); color: #FFFFFF; }
+/* התראה שלא נקראה: בולטת, באותו צבע של מונה הפעמון. (המחלקה כוללת את שם השדה, כדי לא לשנות "מושבתת" או "לא פעיל") */
+.tag-is_read-false { background: var(--err); color: #FFFFFF; font-weight: 700; }
 
 .kanban { display: flex; gap: 16px; align-items: flex-start; overflow-x: auto; padding-bottom: 8px; }
 .lane { flex: 0 0 280px; background: var(--card); border-radius: 24px; box-shadow: var(--shadow); padding: 16px; transition: box-shadow 150ms; }
