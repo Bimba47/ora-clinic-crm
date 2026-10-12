@@ -524,7 +524,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
               <div className="group-fields">
                 {gf.map((f) =>
                   editing && f.is_editable ? (
-                    <label key={f.field_key} className="field" htmlFor={`rp-${f.field_key}`}>
+                    <label key={f.field_key} className={`field${errors[f.field_key] ? " has-error" : ""}`} htmlFor={`rp-${f.field_key}`}>
                       <span>
                         {f.label}
                         {f.is_required && <span aria-hidden="true"> *</span>}
