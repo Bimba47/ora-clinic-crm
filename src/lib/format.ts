@@ -15,6 +15,19 @@ export function formatPhone(p: string) {
   return p;
 }
 
+export function formatDateTime(v: string) {
+  return dateTimeFmt.format(new Date(v));
+}
+
+export function formatMoney(v: unknown) {
+  return moneyFmt.format(Number(v));
+}
+
+// קישור לשיחת וואטסאפ: 0541234567 -> https://wa.me/972541234567
+export function whatsappHref(phone: string) {
+  return `https://wa.me/972${phone.replace(/\D/g, "").replace(/^0/, "")}`;
+}
+
 export function choiceLabel(field: FieldMeta, value: unknown) {
   if (value === null || value === undefined) return "";
   return field.options?.find((o) => o.value === String(value))?.label ?? String(value);

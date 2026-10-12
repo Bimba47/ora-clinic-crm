@@ -1,8 +1,10 @@
 "use client";
 // תצוגת קאנבן: עמודה לכל ערך של שדה הבחירה, מונה בכל עמודה, וגרירת כרטיס שמעדכנת את השדה.
+// לחיצה על כרטיס פותחת את הרשומה (כרטיס לקוח או חלון עריכה), ושם לקוחה מקשר לכרטיס שלה.
 // העדכון מופיע מיד, וחוזר אחורה עם הודעה אם המסד דחה אותו (למשל "בטיפול" בלי אחראית).
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useToast } from "@/components/Toast";
 import type { FieldMeta, Row, ViewState } from "@/lib/views";
 import { errorText, runView, runViewGroups, updateRecords } from "@/lib/views";
@@ -11,13 +13,15 @@ import { formatValue, isLtr } from "@/lib/format";
 const MAX_CARDS = 500;
 
 export default function KanbanView({
-  objectKey, fields, state, search, refreshKey,
+  objectKey, fields, state, search, refreshKey, onOpen, refHref,
 }: {
   objectKey: string;
   fields: FieldMeta[];
   state: ViewState;
   search: string;
   refreshKey: number;
+  onOpen: (row: Row) => void;
+  refHref: (field: FieldMeta, row: Row) => string | null;
 }) {
   const toast = useToast();
   const byKey = new Map(fields.map((f) => [f.field_key, f]));
@@ -101,25 +105,34 @@ export default function KanbanView({
               {items.map((r) => (
                 <article
                   key={r.id}
-                  className="kcard"
+                  className="kcard row-link"
                   draggable
+                  tabIndex={0}
+                  onClick={() => onOpen(r)}
+                  onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && onOpen(r)}
                   onDragStart={(e) => e.dataTransfer.setData("text/plain", r.id)}
                 >
                   {cols.map((c, i) => {
                     const f = byKey.get(c.field)!;
                     const text = formatValue(f, r);
                     if (!text) return null;
+                    const href = refHref(f, r);
+                    const value = href ? (
+                      <Link href={href} className="ref-link" onClick={(e) => e.stopPropagation()}>{text}</Link>
+                    ) : (
+                      <span dir={isLtr(f) ? "ltr" : undefined}>{text}</span>
+                    );
                     return i === 0 ? (
-                      <strong key={c.field} className="kcard-title">{text}</strong>
+                      <strong key={c.field} className="kcard-title">{value}</strong>
                     ) : (
                       <div key={c.field} className="kcard-line">
                         <span className="muted">{f.label}: </span>
-                        <span dir={isLtr(f) ? "ltr" : undefined}>{text}</span>
+                        {value}
                       </div>
                     );
                   })}
                   {/* בנייד ובמקלדת: העברה בלי גרירה */}
-                  <label className="kcard-move">
+                  <label className="kcard-move" onClick={(e) => e.stopPropagation()}>
                     <span className="sr-only">העברה ל</span>
                     <select value={lane.value} onChange={(e) => move(r.id, e.target.value)} aria-label="העברה לעמודה">
                       {(group.options ?? []).map((o) => (

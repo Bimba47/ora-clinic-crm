@@ -3,13 +3,14 @@
 // ונשמרות אליו. אין כאן אף תצוגה ספציפית: המסך יודע רק את המפתח של האובייקט.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import Modal, { Confirm } from "@/components/Modal";
 import Icon from "@/components/Icon";
 import {
   type Catalog, type FieldMeta, type Row, type ViewRow, type ViewState,
-  createView, deleteRecords, deleteView, errorText, loadCatalog, loadViewState, loadViews,
+  cardHref, createView, deleteRecords, deleteView, errorText, loadCatalog, loadViewState, loadViews,
   renameView, runView, saveViewState, setDefaultView, setViewShared, updateRecords,
 } from "@/lib/views";
 import { formatValue } from "@/lib/format";
@@ -69,6 +70,19 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
   const fieldByKey = useMemo(() => new Map(fields.map((f) => [f.field_key, f])), [fields]);
   const view = views.find((v) => v.id === viewId) ?? null;
   const canEditView = !!view && (isManager || view.owner_id === userId);
+  const router = useRouter();
+
+  // לחיצה על רשומה: לאובייקט עם כרטיס (לקוחה) עוברים לכרטיס, לשאר נפתח חלון עריכה
+  const openRow = (row: Row) => {
+    const href = cardHref(objectKey, row.id);
+    if (href) router.push(href);
+    else setDialog({ kind: "edit-record", row });
+  };
+  // שדה שמקשר לאובייקט עם כרטיס (למשל "לקוחה" בתור או בקריאה) מוצג כקישור לכרטיס
+  const refHref = (f: FieldMeta, row: Row) =>
+    f.field_type === "reference"
+      ? cardHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, row[f.field_key])
+      : null;
 
   // ===== טעינה =====
   useEffect(() => {
@@ -383,7 +397,8 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
           selected={selected}
           onSelect={setSelected}
           onChange={update}
-          onOpen={(row) => setDialog({ kind: "edit-record", row })}
+          onOpen={openRow}
+          refHref={refHref}
           emptyAction={obj.can_create ? () => setDialog({ kind: "create-record" }) : undefined}
           emptyLabel={obj.label}
         />
@@ -394,6 +409,8 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
           state={state}
           search={debounced}
           refreshKey={refreshKey}
+          onOpen={openRow}
+          refHref={refHref}
         />
       )}
 

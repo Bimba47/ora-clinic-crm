@@ -3,6 +3,7 @@
 // לחיצה על שורה לעריכה, בחירה מרובה בתיבות סימון, מונה תוצאות ועימוד. בנייד השורות הופכות לכרטיסים.
 
 import { useRef } from "react";
+import Link from "next/link";
 import type { FieldMeta, Row, ViewState } from "@/lib/views";
 import { formatValue, isLtr } from "@/lib/format";
 
@@ -18,12 +19,13 @@ type Props = {
   onSelect: (s: Set<string>) => void;
   onChange: (patch: Partial<ViewState>, opts?: { debounce?: boolean }) => void;
   onOpen: (row: Row) => void;
+  refHref: (field: FieldMeta, row: Row) => string | null;
   emptyAction?: () => void;
   emptyLabel: string;
 };
 
 export default function ListView({
-  fields, state, data, loading, page, pageSize, onPage, selected, onSelect, onChange, onOpen, emptyAction, emptyLabel,
+  fields, state, data, loading, page, pageSize, onPage, selected, onSelect, onChange, onOpen, refHref, emptyAction, emptyLabel,
 }: Props) {
   const byKey = new Map(fields.map((f) => [f.field_key, f]));
   const cols = state.columns.filter((c) => c.visible && byKey.has(c.field));
@@ -135,9 +137,12 @@ export default function ListView({
                     {cols.map((c) => {
                       const f = byKey.get(c.field)!;
                       const text = formatValue(f, r);
+                      const href = text ? refHref(f, r) : null;
                       return (
                         <td key={c.field} data-label={f.label} title={text}>
-                          {f.field_type === "choice" || f.field_type === "boolean" ? (
+                          {href ? (
+                            <Link href={href} className="ref-link" onClick={(e) => e.stopPropagation()}>{text}</Link>
+                          ) : f.field_type === "choice" || f.field_type === "boolean" ? (
                             text && <span className={`tag tag-${String(r[f.field_key])}`}>{text}</span>
                           ) : (
                             <span dir={isLtr(f) ? "ltr" : undefined}>{text}</span>

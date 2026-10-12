@@ -11,6 +11,13 @@ import { createRecord, errorText, loadRecord, updateRecords } from "@/lib/views"
 import { formatValue } from "@/lib/format";
 import { ValueInput } from "./FilterPanel";
 
+// הודעות השמירה מהאפיון
+const CREATED_TOAST: Record<string, string> = {
+  clients: "הלקוחה נשמרה",
+  appointments: "התור נקבע",
+  service_requests: "הקריאה נפתחה",
+};
+
 function toValue(f: FieldMeta, v: string): unknown {
   if (v === "") return null;
   switch (f.field_type) {
@@ -37,12 +44,13 @@ function toInput(f: FieldMeta, v: unknown): string {
 }
 
 export default function RecordForm({
-  obj, fields, catalog, row, onClose, onSaved,
+  obj, fields, catalog, row, initial: preset, onClose, onSaved,
 }: {
   obj: ObjectMeta;
   fields: FieldMeta[];
   catalog: Catalog;
   row?: Row; // בעריכה: השורה מהרשימה
+  initial?: Record<string, string>; // ביצירה: ערכים שכבר ידועים, למשל הלקוחה כשפותחים תור מהכרטיס שלה
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -50,7 +58,10 @@ export default function RecordForm({
   const editing = !!row;
   const editable = fields.filter((f) => f.is_editable);
   const readOnly = editing ? fields.filter((f) => !f.is_editable && formatValue(f, row)) : [];
-  const empty = () => Object.fromEntries(editable.map((f) => [f.field_key, f.field_type === "boolean" && !editing ? "true" : ""]));
+  const empty = () => ({
+    ...Object.fromEntries(editable.map((f) => [f.field_key, f.field_type === "boolean" && !editing ? "true" : ""])),
+    ...(editing ? {} : preset),
+  });
   const [initial, setInitial] = useState<Record<string, string> | null>(editing ? null : empty);
   const [values, setValues] = useState<Record<string, string>>(empty);
   const [error, setError] = useState("");
@@ -102,7 +113,7 @@ export default function RecordForm({
           editable.filter((f) => values[f.field_key] !== "").map((f) => [f.field_key, toValue(f, values[f.field_key])]),
         );
         await createRecord(obj.object_key, payload);
-        toast("הרשומה נשמרה");
+        toast(CREATED_TOAST[obj.object_key] ?? "הרשומה נשמרה");
       }
       onSaved();
     } catch (err) {

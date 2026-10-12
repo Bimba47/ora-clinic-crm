@@ -313,7 +313,45 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 /* ===== נייד: סרגל תחתון במקום תפריט צד ===== */
 .bottom-nav { display: none; }
 
+.kcard:hover { box-shadow: var(--shadow); }
+.kcard:focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
+
+/* קישור לכרטיס (שם לקוחה בתור, בקריאה ובקאנבן) */
+.ref-link { color: var(--link); text-decoration: none; font-weight: 600; }
+.ref-link:hover { text-decoration: underline; }
+
+/* ===== כרטיס לקוח ===== */
+.back-link { display: inline-block; margin-bottom: 8px; font-size: 12px; color: var(--link); text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+.head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.card-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
+.section-title { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+.details { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px 24px; margin: 0; }
+.details dt { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.details dd { margin: 0; font-size: 14px; }
+.details a { color: var(--link); text-decoration: none; }
+.next-appt { background: var(--soft); }
+.next-appt.none { background: var(--card); }
+.next-body { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: var(--text); text-align: start; cursor: pointer; }
+.kpi { font-size: 28px; font-weight: 700; line-height: 1.2; }
+.tabs-card { padding: 16px 24px 8px; }
+.tabs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.history { list-style: none; margin: 0; padding: 0; }
+.history li { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 8px 12px; border-bottom: 1px solid var(--line); border-radius: 16px; cursor: pointer; }
+.history li:last-child { border-bottom: 0; }
+.history li:hover { background: var(--bg); }
+.history li:focus-visible { outline: 2px solid var(--bronze); outline-offset: -2px; }
+.history li.is-next { background: var(--soft); }
+.history-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.history-main strong { font-size: 14px; }
+.overdue { color: var(--err); font-size: 12px; font-weight: 600; }
+/* סטטוס שאפשר לשנות: נראה כמו תגית */
+.status-select { appearance: none; -webkit-appearance: none; border: 0 !important; min-height: 32px; height: 32px; padding: 0 16px; text-align: center; text-align-last: center; cursor: pointer; flex-shrink: 0; }
+.status-select:focus { outline: 2px solid var(--bronze); outline-offset: 2px; }
+
 @media (max-width: 767px) {
+  .card-grid { grid-template-columns: 1fr; gap: 16px; }
+  .history li { align-items: flex-start; }
   .sidebar { display: none; }
   .topbar { padding: 12px 16px; }
   .content { padding: 8px 16px 96px; }
