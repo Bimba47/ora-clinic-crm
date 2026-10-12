@@ -238,6 +238,23 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .data-table tbody tr.row-link:focus-visible { outline: 2px solid var(--bronze); outline-offset: -2px; }
 .data-table .check-col { cursor: default; }
 
+/* שדה בחירה עם חיפוש (רשומה מקושרת) */
+.combo { position: relative; }
+.combo input { width: 100%; }
+.combo-list {
+  position: absolute; z-index: 50; top: calc(100% + 4px); inset-inline: 0;
+  max-height: 240px; overflow-y: auto; margin: 0; padding: 4px; list-style: none;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-hover);
+}
+.combo-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 44px; padding: 0 12px; border-radius: 12px; cursor: pointer; font-size: 14px;
+}
+.combo-list li.active { background: var(--soft); }
+.combo-list li[aria-selected="true"] { font-weight: 600; }
+.combo-list li[aria-disabled="true"] { opacity: 0.5; cursor: default; }
+.combo-list .combo-empty { color: var(--muted); cursor: default; }
+
 /* שדות לקריאה בלבד בחלון העריכה (נוצרה, נוצרה על ידי וכו') */
 .record-meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; font-size: 12px; }
 .record-meta dt { color: var(--muted); }

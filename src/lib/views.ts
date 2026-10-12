@@ -238,16 +238,21 @@ export async function runViewGroups(objectKey: string, state: ViewState, groupFi
 }
 
 // ===== רשומות =====
+// כל שינוי ברשומות מנקה את רשימת האפשרויות של האובייקט בשדות מקושרים,
+// כדי שלקוחה חדשה (או שם שהשתנה) תופיע מיד בבחירה.
+
 // שינוי שדה בכמה רשומות. מחזיר כמה רשומות באמת השתנו (RLS יכול לחסום חלק).
 export async function updateRecords(objectKey: string, ids: string[], values: Record<string, unknown>) {
   const { data, error } = await supabase.from(objectKey).update(values).in("id", ids).select("id");
   if (error) throw error;
+  refCache.delete(objectKey);
   return data.length;
 }
 
 export async function deleteRecords(objectKey: string, ids: string[]) {
   const { data, error } = await supabase.from(objectKey).delete().in("id", ids).select("id");
   if (error) throw error;
+  refCache.delete(objectKey);
   return data.length;
 }
 
@@ -261,18 +266,35 @@ export async function loadRecord(objectKey: string, id: string, columns: string[
 export async function createRecord(objectKey: string, values: Record<string, unknown>) {
   const { error } = await supabase.from(objectKey).insert(values);
   if (error) throw error;
+  refCache.delete(objectKey);
 }
 
 // אפשרויות לשדה מקושר: מזהה + שם הרשומה. רשומה לא פעילה מסומנת.
-export async function loadRefOptions(refObject: ObjectMeta, hasIsActive: boolean) {
-  const cols = ["id", refObject.display_field, ...(hasIsActive ? ["is_active"] : [])].join(", ");
-  const { data, error } = await supabase.from(refObject.object_key).select(cols).order(refObject.display_field).limit(1000);
-  if (error) throw error;
-  return (data as unknown as Record<string, unknown>[]).map((r) => ({
-    value: String(r.id),
-    label: String(r[refObject.display_field] ?? ""),
-    inactive: hasIsActive && r.is_active === false,
-  }));
+// אם לאובייקט יש שדה טלפון (למשל לקוחה), הטלפון נטען כדי לחפש ולהציג גם לפיו.
+export type RefOption = { value: string; label: string; inactive: boolean; phone: string | null };
+
+const refCache = new Map<string, Promise<RefOption[]>>();
+
+export function loadRefOptions(refObject: ObjectMeta, catalog: Catalog): Promise<RefOption[]> {
+  const cached = refCache.get(refObject.object_key);
+  if (cached) return cached;
+  const own = catalog.fields.filter((f) => f.object_id === refObject.id);
+  const hasIsActive = own.some((f) => f.field_key === "is_active");
+  const phoneKey = own.find((f) => f.field_type === "phone")?.field_key;
+  const cols = ["id", refObject.display_field, ...(hasIsActive ? ["is_active"] : []), ...(phoneKey ? [phoneKey] : [])].join(", ");
+  const p = (async () => {
+    const { data, error } = await supabase.from(refObject.object_key).select(cols).order(refObject.display_field).limit(1000);
+    if (error) throw error;
+    return (data as unknown as Record<string, unknown>[]).map((r) => ({
+      value: String(r.id),
+      label: String(r[refObject.display_field] ?? ""),
+      inactive: hasIsActive && r.is_active === false,
+      phone: phoneKey && r[phoneKey] ? String(r[phoneKey]) : null,
+    }));
+  })();
+  p.catch(() => refCache.delete(refObject.object_key));
+  refCache.set(refObject.object_key, p);
+  return p;
 }
 
 // הודעת שגיאה קריאה מתוך שגיאה של Supabase / Postgres

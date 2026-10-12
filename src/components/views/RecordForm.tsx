@@ -68,6 +68,20 @@ export default function RecordForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row?.id]);
 
+  // בחירה בשדה מקושר מעתיקה מהרשומה שנבחרה שדות עם אותו שם שיש גם בטופס.
+  // למשל בתור: בחירת טיפול ממלאת את המחיר והמשך מהמחירון. אפשר עדיין לשנות אותם ידנית.
+  const setRef = (f: FieldMeta, v: string) => {
+    setValues((prev) => ({ ...prev, [f.field_key]: v }));
+    const refObj = catalog.objects.find((o) => o.id === f.ref_object_id);
+    if (!v || !refObj) return;
+    const refKeys = new Set(catalog.fields.filter((x) => x.object_id === refObj.id).map((x) => x.field_key));
+    const copy = editable.filter((x) => x.field_type !== "reference" && refKeys.has(x.field_key));
+    if (copy.length === 0) return;
+    loadRecord(refObj.object_key, v, copy.map((x) => x.field_key))
+      .then((rec) => setValues((prev) => ({ ...prev, ...Object.fromEntries(copy.map((x) => [x.field_key, toInput(x, rec[x.field_key])])) })))
+      .catch((e) => setError(errorText(e)));
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!initial) return;
@@ -143,7 +157,7 @@ export default function RecordForm({
                     catalog={catalog}
                     required={f.is_required}
                     value={values[f.field_key]}
-                    onChange={(v) => setValues({ ...values, [f.field_key]: v })}
+                    onChange={(v) => (f.field_type === "reference" ? setRef(f, v) : setValues({ ...values, [f.field_key]: v }))}
                   />
                 )}
               </label>
