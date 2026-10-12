@@ -25,7 +25,7 @@ type Rec = Record<string, unknown> & { id: string };
 type Dialog =
   | { kind: "delete" }
   | { kind: "blocked"; text: string }
-  | { kind: "child"; child: ChildDef }
+  | { kind: "child"; child: ChildDef; rowId?: string } // הוספה, או עריכה של רשומה בת בלי לצאת מהמסך
   | null;
 
 const LEAVE_MSG = "יש שינויים שלא נשמרו. לצאת בלי לשמור?";
@@ -614,7 +614,8 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
             textOf={textOf}
             canEdit={RECORDS[activeChild.object]?.editRole === "all" || isManager}
             onStatus={(rowId, v) => changeChildStatus(`${activeChild.object}:${activeChild.fk}`, activeChild, rowId, v)}
-            onOpen={(rowId) => {
+            onEdit={(rowId) => setDialog({ kind: "child", child: activeChild, rowId })}
+            onOpenFull={(rowId) => {
               const rows = childRows(activeChild.object, activeChild.fk);
               saveNav(activeChild.object, { ids: rows.map((r) => r.id), backHref: `${cfg.route}${id}`, backLabel: title });
               leave(() => router.push(recordHref(activeChild.object, rowId)!));
@@ -652,10 +653,12 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       )}
       {dialog?.kind === "child" && (
         <RecordForm
+          key={dialog.rowId ?? "new"}
           obj={childMeta(dialog.child.object).obj}
           fields={childMeta(dialog.child.object).fields}
           catalog={catalog}
-          initial={{ [dialog.child.fk]: id }}
+          row={dialog.rowId ? ({ id: dialog.rowId } as Row) : undefined}
+          initial={dialog.rowId ? undefined : { [dialog.child.fk]: id }}
           onClose={() => setDialog(null)}
           onSaved={() => {
             setDialog(null);
@@ -667,9 +670,10 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   );
 }
 
-// רשימת הרשומות המקושרות בלשונית: לחיצה פותחת את הרשומה, והסטטוס משתנה במקום
+// רשימת הרשומות המקושרות בלשונית: לחיצה פותחת עריכה בחלון (בלי לצאת מהמסך), הסטטוס משתנה במקום,
+// ו"למסך המלא" עובר למסך הרשומה הבת
 function ChildList({
-  rows, child, fields, textOf, canEdit, onStatus, onOpen,
+  rows, child, fields, textOf, canEdit, onStatus, onEdit, onOpenFull,
 }: {
   rows: Rec[];
   child: ChildDef;
@@ -677,15 +681,17 @@ function ChildList({
   textOf: (f: FieldMeta, r: Rec) => string;
   canEdit: boolean;
   onStatus: (rowId: string, v: string) => void;
-  onOpen: (rowId: string) => void;
+  onEdit: (rowId: string) => void;
+  onOpenFull: (rowId: string) => void;
 }) {
+  const open = (rowId: string) => (canEdit ? onEdit(rowId) : onOpenFull(rowId));
   const statusField = fields.find((f) => f.field_key === "status");
   const cols = child.columns.map((k) => fields.find((f) => f.field_key === k)).filter(Boolean) as FieldMeta[];
   if (rows.length === 0) return <div className="empty"><p>אין עדיין {child.label}.</p></div>;
   return (
     <ul className="history">
       {rows.map((r) => (
-        <li key={r.id} className="row-link" tabIndex={0} onClick={() => onOpen(r.id)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && onOpen(r.id)}>
+        <li key={r.id} className="row-link" tabIndex={0} onClick={() => open(r.id)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && open(r.id)}>
           <div className="history-main">
             {cols.map((f, i) => {
               const text = textOf(f, r);
@@ -713,6 +719,16 @@ function ChildList({
               <span className={`tag tag-${r.status}`}>{textOf(statusField, r)}</span>
             )
           )}
+          <button
+            type="button"
+            className="link-btn full-link"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenFull(r.id);
+            }}
+          >
+            למסך המלא ←
+          </button>
         </li>
       ))}
     </ul>

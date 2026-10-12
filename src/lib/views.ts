@@ -88,9 +88,10 @@ export function operatorsFor(type: FieldType): FilterOperator[] {
       return ["contains", "not_contains", "eq", "neq", "is_empty", "is_not_empty"];
     case "number":
     case "money":
+      return ["eq", "neq", "gt", "gte", "lt", "lte", "is_empty", "is_not_empty"];
     case "date":
     case "datetime":
-      return ["eq", "neq", "gt", "gte", "lt", "lte", "is_empty", "is_not_empty"];
+      return ["gte", "lte", "eq", "neq", "is_empty", "is_not_empty"]; // מ, עד, שווה ל, שונה מ, ריק, לא ריק
     case "boolean":
       return ["eq", "neq"];
     default:
@@ -99,9 +100,7 @@ export function operatorsFor(type: FieldType): FilterOperator[] {
 }
 
 export const DATE_OPERATOR_LABELS: Partial<Record<FilterOperator, string>> = {
-  gt: "אחרי",
-  gte: "מ-",
-  lt: "לפני",
+  gte: "מ",
   lte: "עד",
 };
 
