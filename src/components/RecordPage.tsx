@@ -209,11 +209,19 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
     }
   };
 
-  // כניסה לעריכה: הטופס יכול להיות מתחת לקצה המסך (בייחוד בטלפון), ולכן עוברים לשדה הראשון ומתמקדים בו
+  // כניסה לעריכה: הטופס יכול להיות מתחת לקצה המסך (בייחוד בטלפון), ולכן עוברים לשדה ומתמקדים בו.
+  // לחיצה על שדה מסוים פותחת את העריכה ישר בו, ו"עריכה" פותחת בשדה הראשון.
+  const focusKey = useRef<string | null>(null);
+  const canEditField = (f: FieldMeta) => canEdit && f.is_editable && !isNew;
+  const startEdit = (key?: string) => {
+    focusKey.current = key ?? null;
+    setEditing(true);
+  };
   useEffect(() => {
     if (!editing || isNew) return;
-    const first = fields.find((f) => f.is_editable);
-    const el = first && document.getElementById(`rp-${first.field_key}`);
+    const key = focusKey.current ?? fields.find((f) => f.is_editable)?.field_key;
+    focusKey.current = null;
+    const el = key && document.getElementById(`rp-${key}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
       el.focus({ preventScroll: true });
@@ -241,17 +249,20 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   // ===== הצגה =====
   const labelOf = (f: FieldMeta, raw: unknown) => (f.ref_object_id ? labels.get(f.ref_object_id)?.get(String(raw)) ?? "" : "");
   const textOf = (f: FieldMeta, r: Rec) => formatValue(f, { ...r, [`${f.field_key}__label`]: labelOf(f, r[f.field_key]) } as Row);
+  // לחיצה על קישור בתוך שדה פותחת את הקישור, ולא את עריכת השדה
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
   const renderValue = (f: FieldMeta, r: Rec) => {
     const text = textOf(f, r);
     if (!text) return <span className="muted">—</span>;
     const raw = r[f.field_key];
     if (f.field_type === "reference") {
       const href = recordHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, raw);
-      return href ? <Link href={href} className="ref-link">{text}</Link> : text;
+      return href ? <Link href={href} className="ref-link" onClick={stop}>{text}</Link> : text;
     }
     if (f.field_type === "choice" || f.field_type === "boolean") return <span className={`tag tag-${String(raw)}`}>{text}</span>;
-    if (f.field_type === "phone") return <a href={`tel:${raw}`} dir="ltr" className="ref-link">{text}</a>;
-    if (f.field_type === "email") return <a href={`mailto:${raw}`} dir="ltr" className="ref-link">{text}</a>;
+    if (f.field_type === "phone") return <a href={`tel:${raw}`} dir="ltr" className="ref-link" onClick={stop}>{text}</a>;
+    if (f.field_type === "email") return <a href={`mailto:${raw}`} dir="ltr" className="ref-link" onClick={stop}>{text}</a>;
+    if (f.field_type === "long_text") return <span className="long-text">{text}</span>;
     return <span dir={isLtr(f) ? "ltr" : undefined}>{text}</span>;
   };
 
@@ -466,15 +477,35 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       </div>
 
       {/* כותרת: שם הרשומה, השדות הקריטיים והפעולות */}
-      <header className="card record-head">
+      <header className={`card record-head${cfg.stackedHeader ? " stacked" : ""}`}>
         <div className="record-title">
           <span className="muted">{obj.label}</span>
-          <h1 className="page-title">{isNew ? `הוספת ${obj.label}` : title}</h1>
+          {isNew ? (
+            <h1 className="page-title">הוספת {obj.label}</h1>
+          ) : byKey.get(obj.display_field)?.field_type === "datetime" ? (
+            // שם שהוא מועד (תור): התאריך, ומתחתיו השעה
+            <>
+              <h1 className="page-title" dir="ltr">{formatDate(String(rec[obj.display_field]))}</h1>
+              <span className="title-sub" dir="ltr">{formatTime(String(rec[obj.display_field]))}</span>
+            </>
+          ) : (
+            <h1 className="page-title">{title}</h1>
+          )}
+          {!isNew && cfg.subtitle && byKey.get(cfg.subtitle) && rec[cfg.subtitle] ? (
+            <span className="title-sub">
+              {byKey.get(cfg.subtitle)!.label}: {renderValue(byKey.get(cfg.subtitle)!, rec)}
+            </span>
+          ) : null}
         </div>
         {!isNew && (
           <dl className="header-fields">
             {cfg.header.map((k) => byKey.get(k)).filter(Boolean).map((f) => (
-              <div key={f!.field_key}>
+              <div
+                key={f!.field_key}
+                className={canEditField(f!) && !editing ? "editable" : undefined}
+                title={canEditField(f!) && !editing ? "לחיצה לעריכה" : undefined}
+                onClick={canEditField(f!) && !editing ? () => startEdit(f!.field_key) : undefined}
+              >
                 <dt>{f!.label}</dt>
                 <dd>{renderValue(f!, rec)}</dd>
               </div>
@@ -500,7 +531,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
                   className="btn primary cta"
                   onClick={(e) => {
                     e.preventDefault();
-                    setEditing(true);
+                    startEdit();
                   }}
                 >
                   עריכה
@@ -572,7 +603,14 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
                       )}
                     </label>
                   ) : isNew ? null : (
-                    <div key={f.field_key} className="field-view">
+                    <div
+                      key={f.field_key}
+                      className={`field-view${canEditField(f) ? " editable" : ""}`}
+                      title={canEditField(f) ? "לחיצה לעריכה" : undefined}
+                      tabIndex={canEditField(f) ? 0 : undefined}
+                      onClick={canEditField(f) ? () => startEdit(f.field_key) : undefined}
+                      onKeyDown={canEditField(f) ? (e) => e.key === "Enter" && e.target === e.currentTarget && startEdit(f.field_key) : undefined}
+                    >
                       <span className="field-label">{f.label}</span>
                       <div>{renderValue(f, rec)}</div>
                     </div>

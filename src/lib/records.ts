@@ -15,6 +15,8 @@ export type RecordConfig = {
   route: string;                                   // בסיס הכתובת, למשל "/clients/"
   listHref: string;                                // מסך הרשימה
   header: string[];                                // שדות קריטיים ליד הכותרת
+  subtitle?: string;                               // שדה שמוצג מתחת לשם (למשל זמן פתיחת קריאה)
+  stackedHeader?: boolean;                         // כותרת בטור: שם, מתחתיו השדות, ומתחתם הכפתורים (לשם ארוך)
   groups: { title: string; fields: string[] }[];   // שאר השדות, בקבוצות
   children: ChildDef[];
   editRole: "all" | "manager";                     // מי יכולה ליצור ולערוך (נאכף גם ב-RLS)
@@ -31,7 +33,7 @@ export const RECORDS: Record<string, RecordConfig> = {
     listHref: "/clients",
     header: ["phone", "source"],
     groups: [
-      { title: "פרטים אישיים", fields: ["full_name", "phone"] },
+      { title: "פרטים אישיים", fields: ["full_name", "phone", "notes"] },
       { title: "שיווק", fields: ["source"] },
     ],
     children: [
@@ -66,6 +68,8 @@ export const RECORDS: Record<string, RecordConfig> = {
     route: "/requests/",
     listHref: "/requests",
     header: ["status", "assigned_to", "client_id"],
+    subtitle: "created_at",
+    stackedHeader: true,
     groups: [
       { title: "הקריאה", fields: ["client_id", "description"] },
       { title: "טיפול בקריאה", fields: ["status", "assigned_to", "closed_at"] },

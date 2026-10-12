@@ -5,7 +5,7 @@
 // מסך הכניסה מוצג בלי המסגרת.
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Icon, { type IconName } from "./Icon";
 import { AuthProvider, useAuth } from "./Auth";
 import { ToastProvider } from "./Toast";
@@ -39,6 +39,7 @@ function NavEntry({ item, compact }: { item: NavItem; compact?: boolean }) {
 
 function Shell({ appName, children }: { appName: string; children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { ready, userId, me, isManager, signOut } = useAuth();
 
   if (pathname === "/login") return <>{children}</>;
@@ -68,6 +69,22 @@ function Shell({ appName, children }: { appName: string; children: React.ReactNo
 
       <div className="main">
         <header className="topbar">
+          {/* חזרה למסך הקודם, מכל מסך. קישור ולא כפתור, כדי שמסך עם שינויים שלא נשמרו יזהיר לפני היציאה */}
+          {pathname !== "/" && (
+            <a
+              href="#back"
+              className="icon-btn back-btn"
+              aria-label="חזרה למסך הקודם"
+              title="חזרה למסך הקודם"
+              onClick={(e) => {
+                e.preventDefault();
+                if (window.history.length > 1) router.back();
+                else router.push("/");
+              }}
+            >
+              <Icon name="back" />
+            </a>
+          )}
           <label className="search">
             <Icon name="search" />
             <input type="tel" inputMode="numeric" aria-label="חיפוש לפי טלפון" placeholder="054-1234567" disabled />

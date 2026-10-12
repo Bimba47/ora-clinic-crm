@@ -329,6 +329,16 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .record-head { display: flex; align-items: center; gap: 16px 32px; flex-wrap: wrap; }
 .record-title { display: flex; flex-direction: column; gap: 2px; }
 .record-title .page-title { margin: 0; font-weight: 500; letter-spacing: 0.2px; }
+/* כותרת בטור (קריאה): תיאור, מתחתיו זמן הפתיחה, השדות, ומתחתם הכפתורים */
+.record-head.stacked { flex-direction: column; align-items: stretch; }
+.record-head.stacked .record-actions { margin-inline-start: 0; }
+.title-sub { font-size: 16px; font-weight: 400; color: var(--muted); }
+/* שדה שאפשר לערוך בלחיצה */
+.field-view.editable, .header-fields > .editable { cursor: pointer; border-radius: 12px; padding: 4px 8px; margin: -4px -8px; transition: background 150ms; }
+.field-view.editable:hover, .header-fields > .editable:hover { background: var(--bg); }
+.field-view.editable:focus-visible { outline: 2px solid var(--bronze); outline-offset: 0; }
+.long-text { white-space: pre-wrap; }
+.back-btn { margin: 0 !important; }
 .header-fields { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; flex: 1 1 auto; }
 .header-fields dt { font-size: 12px; color: var(--muted); }
 .header-fields dd { margin: 0; font-size: 14px; font-weight: 600; }
@@ -359,7 +369,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .tabs-card { padding: 16px 24px 8px; }
 .tabs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
 .history { list-style: none; margin: 0; padding: 0; }
-.history li { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 8px 12px; border-bottom: 1px solid var(--line); border-radius: 16px; cursor: pointer; }
+.history li { display: grid; grid-template-columns: minmax(0, 1fr) 112px auto; align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px; border-bottom: 1px solid var(--line); border-radius: 16px; cursor: pointer; }
 .history li:last-child { border-bottom: 0; }
 .history li:hover { background: var(--bg); }
 .history li:focus-visible { outline: 2px solid var(--bronze); outline-offset: -2px; }
@@ -369,7 +379,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .overdue { color: var(--err); font-size: 12px; font-weight: 600; }
 .history .full-link { white-space: nowrap; flex-shrink: 0; padding: 8px 4px; }
 /* סטטוס שאפשר לשנות: נראה כמו תגית */
-.status-select { appearance: none; -webkit-appearance: none; border: 0 !important; min-height: 32px; height: 32px; padding: 0 16px; text-align: center; text-align-last: center; cursor: pointer; flex-shrink: 0; }
+.status-select { appearance: none; -webkit-appearance: none; border: 0 !important; min-height: 32px; height: 32px; padding: 0 16px; width: 100%; text-align: center; text-align-last: center; cursor: pointer; flex-shrink: 0; }
 .status-select:focus { outline: 2px solid var(--bronze); outline-offset: 2px; }
 
 @media (max-width: 767px) {
