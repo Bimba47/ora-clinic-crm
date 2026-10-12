@@ -263,6 +263,14 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
     if (f.field_type === "phone") return <a href={`tel:${raw}`} dir="ltr" className="ref-link" onClick={stop}>{text}</a>;
     if (f.field_type === "email") return <a href={`mailto:${raw}`} dir="ltr" className="ref-link" onClick={stop}>{text}</a>;
     if (f.field_type === "long_text") return <span className="long-text">{text}</span>;
+    if (f.field_type === "datetime") {
+      return (
+        <span className="dt-stack">
+          <span dir="ltr">{formatDate(String(raw))}</span>
+          <span className="dt-time" dir="ltr">{formatTime(String(raw))}</span>
+        </span>
+      );
+    }
     return <span dir={isLtr(f) ? "ltr" : undefined}>{text}</span>;
   };
 
@@ -493,7 +501,12 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
           )}
           {!isNew && cfg.subtitle && byKey.get(cfg.subtitle) && rec[cfg.subtitle] ? (
             <span className="title-sub">
-              {byKey.get(cfg.subtitle)!.label}: {renderValue(byKey.get(cfg.subtitle)!, rec)}
+              {byKey.get(cfg.subtitle)!.label}:{" "}
+              {byKey.get(cfg.subtitle)!.field_type === "datetime" ? (
+                <span dir="ltr">{formatDateTime(String(rec[cfg.subtitle]))}</span>
+              ) : (
+                renderValue(byKey.get(cfg.subtitle)!, rec)
+              )}
             </span>
           ) : null}
         </div>

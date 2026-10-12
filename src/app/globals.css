@@ -253,6 +253,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .data-table tbody tr.row-link { cursor: pointer; }
 .data-table tbody tr.row-link:focus-visible { outline: 2px solid var(--bronze); outline-offset: -2px; }
 .data-table .check-col { cursor: default; }
+.data-table th.center, .data-table td.center { text-align: center; }
+.data-table th.center .th-btn { justify-content: center; width: 100%; }
 
 /* שדה בחירה עם חיפוש (רשומה מקושרת) */
 .combo { position: relative; }
@@ -327,11 +329,15 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .back-link:hover { text-decoration: underline; }
 .record-nav { display: flex; align-items: center; gap: 8px; }
 .record-head { display: flex; align-items: center; gap: 16px 32px; flex-wrap: wrap; }
-.record-title { display: flex; flex-direction: column; gap: 2px; }
+.record-title { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; } /* align-items: start = ימין: תאריך ושעה (ltr) נצמדים לימין */
 .record-title .page-title { margin: 0; font-weight: 500; letter-spacing: 0.2px; }
 /* כותרת בטור (קריאה): תיאור, מתחתיו זמן הפתיחה, השדות, ומתחתם הכפתורים */
-.record-head.stacked { flex-direction: column; align-items: stretch; }
+.record-head.stacked { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 16px 24px; }
+.record-head.stacked .record-title { grid-column: 1 / -1; }
 .record-head.stacked .record-actions { margin-inline-start: 0; }
+/* תאריך ושעה בשדה: התאריך, ומתחתיו השעה */
+.dt-stack { display: inline-flex; flex-direction: column; align-items: flex-start; }
+.dt-stack .dt-time { color: var(--muted); }
 .title-sub { font-size: 16px; font-weight: 400; color: var(--muted); }
 /* שדה שאפשר לערוך בלחיצה */
 .field-view.editable, .header-fields > .editable { cursor: pointer; border-radius: 12px; padding: 4px 8px; margin: -4px -8px; transition: background 150ms; }
@@ -348,7 +354,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .computed-item.highlight { background: var(--soft); }
 .computed-item.warn .computed-value { color: var(--err); font-weight: 600; }
 .computed-value { font-size: 16px; }
-.computed-link { display: flex; flex-direction: column; gap: 2px; color: var(--text); text-decoration: none; }
+.computed-link { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; color: var(--text); text-decoration: none; }
 .computed-link:hover .next-date { text-decoration: underline; }
 /* התור הבא: תאריך, ומתחתיו השעה, בכתב עדין */
 .next-date { font-size: 22px; font-weight: 500; line-height: 1.3; }
@@ -369,15 +375,15 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .tabs-card { padding: 16px 24px 8px; }
 .tabs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
 .history { list-style: none; margin: 0; padding: 0; }
-.history li { display: grid; grid-template-columns: minmax(0, 1fr) 112px auto; align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px; border-bottom: 1px solid var(--line); border-radius: 16px; cursor: pointer; }
+.history li { display: grid; grid-template-columns: minmax(0, 1fr) 112px minmax(0, 1fr); /* הסטטוס במרכז השורה */ align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px; border-bottom: 1px solid var(--line); border-radius: 16px; cursor: pointer; }
 .history li:last-child { border-bottom: 0; }
 .history li:hover { background: var(--bg); }
 .history li:focus-visible { outline: 2px solid var(--bronze); outline-offset: -2px; }
 .history li.is-next { background: var(--soft); }
-.history-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.history-main { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
 .history-main strong { font-size: 14px; }
 .overdue { color: var(--err); font-size: 12px; font-weight: 600; }
-.history .full-link { white-space: nowrap; flex-shrink: 0; padding: 8px 4px; }
+.history .full-link { white-space: nowrap; flex-shrink: 0; padding: 8px 4px; justify-self: end; }
 /* סטטוס שאפשר לשנות: נראה כמו תגית */
 .status-select { appearance: none; -webkit-appearance: none; border: 0 !important; min-height: 32px; height: 32px; padding: 0 16px; width: 100%; text-align: center; text-align-last: center; cursor: pointer; flex-shrink: 0; }
 .status-select:focus { outline: 2px solid var(--bronze); outline-offset: 2px; }
@@ -422,6 +428,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
   .data-table tr { padding: 12px 16px; border-bottom: 1px solid var(--line); position: relative; }
   .data-table td { height: auto; border: 0; padding: 2px 0; white-space: normal; }
   .data-table td[data-label]::before { content: attr(data-label) ": "; color: var(--muted); font-size: 12px; }
+  .data-table td.center { text-align: start; }
   .data-table td.check-col { position: absolute; top: 12px; inset-inline-end: 16px; width: auto !important; padding: 0; }
   .lane { flex: 1 1 100%; }
   .kanban { flex-direction: column; align-items: stretch; overflow: visible; }

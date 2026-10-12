@@ -7,6 +7,9 @@ import Link from "next/link";
 import type { FieldMeta, Row, ViewState } from "@/lib/views";
 import { formatValue, isLtr } from "@/lib/format";
 
+// עמודה של תגיות (סטטוס, מקור, נקראה) ממורכזת
+const isTag = (f: FieldMeta) => f.field_type === "choice" || f.field_type === "boolean";
+
 type Props = {
   fields: FieldMeta[];
   state: ViewState;
@@ -99,7 +102,7 @@ export default function ListView({
                 const f = byKey.get(c.field)!;
                 const sort = state.sorts[0]?.field === c.field ? state.sorts[0].dir : null;
                 return (
-                  <th key={c.field} aria-sort={sort === "asc" ? "ascending" : sort === "desc" ? "descending" : "none"}>
+                  <th key={c.field} className={isTag(f) ? "center" : undefined} aria-sort={sort === "asc" ? "ascending" : sort === "desc" ? "descending" : "none"}>
                     <button type="button" className="th-btn" onClick={() => toggleSort(c.field)}>
                       {f.label}
                       <span className="sort-mark" aria-hidden="true">{sort === "asc" ? "▲" : sort === "desc" ? "▼" : ""}</span>
@@ -139,7 +142,7 @@ export default function ListView({
                       const text = formatValue(f, r);
                       const href = text ? refHref(f, r) : null;
                       return (
-                        <td key={c.field} data-label={f.label} title={text}>
+                        <td key={c.field} className={isTag(f) ? "center" : undefined} data-label={f.label} title={text}>
                           {href ? (
                             <Link href={href} className="ref-link" onClick={(e) => e.stopPropagation()}>{text}</Link>
                           ) : f.field_type === "choice" || f.field_type === "boolean" ? (
