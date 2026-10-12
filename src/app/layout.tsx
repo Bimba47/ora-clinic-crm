@@ -10,9 +10,8 @@ const heebo = Heebo({
   display: "swap",
 });
 
-// שם המערכת לא מקודד כאן: הוא נקרא מההגדרות (app_settings) ומוצב בלשונית הדפדפן בזמן הריצה
+// בלי title: שם המערכת לא מקודד כאן. הוא נקרא מההגדרות (app_settings) ומוצב בלשונית הדפדפן בזמן הריצה
 export const metadata: Metadata = {
-  title: "CRM",
   description: "מערכת CRM פנימית לצוות",
 };
 

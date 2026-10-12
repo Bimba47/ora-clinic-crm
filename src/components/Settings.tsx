@@ -3,6 +3,7 @@
 // ההגדרות הציבוריות נקראות גם לפני כניסה, כדי שמסך הכניסה יציג אותן.
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 type SettingsState = {
@@ -40,10 +41,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const appName = typeof values.app_name === "string" ? values.app_name : "";
   const logoUrl = typeof values.logo_url === "string" && values.logo_url ? values.logo_url : null;
 
-  // שם הלשונית בדפדפן לפי שם המערכת
+  // שם הלשונית בדפדפן לפי שם המערכת (גם אחרי כל מעבר מסך)
+  const pathname = usePathname();
   useEffect(() => {
     if (appName) document.title = appName;
-  }, [appName]);
+  }, [appName, pathname]);
 
   return <SettingsContext.Provider value={{ ready, appName, logoUrl, reload }}>{children}</SettingsContext.Provider>;
 }
