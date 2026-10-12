@@ -24,7 +24,7 @@ export async function requireAdmin(req: Request) {
   if (error || !auth.user) throw new HttpError(401, "צריך להתחבר מחדש");
   const { data: me } = await admin
     .from("staff")
-    .select("id, is_active, roles(is_admin)")
+    .select("id, is_active, roles!staff_role_id_fkey(is_admin)") // שני קשרים בין הטבלאות (תפקיד, עודכן על ידי): מציינים איזה
     .eq("id", auth.user.id)
     .maybeSingle();
   const role = (me as { roles?: { is_admin: boolean } | null } | null)?.roles;

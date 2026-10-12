@@ -51,7 +51,7 @@ export default function Page() {
       supabase.from("roles").select("id, name, description, is_admin").order("is_admin", { ascending: false }).order("name"),
       supabase.from("role_permissions").select("role_id, object_key, can_view, can_create, can_edit, can_delete"),
       supabase.from("field_permissions").select("role_id, object_key, field_key, access"),
-      supabase.from("object_fields").select("field_key, label, is_required, position, view_objects!inner(object_key)").order("position"),
+      supabase.from("object_fields").select("field_key, label, is_required, position, view_objects!object_fields_object_id_fkey!inner(object_key)").order("position"),
       supabase.from("staff").select("id, role_id"),
     ]);
     const err = r.error ?? p.error ?? fp.error ?? cat.error ?? st.error;

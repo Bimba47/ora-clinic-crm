@@ -521,7 +521,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .perm-action.on { background: var(--bg); }
 .perm-check { display: inline-flex; align-items: center; gap: 6px; min-width: 64px; font-size: 12px; cursor: pointer; }
 .perm-check input { width: 16px; height: 16px; accent-color: var(--bronze); }
-.perm-action select { min-height: 28px; height: 28px; padding: 0 8px; font-size: 12px; border-radius: 999px; max-width: 128px; }
+.perm-action select { min-height: 28px; height: 28px; padding: 0 8px; font-size: 12px; border-radius: 999px; max-width: 170px; }
 .field-perms { list-style: none; margin: 8px 0 16px; padding: 0; }
 .field-perms li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; border-bottom: 1px solid var(--line); }
 .field-perms select { width: 160px; }
