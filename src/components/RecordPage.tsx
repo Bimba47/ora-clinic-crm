@@ -19,7 +19,7 @@ import {
   type Catalog, type FieldMeta, type Row,
   createRecord, deleteRecords, errorText, loadCatalog, loadRefOptions, updateRecords,
 } from "@/lib/views";
-import { formatDate, formatDateTime, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
+import { formatDate, formatDateTime, formatPhone, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 
 type Rec = Record<string, unknown> & { id: string };
 type Dialog =
@@ -53,6 +53,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [rec, setRec] = useState<Rec | null | undefined>(undefined); // undefined = טוען, null = לא נמצאה
   const [labels, setLabels] = useState<Map<string, Map<string, string>>>(new Map());
+  const [phones, setPhones] = useState<Map<string, string>>(new Map()); // טלפון של רשומה מקושרת (למשל הלקוחה בתור)
   const [children, setChildren] = useState<Record<string, Rec[]>>({});
   const [address, setAddress] = useState<string | null | undefined>(undefined); // undefined = אין הרשאה
   const [nav, setNav] = useState<RecordNav | null>(null);
@@ -96,13 +97,16 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
           .forEach((f) => refIds.add(f.ref_object_id!)),
       );
       const lab = new Map<string, Map<string, string>>();
+      const ph = new Map<string, string>();
       await Promise.all(
         [...refIds].map(async (rid) => {
           const opts = await loadRefOptions(cat.objects.find((x) => x.id === rid)!, cat);
           lab.set(rid, new Map(opts.map((op) => [op.value, op.label])));
+          opts.forEach((op) => op.phone && ph.set(op.value, op.phone));
         }),
       );
       setLabels(lab);
+      setPhones(ph);
 
       if (isNew) {
         // רשומה חדשה: ערכים מהכתובת (למשל ?client_id=…) או משכפול (?from=…)
@@ -442,7 +446,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
     }
     if (objectKey === "appointments" && rec.starts_at) {
       const end = new Date(new Date(String(rec.starts_at)).getTime() + Number(rec.duration_minutes) * 60000);
-      computed.push({ label: "שעת סיום", value: <span dir="ltr">{formatDateTime(end.toISOString())}</span> });
+      computed.push({ label: "שעת סיום", value: <span dir="ltr">{formatTime(end.toISOString())}</span> });
     }
     if (objectKey === "service_requests" && rec.status !== "closed") {
       const age = now - new Date(String(rec.created_at)).getTime();
@@ -520,7 +524,22 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
                 onClick={canEditField(f!) && !editing ? () => startEdit(f!.field_key) : undefined}
               >
                 <dt>{f!.label}</dt>
-                <dd>{renderValue(f!, rec)}</dd>
+                <dd>
+                  {renderValue(f!, rec)}
+                  {/* לקוחה בכותרת (בתור ובקריאה): גם הטלפון שלה, כקישור לחיוג */}
+                  {f!.field_type === "reference" &&
+                  catalog.objects.find((o) => o.id === f!.ref_object_id)?.object_key === "clients" &&
+                  phones.get(String(rec[f!.field_key])) ? (
+                    <a
+                      href={`tel:${phones.get(String(rec[f!.field_key]))}`}
+                      dir="ltr"
+                      className="ref-phone"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {formatPhone(phones.get(String(rec[f!.field_key]))!)}
+                    </a>
+                  ) : null}
+                </dd>
               </div>
             ))}
           </dl>
