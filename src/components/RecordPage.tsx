@@ -484,7 +484,8 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         <div className="record-actions">
           {editing ? (
             <>
-              <button type="submit" form="record-form" className="btn primary cta" disabled={saving}>
+              {/* key נפרד: אחרת הדפדפן משתמש באותו כפתור, ולחיצת "עריכה" ממשיכה ל"שמירה" ויוצאת מיד מהעריכה */}
+              <button key="save" type="submit" form="record-form" className="btn primary cta" disabled={saving}>
                 {saving && <span className="spinner" aria-hidden="true" />}
                 שמירה
               </button>
@@ -492,7 +493,19 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
             </>
           ) : (
             <>
-              {canEdit && <button type="button" className="btn primary cta" onClick={() => setEditing(true)}>עריכה</button>}
+              {canEdit && (
+                <button
+                  key="edit"
+                  type="button"
+                  className="btn primary cta"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setEditing(true);
+                  }}
+                >
+                  עריכה
+                </button>
+              )}
               {phoneField && rec[phoneField.field_key] ? (
                 <a className="btn outline" href={whatsappHref(String(rec[phoneField.field_key]))} target="_blank" rel="noopener noreferrer">וואטסאפ</a>
               ) : null}
