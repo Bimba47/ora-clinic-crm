@@ -105,11 +105,6 @@ export default function Page() {
         <h1 className="page-title">תפקידים והרשאות</h1>
         <button type="button" className="btn primary" onClick={() => setEditing("new")}>+ תפקיד חדש</button>
       </div>
-      <p className="muted perm-intro">
-        לכל תפקיד ולכל אובייקט: מה מותר (צפייה, יצירה, עריכה, מחיקה) ועל אילו רשומות. &quot;הכול&quot; – כל הרשומות.
-        &quot;הצוות שלי&quot; – הרשומות שלי ושל חברות הצוות שלי. &quot;שלי&quot; – לקוחות שיצרתי, תורים שאני המטפלת בהם, קריאות באחריותי.
-        השינוי נשמר מיד ונאכף במסד הנתונים.
-      </p>
 
       <div className="card perm-card">
         <table className="perm-matrix">

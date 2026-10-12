@@ -563,3 +563,5 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 /* תפקידים: פעולות התפקיד אחת מתחת לשנייה */
 .perm-role-actions.stacked { flex-direction: column; align-items: flex-start; gap: 0; margin-top: 4px; }
 .perm-role-actions.stacked .link-btn { min-height: 32px; padding: 4px 8px; }
+/* כותרת קריאה (תיאור ארוך): כתב קטן יותר מכותרת עמוד רגילה */
+.record-head.stacked .record-title .page-title { font-size: 20px; line-height: 1.4; }

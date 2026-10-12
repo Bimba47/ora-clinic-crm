@@ -65,9 +65,6 @@ export default function Page() {
         <h1 className="page-title">צוותים</h1>
         <button type="button" className="btn primary" onClick={() => setEditing("new")}>+ צוות חדש</button>
       </div>
-      <p className="muted perm-intro">
-        הצוות קובע מה זה &quot;הצוות שלי&quot; במסך ההרשאות: תפקיד עם היקף &quot;הצוות שלי&quot; רואה את הרשומות שלה ושל חברות הצוות שלה.
-      </p>
 
       {teams.length === 0 && (
         <div className="card empty">
