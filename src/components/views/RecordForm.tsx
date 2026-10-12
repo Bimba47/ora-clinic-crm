@@ -1,7 +1,8 @@
 "use client";
-// טופס גנרי ליצירה ולעריכה: השדות, הסוגים ושדות החובה מגיעים מהקטלוג.
+// טופס גנרי ליצירה ולעריכה בחלון (למשל הוספת תור מתוך כרטיס לקוחה): השדות, הסוגים ושדות החובה מגיעים מהקטלוג.
 // בעריכה הערכים נטענים מהמסד, ונשמרים רק השדות שהשתנו.
 // הבדיקות האמיתיות (טלפון, שעות פעילות, חפיפה, הרשאות) נעשות במסד, וההודעה שלו מוצגת ליד הכפתור.
+// הרכיבים והפונקציות המשותפים (שדה קלט, המרת ערכים, העתקה משדה מקושר) משמשים גם את מסך הרשומה.
 
 import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
@@ -12,13 +13,13 @@ import { formatValue } from "@/lib/format";
 import { ValueInput } from "./FilterPanel";
 
 // הודעות השמירה מהאפיון
-const CREATED_TOAST: Record<string, string> = {
+export const CREATED_TOAST: Record<string, string> = {
   clients: "הלקוחה נשמרה",
   appointments: "התור נקבע",
   service_requests: "הקריאה נפתחה",
 };
 
-function toValue(f: FieldMeta, v: string): unknown {
+export function toValue(f: FieldMeta, v: string): unknown {
   if (v === "") return null;
   switch (f.field_type) {
     case "number":
@@ -34,13 +35,51 @@ function toValue(f: FieldMeta, v: string): unknown {
 }
 
 // ערך מהמסד לערך של שדה בטופס
-function toInput(f: FieldMeta, v: unknown): string {
+export function toInput(f: FieldMeta, v: unknown): string {
   if (v === null || v === undefined) return "";
   if (f.field_type === "datetime") {
     const d = new Date(String(v));
     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   }
   return String(v);
+}
+
+// בחירה בשדה מקושר מעתיקה מהרשומה שנבחרה שדות עם אותו שם שיש גם בטופס.
+// למשל בתור: בחירת טיפול ממלאת את המחיר והמשך מהמחירון. אפשר עדיין לשנות אותם ידנית.
+export async function copyFromRef(catalog: Catalog, editable: FieldMeta[], f: FieldMeta, id: string) {
+  const refObj = catalog.objects.find((o) => o.id === f.ref_object_id);
+  if (!id || !refObj) return {};
+  const refKeys = new Set(catalog.fields.filter((x) => x.object_id === refObj.id).map((x) => x.field_key));
+  const copy = editable.filter((x) => x.field_type !== "reference" && refKeys.has(x.field_key));
+  if (copy.length === 0) return {};
+  const rec = await loadRecord(refObj.object_key, id, copy.map((x) => x.field_key));
+  return Object.fromEntries(copy.map((x) => [x.field_key, toInput(x, rec[x.field_key])])) as Record<string, string>;
+}
+
+// שדה קלט אחד לפי סוג השדה בקטלוג
+export function FieldInput({
+  field: f, catalog, value, onChange, id, invalid,
+}: {
+  field: FieldMeta;
+  catalog: Catalog;
+  value: string;
+  onChange: (v: string) => void;
+  id: string;
+  invalid?: boolean;
+}) {
+  if (f.field_type === "datetime") {
+    return (
+      <input id={id} type="datetime-local" dir="ltr" required={f.is_required} aria-invalid={invalid}
+        value={value} onChange={(e) => onChange(e.target.value)} />
+    );
+  }
+  if (f.field_type === "long_text") {
+    return (
+      <textarea id={id} required={f.is_required} rows={3} aria-invalid={invalid}
+        value={value} onChange={(e) => onChange(e.target.value)} />
+    );
+  }
+  return <ValueInput id={id} field={f} catalog={catalog} required={f.is_required} value={value} onChange={onChange} />;
 }
 
 export default function RecordForm({
@@ -79,18 +118,13 @@ export default function RecordForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row?.id]);
 
-  // בחירה בשדה מקושר מעתיקה מהרשומה שנבחרה שדות עם אותו שם שיש גם בטופס.
-  // למשל בתור: בחירת טיפול ממלאת את המחיר והמשך מהמחירון. אפשר עדיין לשנות אותם ידנית.
-  const setRef = (f: FieldMeta, v: string) => {
+  const setField = (f: FieldMeta, v: string) => {
     setValues((prev) => ({ ...prev, [f.field_key]: v }));
-    const refObj = catalog.objects.find((o) => o.id === f.ref_object_id);
-    if (!v || !refObj) return;
-    const refKeys = new Set(catalog.fields.filter((x) => x.object_id === refObj.id).map((x) => x.field_key));
-    const copy = editable.filter((x) => x.field_type !== "reference" && refKeys.has(x.field_key));
-    if (copy.length === 0) return;
-    loadRecord(refObj.object_key, v, copy.map((x) => x.field_key))
-      .then((rec) => setValues((prev) => ({ ...prev, ...Object.fromEntries(copy.map((x) => [x.field_key, toInput(x, rec[x.field_key])])) })))
-      .catch((e) => setError(errorText(e)));
+    if (f.field_type === "reference" && v) {
+      copyFromRef(catalog, editable, f, v)
+        .then((copied) => setValues((prev) => ({ ...prev, ...copied })))
+        .catch((e) => setError(errorText(e)));
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -144,33 +178,7 @@ export default function RecordForm({
                   {f.label}
                   {f.is_required && <span aria-hidden="true"> *</span>}
                 </span>
-                {f.field_type === "datetime" ? (
-                  <input
-                    id={`rf-${f.field_key}`}
-                    type="datetime-local"
-                    dir="ltr"
-                    required={f.is_required}
-                    value={values[f.field_key]}
-                    onChange={(e) => setValues({ ...values, [f.field_key]: e.target.value })}
-                  />
-                ) : f.field_type === "long_text" ? (
-                  <textarea
-                    id={`rf-${f.field_key}`}
-                    required={f.is_required}
-                    rows={3}
-                    value={values[f.field_key]}
-                    onChange={(e) => setValues({ ...values, [f.field_key]: e.target.value })}
-                  />
-                ) : (
-                  <ValueInput
-                    id={`rf-${f.field_key}`}
-                    field={f}
-                    catalog={catalog}
-                    required={f.is_required}
-                    value={values[f.field_key]}
-                    onChange={(v) => (f.field_type === "reference" ? setRef(f, v) : setValues({ ...values, [f.field_key]: v }))}
-                  />
-                )}
+                <FieldInput id={`rf-${f.field_key}`} field={f} catalog={catalog} value={values[f.field_key]} onChange={(v) => setField(f, v)} />
               </label>
             ))}
         {error && <p className="field-error" role="alert">{error}</p>}

@@ -108,16 +108,6 @@ export function needsValue(op: FilterOperator) {
   return op !== "is_empty" && op !== "is_not_empty";
 }
 
-// ===== מסכי כרטיס =====
-// אובייקט שיש לו מסך כרטיס משלו: לחיצה על רשומה שלו פותחת את הכרטיס במקום חלון עריכה,
-// ושדה שמקשר אליו מוצג כקישור לכרטיס.
-const CARD_ROUTES: Record<string, string> = { clients: "/clients/" };
-
-export function cardHref(objectKey: string | undefined, id: unknown): string | null {
-  const base = objectKey ? CARD_ROUTES[objectKey] : undefined;
-  return base && id ? `${base}${id}` : null;
-}
-
 // ===== קטלוג =====
 export type Catalog = { objects: ObjectMeta[]; fields: FieldMeta[] };
 
@@ -273,10 +263,12 @@ export async function loadRecord(objectKey: string, id: string, columns: string[
   return data as unknown as Record<string, unknown>;
 }
 
+// יצירת רשומה. מחזיר את המזהה החדש (למשל כדי לעבור למסך הרשומה שנוצרה).
 export async function createRecord(objectKey: string, values: Record<string, unknown>) {
-  const { error } = await supabase.from(objectKey).insert(values);
+  const { data, error } = await supabase.from(objectKey).insert(values).select("id").single();
   if (error) throw error;
   refCache.delete(objectKey);
+  return String((data as { id: string }).id);
 }
 
 // אפשרויות לשדה מקושר: מזהה + שם הרשומה. רשומה לא פעילה מסומנת.

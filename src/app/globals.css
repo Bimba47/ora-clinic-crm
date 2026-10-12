@@ -320,19 +320,36 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .ref-link { color: var(--link); text-decoration: none; font-weight: 600; }
 .ref-link:hover { text-decoration: underline; }
 
-/* ===== כרטיס לקוח ===== */
-.back-link { display: inline-block; margin-bottom: 8px; font-size: 12px; color: var(--link); text-decoration: none; }
+/* ===== מסך רשומה ===== */
+.record { display: flex; flex-direction: column; gap: 24px; }
+.record-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: -8px; }
+.back-link { border: 0; background: none; padding: 8px 0; min-height: 44px; font: inherit; font-size: 12px; color: var(--link); cursor: pointer; }
 .back-link:hover { text-decoration: underline; }
-.head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.card-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
+.record-nav { display: flex; align-items: center; gap: 8px; }
+.record-head { display: flex; align-items: center; gap: 16px 32px; flex-wrap: wrap; }
+.record-title { display: flex; flex-direction: column; gap: 2px; }
+.record-title .page-title { margin: 0; }
+.header-fields { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; flex: 1 1 auto; }
+.header-fields dt { font-size: 12px; color: var(--muted); }
+.header-fields dd { margin: 0; font-size: 14px; font-weight: 600; }
+.record-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
+.computed { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+.computed-item { padding: 16px 24px; display: flex; flex-direction: column; gap: 4px; }
+.computed-item.highlight { background: var(--soft); }
+.computed-item.warn .computed-value { color: var(--err); font-weight: 600; }
+.computed-value { font-size: 16px; }
+.computed-link { display: flex; flex-direction: column; gap: 2px; color: var(--text); text-decoration: none; }
+.computed-link:hover .kpi { text-decoration: underline; }
 .section-title { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
-.details { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px 24px; margin: 0; }
-.details dt { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-.details dd { margin: 0; font-size: 14px; }
-.details a { color: var(--link); text-decoration: none; }
-.next-appt { background: var(--soft); }
-.next-appt.none { background: var(--card); }
-.next-body { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: var(--text); text-align: start; cursor: pointer; }
+.record-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+.form-error { grid-column: 1 / -1; }
+.group-fields { display: flex; flex-direction: column; gap: 16px; }
+.field-view { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 12px; color: var(--muted); }
+.field-view > div { font-size: 14px; min-height: 20px; }
+[aria-invalid="true"] { border-color: var(--err) !important; }
+.exists-hint { font-size: 12px; color: var(--err); }
+.record-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding: 0 8px; }
 .kpi { font-size: 28px; font-weight: 700; line-height: 1.2; }
 .tabs-card { padding: 16px 24px 8px; }
 .tabs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -350,7 +367,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .status-select:focus { outline: 2px solid var(--bronze); outline-offset: 2px; }
 
 @media (max-width: 767px) {
-  .card-grid { grid-template-columns: 1fr; gap: 16px; }
+  .record-actions { margin-inline-start: 0; }
   .history li { align-items: flex-start; }
   .sidebar { display: none; }
   .topbar { padding: 12px 16px; }

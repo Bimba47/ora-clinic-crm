@@ -1,9 +1,9 @@
 "use client";
-// כרטיס לקוח: /clients/[id]
+// מסך רשומה בודדת: /clients/[id] (או /clients/new ליצירה). המבנה ב-src/lib/records.ts
 import { useParams } from "next/navigation";
-import ClientCard from "@/components/ClientCard";
+import RecordPage from "@/components/RecordPage";
 
 export default function Page() {
   const { id } = useParams<{ id: string }>();
-  return <ClientCard key={id} id={id} />;
+  return <RecordPage key={id} objectKey="clients" id={id} />;
 }

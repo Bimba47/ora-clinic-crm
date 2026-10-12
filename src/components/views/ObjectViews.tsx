@@ -3,16 +3,17 @@
 // ונשמרות אליו. אין כאן אף תצוגה ספציפית: המסך יודע רק את המפתח של האובייקט.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import Modal, { Confirm } from "@/components/Modal";
 import Icon from "@/components/Icon";
 import {
   type Catalog, type FieldMeta, type Row, type ViewRow, type ViewState,
-  cardHref, createView, deleteRecords, deleteView, errorText, loadCatalog, loadViewState, loadViews,
+  createView, deleteRecords, deleteView, errorText, loadCatalog, loadRecord, loadViewState, loadViews,
   renameView, runView, saveViewState, setDefaultView, setViewShared, updateRecords,
 } from "@/lib/views";
+import { RECORDS, recordHref, saveListSnapshot, saveNav, takeListSnapshot } from "@/lib/records";
 import { formatValue } from "@/lib/format";
 import ListView from "./ListView";
 import KanbanView from "./KanbanView";
@@ -70,19 +71,50 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
   const fieldByKey = useMemo(() => new Map(fields.map((f) => [f.field_key, f])), [fields]);
   const view = views.find((v) => v.id === viewId) ?? null;
   const canEditView = !!view && (isManager || view.owner_id === userId);
+  // הוספה רק למי שמורשית (בטיפולים ובצוות: מנהלת בלבד, כמו ב-RLS)
+  const canCreate = !!obj?.can_create && (RECORDS[objectKey]?.editRole !== "manager" || isManager);
   const router = useRouter();
+  const pathname = usePathname();
+  const lastSearch = useRef("");
 
-  // לחיצה על רשומה: לאובייקט עם כרטיס (לקוחה) עוברים לכרטיס, לשאר נפתח חלון עריכה
-  const openRow = (row: Row) => {
-    const href = cardHref(objectKey, row.id);
-    if (href) router.push(href);
-    else setDialog({ kind: "edit-record", row });
+  // לחיצה על רשומה פותחת את מסך הרשומה. לפני כן נשמרים סדר הרשומות בתצוגה (לקודמת/הבאה)
+  // ומצב הרשימה (תצוגה, סינון, מיון, חיפוש, עמוד), כדי שהחזרה תחזיר אותו.
+  // התראה: מסומנת כנקראה ופותחת את הקריאה שלה (לפי האפיון).
+  const openRow = async (row: Row) => {
+    try {
+      if (objectKey === "notifications") {
+        const n = await loadRecord("notifications", row.id, ["request_id", "is_read"]);
+        if (!n.is_read) await updateRecords("notifications", [row.id], { is_read: true });
+        saveNav("service_requests", { ids: [String(n.request_id)], backHref: pathname, backLabel: obj?.label_plural ?? "" });
+        router.push(recordHref("service_requests", n.request_id)!);
+        return;
+      }
+      const href = recordHref(objectKey, row.id);
+      if (!href) return setDialog({ kind: "edit-record", row });
+      if (state && view && obj) {
+        saveListSnapshot(objectKey, { viewId: view.id, state, search, page });
+        let ids = (data?.rows ?? [row]).map((r) => r.id);
+        try {
+          ids = (await runView(objectKey, state, { search: debounced, limit: 2000 })).rows.map((r) => r.id);
+        } catch {}
+        saveNav(objectKey, { ids, backHref: pathname, backLabel: obj.label_plural });
+      }
+      router.push(href);
+    } catch (e) {
+      toast(errorText(e), "err");
+    }
   };
-  // שדה שמקשר לאובייקט עם כרטיס (למשל "לקוחה" בתור או בקריאה) מוצג כקישור לכרטיס
+  // שדה מקושר (למשל "לקוחה" בתור) מוצג כקישור למסך הרשומה שלו
   const refHref = (f: FieldMeta, row: Row) =>
     f.field_type === "reference"
-      ? cardHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, row[f.field_key])
+      ? recordHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, row[f.field_key])
       : null;
+  // הוספה: אובייקט עם מסך רשומה נפתח במסך "חדש", אחרת בחלון
+  const createNew = () => {
+    const cfg = RECORDS[objectKey];
+    if (cfg) router.push(`${cfg.route}new`);
+    else setDialog({ kind: "create-record" });
+  };
 
   // ===== טעינה =====
   useEffect(() => {
@@ -118,12 +150,28 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
     setSelected(new Set());
     setPage(0);
     warnedRef.current = false;
-    loadViewState(view, fields).then(setState).catch((e) => setLoadError(errorText(e)));
+    loadViewState(view, fields)
+      .then((s) => {
+        // חזרה ממסך רשומה: אותו סינון, מיון, חיפוש ועמוד שהיו (גם אם לא נשמרו בתצוגה)
+        const snap = takeListSnapshot<ViewState>(objectKey);
+        if (snap && snap.viewId === view.id) {
+          lastSearch.current = snap.search;
+          setSearch(snap.search);
+          setDebounced(snap.search);
+          setState(snap.state);
+          setPage(snap.page);
+        } else {
+          setState(s);
+        }
+      })
+      .catch((e) => setLoadError(errorText(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view?.id]);
 
   useEffect(() => {
     const t = setTimeout(() => {
+      if (lastSearch.current === search) return; // בלי שינוי אמיתי בחיפוש, העמוד נשאר
+      lastSearch.current = search;
       setDebounced(search);
       setPage(0);
     }, 300);
@@ -275,8 +323,8 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
     <div className="views">
       <div className="views-head">
         <h1 className="page-title">{obj.label_plural}</h1>
-        {obj.can_create && (
-          <button type="button" className="btn primary cta" onClick={() => setDialog({ kind: "create-record" })}>
+        {canCreate && (
+          <button type="button" className="btn primary cta" onClick={createNew}>
             + הוספת {obj.label}
           </button>
         )}
@@ -359,7 +407,7 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
               <button type="button" className="btn outline" onClick={() => setDialog({ kind: "bulk-set" })}>שינוי ערך</button>
             )}
             <button type="button" className="btn outline" onClick={() => doExport(selected)}>ייצוא הנבחרות</button>
-            <button type="button" className="btn outline danger" onClick={() => setDialog({ kind: "delete-rows" })}>מחיקה</button>
+            {isManager && <button type="button" className="btn outline danger" onClick={() => setDialog({ kind: "delete-rows" })}>מחיקה</button>}
             <button type="button" className="link-btn" onClick={() => setSelected(new Set())}>ניקוי הבחירה</button>
           </div>
         </div>
@@ -399,7 +447,7 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
           onChange={update}
           onOpen={openRow}
           refHref={refHref}
-          emptyAction={obj.can_create ? () => setDialog({ kind: "create-record" }) : undefined}
+          emptyAction={canCreate ? createNew : undefined}
           emptyLabel={obj.label}
         />
       ) : (
