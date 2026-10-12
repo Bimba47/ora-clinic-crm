@@ -516,7 +516,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
               {byKey.get(cfg.subtitle)!.label}:{" "}
               {byKey.get(cfg.subtitle)!.field_type === "datetime" ? (
                 // קודם התאריך ואחריו השעה (בסדר הקריאה מימין)
-                <><span dir="ltr">{formatDate(String(rec[cfg.subtitle]))}</span>, <span dir="ltr">{formatTime(String(rec[cfg.subtitle]))}</span></>
+                <><span dir="ltr">{formatDate(String(rec[cfg.subtitle]))}</span><span dir="ltr" className="sub-time">{formatTime(String(rec[cfg.subtitle]))}</span></>
               ) : (
                 renderValue(byKey.get(cfg.subtitle)!, rec)
               )}

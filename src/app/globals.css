@@ -557,7 +557,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 /* כפתורי הפעולה במסך רשומה: קומפקטיים */
 .record-actions .btn, .record-actions .btn.cta { min-height: 36px; padding: 0 16px; font-size: 12px; box-shadow: none; }
 /* "פתוחה כבר" בקריאה: ערך מודגש */
-.computed-item.strong .computed-value { color: var(--link); font-weight: 700; }
+.computed-item.strong .computed-value, .computed-item.warn .computed-value { color: var(--err); font-weight: 700; } /* כמו תגית "לא נקראה" */
 /* תיאור הקריאה בקבוצת "הקריאה": כתב קטן יותר */
 .field-description > div { font-size: 12px; }
 /* תפקידים: פעולות התפקיד אחת מתחת לשנייה */
@@ -565,3 +565,5 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .perm-role-actions.stacked .link-btn { min-height: 32px; padding: 4px 8px; }
 /* כותרת קריאה (תיאור ארוך): כתב קטן יותר מכותרת עמוד רגילה */
 .record-head.stacked .record-title .page-title { font-size: 20px; line-height: 1.4; }
+/* "נפתחה": רווח בין התאריך לשעה */
+.title-sub .sub-time { margin-inline-start: 16px; }
