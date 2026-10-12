@@ -14,7 +14,7 @@ import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import Modal, { Confirm } from "@/components/Modal";
 import RecordForm, { CREATED_TOAST, FieldInput, copyFromRef, toInput, toValue } from "@/components/views/RecordForm";
-import { type ChildDef, type RecordNav, RECORDS, markListRestore, readNav, recordHref, saveNav } from "@/lib/records";
+import { type ChildDef, type RecordNav, RECORDS, linkHref, markListRestore, readNav, recordHref, saveNav } from "@/lib/records";
 import {
   type Catalog, type FieldMeta, type Row,
   createRecord, deleteRecords, errorText, loadCatalog, loadRefOptions, updateRecords,
@@ -260,7 +260,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
     if (!text) return <span className="muted">—</span>;
     const raw = r[f.field_key];
     if (f.field_type === "reference") {
-      const href = recordHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, raw);
+      const href = linkHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, raw, isManager);
       return href ? <Link href={href} className="ref-link" onClick={stop}>{text}</Link> : text;
     }
     if (f.field_type === "choice" || f.field_type === "boolean") return <span className={`tag tag-${String(raw)}`}>{text}</span>;

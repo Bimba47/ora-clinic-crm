@@ -1,25 +1,27 @@
 "use client";
 // מסגרת האפליקציה לפי האפיון:
 // מחשב: תפריט צד קבוע בצד ימין. נייד (מתחת ל-768px): סרגל תחתון עם 4 לשוניות.
-// כותרת עליונה בכל מסך: חיפוש לפי טלפון ופעמון התראות.
-// מסך הכניסה מוצג בלי המסגרת.
+// כותרת עליונה בכל מסך: חזרה, חיפוש לפי טלפון, פעמון התראות (ובנייד גם הגדרות).
+// שם המערכת והלוגו נקראים מההגדרות (app_settings). מסך הכניסה מוצג בלי המסגרת.
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Icon, { type IconName } from "./Icon";
 import { AuthProvider, useAuth } from "./Auth";
 import { ToastProvider } from "./Toast";
+import { Brand, SettingsProvider } from "./Settings";
+import NotificationBell from "./NotificationBell";
 
-type NavItem = { label: string; short?: string; href: string; icon: IconName; mobile?: boolean; managerOnly?: boolean };
+type NavItem = { label: string; short?: string; href: string; icon: IconName; mobile?: boolean };
 
+// ניהול צוות ומחירון נמצאים בתוך "הגדרות" (/settings)
 const NAV: NavItem[] = [
   { label: "ראשי", href: "/", icon: "home", mobile: true },
   { label: "לקוחות", href: "/clients", icon: "users", mobile: true },
   { label: "תורים", href: "/appointments/list", icon: "calendar", mobile: true },
   { label: "קריאות שירות", short: "קריאות", href: "/requests", icon: "ticket", mobile: true },
   { label: "התראות", href: "/notifications", icon: "bell" },
-  { label: "ניהול צוות", short: "צוות", href: "/team", icon: "settings", managerOnly: true },
-  { label: "מחירון", href: "/treatments", icon: "tag", managerOnly: true },
+  { label: "הגדרות", href: "/settings", icon: "settings" },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -37,10 +39,10 @@ function NavEntry({ item, compact }: { item: NavItem; compact?: boolean }) {
   );
 }
 
-function Shell({ appName, children }: { appName: string; children: React.ReactNode }) {
+function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { ready, userId, me, isManager, signOut } = useAuth();
+  const { ready, userId, me, signOut } = useAuth();
 
   if (pathname === "/login") return <>{children}</>;
   if (!ready || !userId) {
@@ -51,18 +53,17 @@ function Shell({ appName, children }: { appName: string; children: React.ReactNo
     );
   }
 
-  const items = NAV.filter((i) => !i.managerOnly || isManager);
   return (
     <div className="shell">
       <aside className="sidebar" aria-label="תפריט ראשי">
-        <div className="brand">{appName}</div>
+        <div className="brand"><Brand /></div>
         <nav>
-          {items.map((item) => (
+          {NAV.map((item) => (
             <NavEntry key={item.href} item={item} />
           ))}
         </nav>
         <div className="sidebar-foot">
-          <div className="muted">{me?.full_name ?? "משתמשת לא מזוהה"}</div>
+          <Link href="/settings/profile" className="muted profile-link">{me?.full_name ?? "משתמשת לא מזוהה"}</Link>
           <button type="button" className="link-btn" onClick={signOut}>יציאה</button>
         </div>
       </aside>
@@ -89,8 +90,10 @@ function Shell({ appName, children }: { appName: string; children: React.ReactNo
             <Icon name="search" />
             <input type="tel" inputMode="numeric" aria-label="חיפוש לפי טלפון" placeholder="054-1234567" disabled />
           </label>
-          <Link className="icon-btn" href="/notifications" aria-label="התראות">
-            <Icon name="bell" />
+          <NotificationBell />
+          {/* בנייד אין תפריט צד, ולכן ההגדרות והפרופיל זמינים מכאן */}
+          <Link className="icon-btn settings-mobile" href="/settings" aria-label="הגדרות">
+            <Icon name="settings" />
           </Link>
         </header>
         {me && !me.is_active && (
@@ -109,12 +112,14 @@ function Shell({ appName, children }: { appName: string; children: React.ReactNo
   );
 }
 
-export default function AppShell({ appName, children }: { appName: string; children: React.ReactNode }) {
+export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <Shell appName={appName}>{children}</Shell>
-      </ToastProvider>
-    </AuthProvider>
+    <SettingsProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <Shell>{children}</Shell>
+        </ToastProvider>
+      </AuthProvider>
+    </SettingsProvider>
   );
 }

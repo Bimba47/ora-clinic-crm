@@ -13,7 +13,8 @@ import {
   createView, deleteRecords, deleteView, errorText, loadCatalog, loadRecord, loadViewState, loadViews,
   renameView, runView, saveViewState, setDefaultView, setViewShared, updateRecords,
 } from "@/lib/views";
-import { RECORDS, recordHref, saveListSnapshot, saveNav, takeListSnapshot } from "@/lib/records";
+import { RECORDS, linkHref, recordHref, saveListSnapshot, saveNav, takeListSnapshot } from "@/lib/records";
+import { openNotification } from "@/components/NotificationBell";
 import { formatValue } from "@/lib/format";
 import ListView from "./ListView";
 import KanbanView from "./KanbanView";
@@ -43,7 +44,14 @@ function remember(objectKey: string, viewId?: string) {
   }
 }
 
-export default function ObjectViews({ objectKey }: { objectKey: string }) {
+// headerActions: כפתורים נוספים בכותרת (למשל "סמני הכול כנקרא"). reloadToken: שינוי שלו טוען את הרשימה מחדש.
+export default function ObjectViews({
+  objectKey, headerActions, reloadToken = 0,
+}: {
+  objectKey: string;
+  headerActions?: React.ReactNode;
+  reloadToken?: number;
+}) {
   const { userId, isManager, me } = useAuth();
   const toast = useToast();
 
@@ -83,10 +91,10 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
   const openRow = async (row: Row) => {
     try {
       if (objectKey === "notifications") {
-        const n = await loadRecord("notifications", row.id, ["request_id", "is_read"]);
-        if (!n.is_read) await updateRecords("notifications", [row.id], { is_read: true });
-        saveNav("service_requests", { ids: [String(n.request_id)], backHref: pathname, backLabel: obj?.label_plural ?? "" });
-        router.push(recordHref("service_requests", n.request_id)!);
+        // התראה: מסומנת כנקראה ומובילה לרשומה שהיא מקשרת אליה (לפי האפיון)
+        const n = await loadRecord("notifications", row.id, ["object_key", "record_id", "is_read"]);
+        router.push(await openNotification({ id: row.id, is_read: !!n.is_read, object_key: (n.object_key as string) ?? null, record_id: (n.record_id as string) ?? null }));
+        setRefreshKey((k) => k + 1);
         return;
       }
       const href = recordHref(objectKey, row.id);
@@ -107,7 +115,7 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
   // שדה מקושר (למשל "לקוחה" בתור) מוצג כקישור למסך הרשומה שלו
   const refHref = (f: FieldMeta, row: Row) =>
     f.field_type === "reference"
-      ? recordHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, row[f.field_key])
+      ? linkHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, row[f.field_key], isManager)
       : null;
   // הוספה: אובייקט עם מסך רשומה נפתח במסך "חדש", אחרת בחלון
   const createNew = () => {
@@ -190,7 +198,7 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
     return () => {
       cancelled = true;
     };
-  }, [objectKey, state, debounced, page, refreshKey, toast]);
+  }, [objectKey, state, debounced, page, refreshKey, reloadToken, toast]);
 
   // ===== שמירת הגדרות =====
   // כל שינוי חל מיד על המסך. אם מותר לשנות את התצוגה, הוא נשמר במסד.
@@ -323,6 +331,7 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
     <div className="views">
       <div className="views-head">
         <h1 className="page-title">{obj.label_plural}</h1>
+        {headerActions && <div className="head-extra">{headerActions}</div>}
         {canCreate && (
           <button type="button" className="btn primary cta" onClick={createNew}>
             + הוספת {obj.label}
@@ -456,7 +465,7 @@ export default function ObjectViews({ objectKey }: { objectKey: string }) {
           fields={fields}
           state={state}
           search={debounced}
-          refreshKey={refreshKey}
+          refreshKey={refreshKey + reloadToken}
           onOpen={openRow}
           refHref={refHref}
         />

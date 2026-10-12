@@ -25,6 +25,7 @@ export type RecordConfig = {
   noCopy?: string[];                               // שדות שמתרוקנים בשכפול (ייחודיים או תלויי זמן)
   copySuffix?: string;                             // שדה שמקבל " (עותק)" בשכפול (שם ייחודי)
   uniquePhone?: boolean;                           // בדיקת "לקוחה קיימת" בזמן ההקלדה
+  managerScreen?: boolean;                         // המסך נמצא באזור ההגדרות של המנהלת (מטפלת לא מקבלת אליו קישור)
 };
 
 export const RECORDS: Record<string, RecordConfig> = {
@@ -79,8 +80,8 @@ export const RECORDS: Record<string, RecordConfig> = {
     noCopy: ["status", "closed_at"],
   },
   staff: {
-    route: "/team/",
-    listHref: "/team",
+    route: "/settings/team/",
+    listHref: "/settings/team",
     header: ["role", "is_active"],
     groups: [
       { title: "פרטים", fields: ["full_name", "phone", "email"] },
@@ -97,12 +98,13 @@ export const RECORDS: Record<string, RecordConfig> = {
       },
     ],
     editRole: "manager",
+    managerScreen: true,
     noDelete: "אשת צוות לא נמחקת, כי יש לה היסטוריה. כדי להפסיק את הגישה שלה משביתים אותה (סטטוס: מושבתת).",
     noDuplicate: "אשת צוות נוספת מתווספת דרך הזמנה למערכת, לא בשכפול.",
   },
   treatments: {
-    route: "/treatments/",
-    listHref: "/treatments",
+    route: "/settings/treatments/",
+    listHref: "/settings/treatments",
     header: ["price", "duration_minutes", "is_active"],
     groups: [
       { title: "טיפול", fields: ["name", "is_active"] },
@@ -115,6 +117,7 @@ export const RECORDS: Record<string, RecordConfig> = {
       },
     ],
     editRole: "manager",
+    managerScreen: true,
     copySuffix: "name",
   },
 };
@@ -123,6 +126,12 @@ export const RECORDS: Record<string, RecordConfig> = {
 export function recordHref(objectKey: string | undefined, id: unknown): string | null {
   const cfg = objectKey ? RECORDS[objectKey] : undefined;
   return cfg && id ? `${cfg.route}${id}` : null;
+}
+
+// קישור לרשומה מקושרת, לפי ההרשאה: מסכי הגדרות (צוות, מחירון) רק למנהלת. למטפלת השם מוצג בלי קישור.
+export function linkHref(objectKey: string | undefined, id: unknown, isManager: boolean): string | null {
+  if (objectKey && RECORDS[objectKey]?.managerScreen && !isManager) return null;
+  return recordHref(objectKey, id);
 }
 
 // ===== ניווט בין רשומות =====

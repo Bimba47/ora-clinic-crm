@@ -1,6 +1,6 @@
 # סכמת בסיס הנתונים: CRM קליניקת אורה
 
-מצב אחרי מיגרציה `0006_filterable` (12.10.2026). כל הכללים כאן נאכפים במסד.
+מצב אחרי מיגרציה `0009_settings_profile_notifications` (12.10.2026). כל הכללים כאן נאכפים במסד.
 טבלאות העסק בטבלאות 1 ו-2. טבלאות מנוע התצוגות בטבלה 3.
 
 ## טבלה 1: האובייקטים והקשרים
@@ -17,7 +17,7 @@
 | קריאות שירות | `service_requests` | clients | לקוחה 1 ← רבים | `service_requests.client_id` | חסום |
 | | | staff (אחראית) | צוות 1 ← רבים | `service_requests.assigned_to` | השדה מתרוקן |
 | | | staff (נפתחה על ידי) | צוות 1 ← רבים | `service_requests.created_by` | השדה מתרוקן |
-| התראות שיוך | `notifications` | service_requests | קריאה 1 ← רבים | `notifications.request_id` | נמחקות איתה |
+| התראות | `notifications` | כל רשומה (object_key + record_id) | רשומה 1 ← רבים | בלי מפתח זר (מאז 0009) | נשארות (הקישור מוביל ל"לא נמצאה") |
 | | | staff (למי) | צוות 1 ← רבים | `notifications.recipient_id` | נמחקות איתה |
 | יומן פעילות | `audit_log` | staff (מי ביצעה) | צוות 1 ← רבים | `audit_log.actor_id` | חסום |
 
@@ -92,13 +92,15 @@
 | updated_at | עודכנה | timestamptz | ✓ | אוטומטי |
 | closed_at | נסגרה | timestamptz | | ייקבע אוטומטית בשלב האוטומציות |
 
-### notifications (התראות שיוך)
+### notifications (מרכז התראות)
 | שדה | תווית | סוג | חובה | ערכים / כלל |
 |---|---|---|---|---|
 | id | | uuid | ✓ | אוטומטי |
 | recipient_id | למי | uuid → staff | ✓ | |
-| request_id | קריאה | uuid → service_requests | ✓ | |
-| message | הודעה | text | ✓ | נוצרת אוטומטית |
+| kind | סוג | enum `notification_kind` | ✓ | `assignment` שיוך, `reminder` תזכורת, `update` עדכון, `system` מערכת (ברירת מחדל) |
+| object_key | אובייקט | text | | `clients`, `appointments`, `service_requests`, `staff`, `treatments`. יחד עם record_id או ששניהם ריקים |
+| record_id | מזהה הרשומה | uuid | | הרשומה שההתראה מובילה אליה |
+| message | הודעה | text | ✓ | נוצרת אוטומטית. יצירת התראה = הוספת שורה אחת (recipient_id + message חובה, השאר ברירת מחדל) |
 | is_read | נקראה | boolean | ✓ | ברירת מחדל `false` |
 | created_at | נוצרה | timestamptz | ✓ | אוטומטי |
 | updated_at | עודכנה | timestamptz | ✓ | אוטומטי |
@@ -181,6 +183,35 @@
 ### פונקציות
 - `run_view`, `run_view_groups`: מריצות תצוגה (security invoker, ולכן RLS חל).
 - `save_view`, `create_view`, `set_default_view` (מנהלת בלבד): שמירה, יצירה ושכפול, ברירת מחדל.
+
+## הגדרות, העדפות ולוגו (`0009_settings_profile_notifications`)
+
+### app_settings (הגדרות המערכת, מפתח-ערך)
+| שדה | סוג | חובה | ערכים / כלל |
+|---|---|---|---|
+| key | text, PK | ✓ | אותיות קטנות וקו תחתון. כרגע: `app_name`, `logo_url` |
+| value | jsonb | ✓ | הערך (מחרוזת, או null) |
+| label | text | ✓ | שם ההגדרה בעברית |
+| is_public | boolean | ✓ | `true` = נקרא גם לפני כניסה (שם ולוגו למסך הכניסה) |
+| created_at, updated_at | timestamptz | ✓ | אוטומטי |
+| updated_by | uuid → staff | | אוטומטי |
+
+- RLS: קריאה – ציבוריות לכולם, השאר לצוות פעיל. עדכון – מנהלת בלבד. הוספה ומחיקה – רק במיגרציה.
+- לוגו: אחסון Supabase, bucket `branding` (ציבורי לקריאה, כתיבה למנהלת בלבד, עד 1MB, PNG/JPG/WEBP/SVG).
+
+### user_preferences (העדפות אישיות)
+| שדה | סוג | חובה | ערכים / כלל |
+|---|---|---|---|
+| staff_id | uuid, PK → staff | ✓ | ברירת מחדל: המשתמשת המחוברת. נמחק עם אשת הצוות |
+| landing_path | text | ✓ | המסך שנפתח אחרי כניסה: `/`, `/clients`, `/appointments/list`, `/requests`, `/notifications` |
+| email_notifications | boolean | ✓ | ברירת מחדל `false` |
+| created_at, updated_at | timestamptz | ✓ | אוטומטי |
+
+- RLS: כל אחת קוראת, יוצרת ומעדכנת רק את השורה שלה.
+
+### פונקציות פרופיל
+- `update_my_profile(p_full_name, p_phone, p_address)`: מעדכנת רק את השורה של המשתמשת המחוברת, ורק שם, טלפון וכתובת.
+- `sync_my_email()`: אחרי החלפת אימייל ב-Supabase Auth, מעדכנת את האימייל בטבלת הצוות.
 
 ## עודכנה על ידי (`0005_updated_by`)
 

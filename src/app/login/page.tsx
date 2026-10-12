@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { Brand } from "@/components/Settings";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,7 +23,8 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <form className="card login-card" onSubmit={submit}>
-        <h1 className="page-title">קליניקת אורה</h1>
+        {/* שם המערכת והלוגו מההגדרות */}
+        <h1 className="page-title"><Brand className="login-brand" /></h1>
         <label className="field">
           <span>אימייל</span>
           <input type="email" dir="ltr" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />

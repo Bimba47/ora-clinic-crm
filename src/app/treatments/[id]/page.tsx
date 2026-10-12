@@ -1,9 +1,7 @@
-"use client";
-// מסך רשומה בודדת: /treatments/[id] (או /treatments/new ליצירה). המבנה ב-src/lib/records.ts
-import { useParams } from "next/navigation";
-import RecordPage from "@/components/RecordPage";
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  const { id } = useParams<{ id: string }>();
-  return <RecordPage key={id} objectKey="treatments" id={id} />;
+// המסך עבר לאזור ההגדרות
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  redirect(`/settings/treatments/${id}`);
 }

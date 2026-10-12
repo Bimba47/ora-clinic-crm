@@ -10,11 +10,10 @@ const heebo = Heebo({
   display: "swap",
 });
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME || "קליניקת אורה";
-
+// שם המערכת לא מקודד כאן: הוא נקרא מההגדרות (app_settings) ומוצב בלשונית הדפדפן בזמן הריצה
 export const metadata: Metadata = {
-  title: appName,
-  description: "מערכת CRM פנימית לצוות הקליניקה",
+  title: "CRM",
+  description: "מערכת CRM פנימית לצוות",
 };
 
 export const viewport: Viewport = {
@@ -27,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="he" dir="rtl">
       <body className={heebo.className}>
-        <AppShell appName={appName}>{children}</AppShell>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
