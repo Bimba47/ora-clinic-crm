@@ -502,3 +502,47 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 /* טלפון הלקוחה ליד השם בכותרת של תור וקריאה */
 .ref-phone { display: block; font-size: 12px; font-weight: 400; color: var(--muted); text-decoration: none; text-align: right; }
 .ref-phone:hover { text-decoration: underline; }
+
+/* ===== תפקידים, הרשאות וצוותים (v13) ===== */
+.record-form.one-col { grid-template-columns: 1fr; }
+.link-btn.danger { color: var(--err); }
+.perm-intro { margin: -8px 0 0; max-width: 760px; }
+.perm-card { padding: 8px; overflow-x: auto; }
+.perm-matrix { border-collapse: collapse; width: 100%; min-width: 980px; }
+.perm-matrix th, .perm-matrix td { padding: 12px; text-align: start; vertical-align: top; border-bottom: 1px solid var(--line); }
+.perm-matrix thead th { font-size: 12px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--line); }
+.perm-matrix tbody tr:last-child th, .perm-matrix tbody tr:last-child td { border-bottom: 0; }
+.perm-role { width: 200px; font-weight: 400; position: sticky; inset-inline-start: 0; background: var(--card); }
+.perm-role-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 16px; font-weight: 600; }
+.perm-role-actions { display: flex; flex-wrap: wrap; gap: 0 4px; margin-inline-start: -8px; }
+.tag-admin { background: var(--soft); min-width: 0; }
+.perm-cell { display: flex; flex-direction: column; gap: 4px; }
+.perm-action { display: flex; align-items: center; gap: 6px; min-height: 32px; border-radius: 12px; padding: 0 6px; }
+.perm-action.on { background: var(--bg); }
+.perm-check { display: inline-flex; align-items: center; gap: 6px; min-width: 64px; font-size: 12px; cursor: pointer; }
+.perm-check input { width: 16px; height: 16px; accent-color: var(--bronze); }
+.perm-action select { min-height: 28px; height: 28px; padding: 0 8px; font-size: 12px; border-radius: 999px; max-width: 128px; }
+.field-perms { list-style: none; margin: 8px 0 16px; padding: 0; }
+.field-perms li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; border-bottom: 1px solid var(--line); }
+.field-perms select { width: 160px; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+.team-card { display: flex; flex-direction: column; gap: 8px; }
+.team-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.team-head .section-title { margin: 0; }
+.team-members { list-style: none; margin: 0; padding: 0; }
+.team-members li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; border-bottom: 1px solid var(--line); }
+.team-tag { min-width: 0; margin-inline-start: 8px; height: 20px; }
+
+@media (max-width: 767px) {
+  /* מטריצת ההרשאות הופכת לכרטיס לכל תפקיד */
+  .perm-card { padding: 0; overflow: visible; background: transparent; box-shadow: none; }
+  .perm-matrix, .perm-matrix tbody, .perm-matrix tr, .perm-matrix th, .perm-matrix td { display: block; width: 100%; min-width: 0; }
+  .perm-matrix thead { display: none; }
+  .perm-matrix tr { background: var(--card); border-radius: 24px; box-shadow: var(--shadow); padding: 8px 16px; margin-bottom: 16px; }
+  .perm-role { position: static; width: auto; }
+  .perm-matrix td[data-label]::before { content: attr(data-label); display: block; font-weight: 600; margin-bottom: 4px; }
+  .perm-matrix tbody tr:last-child td { border-bottom: 1px solid var(--line); }
+  .perm-matrix tr td:last-child { border-bottom: 0 !important; }
+  .field-perms select { width: 140px; }
+}

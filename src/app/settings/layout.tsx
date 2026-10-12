@@ -12,17 +12,21 @@ type SubItem = { label: string; href: string; managerOnly: boolean };
 
 const SETTINGS_NAV: SubItem[] = [
   { label: "פרטי המערכת", href: "/settings/system", managerOnly: true },
-  { label: "ניהול צוות", href: "/settings/team", managerOnly: true },
+  { label: "משתמשים", href: "/settings/team", managerOnly: true },
+  { label: "תפקידים והרשאות", href: "/settings/roles", managerOnly: true },
+  { label: "צוותים", href: "/settings/teams", managerOnly: true },
   { label: "מחירון", href: "/settings/treatments", managerOnly: true },
   { label: "הפרופיל שלי", href: "/settings/profile", managerOnly: false },
 ];
+
+const under = (pathname: string, href: string) => pathname === href || pathname.startsWith(href + "/");
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { ready, me, isManager } = useAuth();
   const items = SETTINGS_NAV.filter((i) => !i.managerOnly || isManager);
-  const current = SETTINGS_NAV.find((i) => pathname.startsWith(i.href));
+  const current = SETTINGS_NAV.find((i) => under(pathname, i.href));
   const blocked = ready && !!me && !!current?.managerOnly && !isManager;
 
   // מטפלת שמגיעה למסך של מנהלת עוברת לפרופיל שלה
@@ -35,7 +39,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       <nav className="settings-nav card" aria-label="הגדרות">
         <h2 className="section-title">הגדרות</h2>
         {items.map((i) => {
-          const active = pathname.startsWith(i.href);
+          const active = under(pathname, i.href);
           return (
             <Link key={i.href} href={i.href} className={`settings-link${active ? " active" : ""}`} aria-current={active ? "page" : undefined}>
               {i.label}

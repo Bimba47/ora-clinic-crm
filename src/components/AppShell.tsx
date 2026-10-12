@@ -12,14 +12,14 @@ import { ToastProvider } from "./Toast";
 import { Brand, SettingsProvider } from "./Settings";
 import NotificationBell from "./NotificationBell";
 
-type NavItem = { label: string; short?: string; href: string; icon: IconName; mobile?: boolean };
+type NavItem = { label: string; short?: string; href: string; icon: IconName; mobile?: boolean; object?: string };
 
 // ניהול צוות ומחירון נמצאים בתוך "הגדרות" (/settings)
 const NAV: NavItem[] = [
   { label: "ראשי", href: "/", icon: "home", mobile: true },
-  { label: "לקוחות", href: "/clients", icon: "users", mobile: true },
-  { label: "תורים", href: "/appointments/list", icon: "calendar", mobile: true },
-  { label: "קריאות שירות", short: "קריאות", href: "/requests", icon: "ticket", mobile: true },
+  { label: "לקוחות", href: "/clients", icon: "users", mobile: true, object: "clients" },
+  { label: "תורים", href: "/appointments/list", icon: "calendar", mobile: true, object: "appointments" },
+  { label: "קריאות שירות", short: "קריאות", href: "/requests", icon: "ticket", mobile: true, object: "service_requests" },
   { label: "התראות", href: "/notifications", icon: "bell" },
   { label: "הגדרות", href: "/settings", icon: "settings" },
 ];
@@ -42,9 +42,11 @@ function NavEntry({ item, compact }: { item: NavItem; compact?: boolean }) {
 function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { ready, userId, me, signOut } = useAuth();
+  const { ready, userId, me, signOut, can } = useAuth();
+  // פריט תפריט של אובייקט מוצג רק לתפקיד שיש לו הרשאת צפייה בו
+  const nav = NAV.filter((item) => !item.object || can(item.object, "view"));
 
-  if (pathname === "/login") return <>{children}</>;
+  if (pathname === "/login" || pathname === "/accept-invite") return <>{children}</>;
   if (!ready || !userId) {
     return (
       <div className="shell-loading" aria-busy="true">
@@ -58,7 +60,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <aside className="sidebar" aria-label="תפריט ראשי">
         <div className="brand"><Brand /></div>
         <nav>
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <NavEntry key={item.href} item={item} />
           ))}
         </nav>
@@ -104,7 +106,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="bottom-nav" aria-label="ניווט">
-        {NAV.filter((item) => item.mobile).map((item) => (
+        {nav.filter((item) => item.mobile).map((item) => (
           <NavEntry key={item.href} item={item} compact />
         ))}
       </nav>

@@ -329,6 +329,8 @@ export function errorText(e: unknown): string {
     if (m.includes("duplicate key") && m.includes("phone")) return "כבר יש לקוחה עם הטלפון הזה.";
     if (m.includes("violates foreign key") && m.includes("delete")) return "אי אפשר למחוק רשומה שיש לה רשומות מקושרות.";
     if (m.includes("phone_format") || m.includes("phone_check")) return "מספר הטלפון לא תקין.";
+    if (m.includes("roles_name_key")) return "כבר יש תפקיד בשם הזה.";
+    if (m.includes("teams_name_key")) return "כבר יש צוות בשם הזה.";
     return m;
   }
   return "משהו השתבש. נסי שוב.";

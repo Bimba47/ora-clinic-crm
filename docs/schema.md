@@ -35,8 +35,9 @@
 | full_name | שם מלא | text | ✓ | לא ריק |
 | phone | טלפון | text | ✓ | מנורמל ל-`0` ועוד 8-9 ספרות |
 | email | אימייל | text | ✓ | ייחודי, באותיות קטנות, בפורמט אימייל |
-| role | תפקיד | enum `staff_role` | ✓ | `manager` מנהלת, `therapist` מטפלת (ברירת מחדל) |
-| address | כתובת מגורים | text | | גלויה רק למנהלת ולעובדת עצמה |
+| role_id | תפקיד | uuid → roles | ✓ | ההרשאות לפי התפקיד |
+| team_id | צוות | uuid → teams | | נמחק צוות → ריק |
+| address | כתובת מגורים | text | | חסומה לתפקיד "מטפלת" (הרשאת שדה). כל אחת רואה את שלה ב-`get_me` |
 | is_active | סטטוס | boolean | ✓ | `true` פעילה (ברירת מחדל), `false` מושבתת |
 | created_at | נוצרה | timestamptz | ✓ | אוטומטי |
 | updated_at | עודכנה | timestamptz | ✓ | אוטומטי |
@@ -181,7 +182,8 @@
 | `view_sorts` | direction (enum `sort_direction`: `asc`, `desc`) | |
 
 ### פונקציות
-- `run_view`, `run_view_groups`: מריצות תצוגה (security invoker, ולכן RLS חל).
+- `run_view`, `run_view_groups`: מריצות תצוגה. מאז v13 security definer, עם בדיקת היקף לכל שורה (`can_view_row`) והסתרת שדות חסומים.
+- `get_record(object, id)`: רשומה אחת עם תוויות לשדות מקושרים, לפי אותן הרשאות.
 - `save_view`, `create_view`, `set_default_view` (מנהלת בלבד): שמירה, יצירה ושכפול, ברירת מחדל.
 
 ## הגדרות, העדפות ולוגו (`0009_settings_profile_notifications`)
@@ -224,6 +226,49 @@
 - לא נחשב "שדה שהשתנה" ביומן הפעילות, בדיוק כמו `updated_at`.
 - בצוות ההרשאות לפי עמודה, ולכן ניתנה הרשאת קריאה לעמודה הזו.
 - בקטלוג מנוע התצוגות: שדה מקושר לצוות, לקריאה בלבד.
+
+## הרשאות (`0010_permissions`, `0011_function_grants`, `0012_permission_guards`)
+
+### roles (תפקידים)
+| שדה | תווית | סוג | חובה | ערכים / כלל |
+|---|---|---|---|---|
+| id | | uuid | ✓ | |
+| name | שם | text | ✓ | ייחודי |
+| description | תיאור | text | | |
+| is_admin | מנהלת מערכת | boolean | ✓ | גישה להגדרות, הרשאות ומשתמשים. תמיד נשארת מנהלת פעילה אחת |
+| created_at, updated_at, updated_by | | | | אוטומטי |
+
+תפקיד חדש מקבל אוטומטית שורת `role_permissions` לכל אובייקט, הכול `none`.
+
+### teams (צוותים)
+| שדה | תווית | סוג | חובה | ערכים / כלל |
+|---|---|---|---|---|
+| id | | uuid | ✓ | |
+| name | שם | text | ✓ | ייחודי |
+| description | תיאור | text | | |
+| created_at, updated_at, updated_by | | | | אוטומטי |
+
+### role_permissions (הרשאה לאובייקט)
+| שדה | סוג | ערכים / כלל |
+|---|---|---|
+| role_id | uuid → roles | מפתח (עם object_key). נמחק עם התפקיד |
+| object_key | text | `clients`, `appointments`, `service_requests`, `treatments`, `staff` |
+| can_view, can_create, can_edit, can_delete | enum `perm_scope` | `none` אין, `own` שלי, `team` הצוות שלי, `all` הכול. במחירון רק `none`/`all` |
+
+"שלי" לפי `view_objects.owner_field`: לקוחה `created_by`, תור `therapist_id`, קריאה `assigned_to`, צוות `id`.
+
+### field_permissions (הרשאה לשדה)
+| שדה | סוג | ערכים / כלל |
+|---|---|---|
+| role_id, object_key, field_key | | מפתח. השדה חייב להיות בקטלוג |
+| access | enum `field_access` | `hidden` חסום (לא נשלח לדפדפן), `read` קריאה בלבד. שדה חובה לא יכול להיות חסום |
+
+### פונקציות הרשאה
+- `private.row_allowed(object, action, owner)`: לב ה-RLS. קורא את ההיקף מ-`role_permissions`.
+- `private.can_view_row`, `private.field_hidden`: לשימוש `run_view` ו-`get_record`.
+- `enforce_field_access` (טריגר): חוסם שינוי שדה לקריאה בלבד או מילוי שדה חסום.
+- `sync_column_grants` (טריגר על `field_permissions`): שולל SELECT על עמודה חסומה.
+- `get_me()`, `get_my_permissions()`, `duplicate_role(role_id, name)` (מנהלת מערכת).
 
 ## מחושב בתצוגה, לא נשמר
 - **התור הבא** של לקוחה: התור הקרוב בעתיד שלא בוטל.
