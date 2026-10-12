@@ -32,6 +32,7 @@ export type FieldMeta = {
   position: number;
   default_visible: boolean;
   is_searchable: boolean;
+  is_filterable: boolean;
   is_required: boolean;
   is_editable: boolean;
 };

@@ -19,6 +19,16 @@ export function formatDateTime(v: string) {
   return dateTimeFmt.format(new Date(v));
 }
 
+const timeFmt = new Intl.DateTimeFormat("he-IL", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+
+export function formatDate(v: string) {
+  return dateFmt.format(new Date(v));
+}
+
+export function formatTime(v: string) {
+  return timeFmt.format(new Date(v));
+}
+
 export function formatMoney(v: unknown) {
   return moneyFmt.format(Number(v));
 }

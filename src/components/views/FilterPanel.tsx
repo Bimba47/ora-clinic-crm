@@ -13,12 +13,14 @@ export default function FilterPanel({
   state: ViewState;
   onChange: (patch: Partial<ViewState>) => void;
 }) {
-  const byKey = new Map(fields.map((f) => [f.field_key, f]));
+  // רק שדות שמותר לסנן לפיהם (is_filterable בקטלוג, נאכף גם במסד)
+  const filterable = fields.filter((f) => f.is_filterable);
+  const byKey = new Map(filterable.map((f) => [f.field_key, f]));
   const set = (filters: FilterDef[]) => onChange({ filters });
   const patch = (i: number, p: Partial<FilterDef>) => set(state.filters.map((f, j) => (j === i ? { ...f, ...p } : f)));
 
   const add = () => {
-    const f = fields[0];
+    const f = filterable[0];
     set([...state.filters, { field: f.field_key, op: operatorsFor(f.field_type)[0], value: "" }]);
   };
 
@@ -38,7 +40,7 @@ export default function FilterPanel({
       {state.filters.length === 0 && <p className="muted">אין סינון. כל הרשומות מוצגות.</p>}
 
       {state.filters.map((flt, i) => {
-        const field = byKey.get(flt.field) ?? fields[0];
+        const field = byKey.get(flt.field) ?? filterable[0];
         const ops = operatorsFor(field.field_type);
         const isDate = field.field_type === "date" || field.field_type === "datetime";
         return (
@@ -51,7 +53,7 @@ export default function FilterPanel({
                 patch(i, { field: nf.field_key, op: operatorsFor(nf.field_type)[0], value: "" });
               }}
             >
-              {fields.map((f) => (
+              {filterable.map((f) => (
                 <option key={f.field_key} value={f.field_key}>{f.label}</option>
               ))}
             </select>
@@ -108,6 +110,7 @@ export function ValueInput({
     case "money":
       return <input type="number" inputMode="decimal" step={field.field_type === "money" ? "0.01" : "1"} dir="ltr" {...common} />;
     case "date":
+    case "datetime": // בסינון משווים לפי יום, ולכן בוחרים תאריך בלבד
       return <input type="date" dir="ltr" {...common} />;
     case "phone":
       return <input type="tel" inputMode="numeric" dir="ltr" {...common} />;

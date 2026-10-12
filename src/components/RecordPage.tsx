@@ -19,7 +19,7 @@ import {
   type Catalog, type FieldMeta, type Row,
   createRecord, deleteRecords, errorText, loadCatalog, loadRefOptions, updateRecords,
 } from "@/lib/views";
-import { formatDateTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
+import { formatDate, formatDateTime, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 
 type Rec = Record<string, unknown> & { id: string };
 type Dialog =
@@ -208,6 +208,18 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       go();
     }
   };
+
+  // כניסה לעריכה: הטופס יכול להיות מתחת לקצה המסך (בייחוד בטלפון), ולכן עוברים לשדה הראשון ומתמקדים בו
+  useEffect(() => {
+    if (!editing || isNew) return;
+    const first = fields.find((f) => f.is_editable);
+    const el = first && document.getElementById(`rp-${first.field_key}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.focus({ preventScroll: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing]);
 
   // ===== "לקוחה קיימת": בדיקת טלפון כפול בזמן ההקלדה =====
   const phoneValue = phoneField ? values[phoneField.field_key] ?? "" : "";
@@ -401,8 +413,9 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         tone: next ? "highlight" : undefined,
         value: next ? (
           <Link href={recordHref("appointments", next.id)!} className="computed-link">
-            <span className="kpi" dir="ltr">{formatDateTime(String(next.starts_at))}</span>
-            <span>{textOf(af("treatment_id"), next)} · {textOf(af("therapist_id"), next)}</span>
+            <span className="next-date" dir="ltr">{formatDate(String(next.starts_at))}</span>
+            <span className="next-time" dir="ltr">{formatTime(String(next.starts_at))}</span>
+            <span className="next-meta">{textOf(af("treatment_id"), next)} · {textOf(af("therapist_id"), next)}</span>
           </Link>
         ) : "אין תור עתידי",
       });
@@ -492,7 +505,8 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         </div>
       </header>
 
-      {computed.length > 0 && (
+      {/* בעריכה השדות המחושבים מוסתרים, כדי שהטופס יופיע מיד אחרי הכותרת */}
+      {computed.length > 0 && !editing && (
         <section className="computed" aria-label="שדות מחושבים">
           {computed.map((c) => (
             <div key={c.label} className={`card computed-item${c.tone ? ` ${c.tone}` : ""}`}>

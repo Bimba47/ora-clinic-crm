@@ -1,6 +1,6 @@
 # סכמת בסיס הנתונים: CRM קליניקת אורה
 
-מצב אחרי מיגרציה `0005_updated_by` (12.10.2026). כל הכללים כאן נאכפים במסד.
+מצב אחרי מיגרציה `0006_filterable` (12.10.2026). כל הכללים כאן נאכפים במסד.
 טבלאות העסק בטבלאות 1 ו-2. טבלאות מנוע התצוגות בטבלה 3.
 
 ## טבלה 1: האובייקטים והקשרים
@@ -154,6 +154,7 @@
 | ref_object_id | uuid → view_objects | ב-`reference` בלבד | |
 | position | int | ✓ | סדר השדות |
 | default_visible, is_searchable, is_required, is_editable | boolean | ✓ | |
+| is_filterable | boolean | ✓ | ברירת מחדל `true`. `false` = לא מופיע בסינון ונחסם במסד (0006) |
 | created_at, updated_at | timestamptz | ✓ | אוטומטי |
 
 ### views (תצוגות)
