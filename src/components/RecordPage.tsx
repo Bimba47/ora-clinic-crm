@@ -444,10 +444,6 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       });
       computed.push({ label: "קריאות פתוחות", value: childRows("service_requests", "client_id").filter((r) => r.status !== "closed").length });
     }
-    if (objectKey === "appointments" && rec.starts_at) {
-      const end = new Date(new Date(String(rec.starts_at)).getTime() + Number(rec.duration_minutes) * 60000);
-      computed.push({ label: "שעת סיום", value: <span dir="ltr">{formatTime(end.toISOString())}</span> });
-    }
     if (objectKey === "service_requests" && rec.status !== "closed") {
       const age = now - new Date(String(rec.created_at)).getTime();
       computed.push({ label: "פתוחה כבר", value: ago(age), tone: age > OLD_REQUEST_MS ? "warn" : undefined });
