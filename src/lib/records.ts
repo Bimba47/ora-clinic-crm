@@ -1,6 +1,7 @@
 // מבנה מסך הרשומה הבודדת לכל אובייקט. המבנה קבוע ונגזר מהאפיון, ולא מוגדר על ידי המשתמשת:
 // אילו שדות קריטיים ליד הכותרת, איך שאר השדות מקובצים, אילו רשומות מקושרות מוצגות בלשוניות,
-// ומה מותר (עריכה, מחיקה, שכפול). השדות עצמם (סוג, תווית, חובה) מגיעים מהקטלוג במסד.
+// ומה לא מוצע בכלל (מחיקה, שכפול). מי מורשית ליצור, לערוך ולמחוק נקבע בטבלת ההרשאות במסד (role_permissions),
+// והשדות עצמם (סוג, תווית, חובה, חסום/קריאה בלבד) מגיעים מהקטלוג ומהרשאות השדה.
 
 export type ChildDef = {
   object: string;      // האובייקט המקושר
@@ -19,7 +20,6 @@ export type RecordConfig = {
   stackedHeader?: boolean;                         // כותרת בטור: שם, מתחתיו השדות, ומתחתם הכפתורים (לשם ארוך)
   groups: { title: string; fields: string[] }[];   // שאר השדות, בקבוצות
   children: ChildDef[];
-  editRole: "all" | "manager";                     // מי יכולה ליצור ולערוך (נאכף גם ב-RLS)
   noDelete?: string;                               // אם מחיקה לא מוצעת: ההסבר
   noDuplicate?: string;                            // אם שכפול לא מוצע: ההסבר
   noCopy?: string[];                               // שדות שמתרוקנים בשכפול (ייחודיים או תלויי זמן)
@@ -47,7 +47,6 @@ export const RECORDS: Record<string, RecordConfig> = {
         columns: ["description", "assigned_to", "created_at"], sort: { field: "created_at", asc: false },
       },
     ],
-    editRole: "all",
     noCopy: ["phone"],
     uniquePhone: true,
   },
@@ -62,7 +61,6 @@ export const RECORDS: Record<string, RecordConfig> = {
       { title: "הערות", fields: ["notes"] },
     ],
     children: [],
-    editRole: "all",
     noCopy: ["starts_at", "status"],
   },
   service_requests: {
@@ -76,16 +74,15 @@ export const RECORDS: Record<string, RecordConfig> = {
       { title: "טיפול בקריאה", fields: ["status", "assigned_to", "closed_at"] },
     ],
     children: [],
-    editRole: "all",
     noCopy: ["status", "closed_at"],
   },
   staff: {
     route: "/settings/team/",
     listHref: "/settings/team",
-    header: ["role", "is_active"],
+    header: ["role_id", "team_id", "is_active"],
     groups: [
-      { title: "פרטים", fields: ["full_name", "phone", "email"] },
-      { title: "תפקיד וגישה", fields: ["role", "is_active"] },
+      { title: "פרטים", fields: ["full_name", "phone", "email", "address"] },
+      { title: "תפקיד וצוות", fields: ["role_id", "team_id", "is_active"] },
     ],
     children: [
       {
@@ -97,7 +94,6 @@ export const RECORDS: Record<string, RecordConfig> = {
         columns: ["description", "client_id", "created_at"], sort: { field: "created_at", asc: false },
       },
     ],
-    editRole: "manager",
     managerScreen: true,
     noDelete: "אשת צוות לא נמחקת, כי יש לה היסטוריה. כדי להפסיק את הגישה שלה משביתים אותה (סטטוס: מושבתת).",
     noDuplicate: "אשת צוות נוספת מתווספת דרך הזמנה למערכת, לא בשכפול.",
@@ -116,7 +112,6 @@ export const RECORDS: Record<string, RecordConfig> = {
         columns: ["starts_at", "client_id", "therapist_id"], sort: { field: "starts_at", asc: false },
       },
     ],
-    editRole: "manager",
     managerScreen: true,
     copySuffix: "name",
   },

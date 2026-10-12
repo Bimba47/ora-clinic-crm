@@ -111,14 +111,23 @@ export function needsValue(op: FilterOperator) {
 // ===== קטלוג =====
 export type Catalog = { objects: ObjectMeta[]; fields: FieldMeta[] };
 
+// הקטלוג כפי שהוא למשתמשת המחוברת: שדה חסום לתפקיד שלה לא מופיע בכלל (גם המסד לא שולח אותו),
+// ושדה לקריאה בלבד לא נפתח לעריכה (המסד גם חוסם את השינוי).
 export async function loadCatalog(): Promise<Catalog> {
-  const [objects, fields] = await Promise.all([
+  const [objects, fields, perms] = await Promise.all([
     supabase.from("view_objects").select("id, object_key, label, label_plural, display_field, can_create"),
     supabase.from("object_fields").select("*").order("position"),
+    supabase.rpc("get_my_permissions"),
   ]);
   if (objects.error) throw objects.error;
   if (fields.error) throw fields.error;
-  return { objects: objects.data as ObjectMeta[], fields: fields.data as FieldMeta[] };
+  const objs = objects.data as ObjectMeta[];
+  const keyOf = new Map(objs.map((o) => [o.id, o.object_key]));
+  const access = ((perms.data as { fields?: Record<string, "hidden" | "read"> } | null)?.fields) ?? {};
+  const visible = (fields.data as FieldMeta[])
+    .filter((f) => access[`${keyOf.get(f.object_id)}.${f.field_key}`] !== "hidden")
+    .map((f) => (access[`${keyOf.get(f.object_id)}.${f.field_key}`] === "read" ? { ...f, is_editable: false } : f));
+  return { objects: objs, fields: visible };
 }
 
 // ===== תצוגות =====
@@ -256,11 +265,15 @@ export async function deleteRecords(objectKey: string, ids: string[]) {
   return data.length;
 }
 
-// רשומה אחת לעריכה. העמודות נבחרות במפורש (אף פעם לא select *, בגלל עמודות חסומות כמו כתובת הצוות).
-export async function loadRecord(objectKey: string, id: string, columns: string[]) {
-  const { data, error } = await supabase.from(objectKey).select(["id", ...columns].join(", ")).eq("id", id).single();
+// רשומה אחת, דרך get_record: רק אם מותר לראות אותה, ובלי שדות שחסומים לתפקיד.
+// כולל את שמות השדות המקושרים (<שדה>__label). columns נשאר לתאימות, ומחזירים רק אותם (ואת id).
+export async function loadRecord(objectKey: string, id: string, columns?: string[]) {
+  const { data, error } = await supabase.rpc("get_record", { p_object: objectKey, p_id: id });
   if (error) throw error;
-  return data as unknown as Record<string, unknown>;
+  if (!data) throw new Error("הרשומה לא נמצאה, או שאין לך הרשאה לראות אותה.");
+  const rec = data as Record<string, unknown>;
+  if (!columns) return rec;
+  return Object.fromEntries(Object.entries(rec).filter(([k]) => k === "id" || columns.includes(k) || columns.includes(k.replace(/__label$/, ""))));
 }
 
 // יצירת רשומה. מחזיר את המזהה החדש (למשל כדי לעבור למסך הרשומה שנוצרה).
@@ -284,10 +297,17 @@ export function loadRefOptions(refObject: ObjectMeta, catalog: Catalog): Promise
   const hasIsActive = own.some((f) => f.field_key === "is_active");
   const phoneKey = own.find((f) => f.field_type === "phone")?.field_key;
   const cols = ["id", refObject.display_field, ...(hasIsActive ? ["is_active"] : []), ...(phoneKey ? [phoneKey] : [])].join(", ");
+  // דרך run_view: אותו היקף שורות ואותה הסתרת שדות כמו בכל מקום אחר
   const p = (async () => {
-    const { data, error } = await supabase.from(refObject.object_key).select(cols).order(refObject.display_field).limit(1000);
+    const { data, error } = await supabase.rpc("run_view", {
+      p_object: refObject.object_key,
+      p_def: { columns: cols.split(", ").filter((c) => c !== "id"), filters: [], match: "all", sorts: [{ field: refObject.display_field, dir: "asc" }] },
+      p_search: null,
+      p_limit: 1000,
+      p_offset: 0,
+    });
     if (error) throw error;
-    return (data as unknown as Record<string, unknown>[]).map((r) => ({
+    return ((data as { rows: Record<string, unknown>[] }).rows ?? []).map((r) => ({
       value: String(r.id),
       label: String(r[refObject.display_field] ?? ""),
       inactive: hasIsActive && r.is_active === false,

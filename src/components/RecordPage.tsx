@@ -20,6 +20,7 @@ import {
   createRecord, deleteRecords, errorText, loadCatalog, loadRefOptions, updateRecords,
 } from "@/lib/views";
 import { formatDate, formatDateTime, formatPhone, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
+import { adminApi } from "@/lib/adminApi";
 
 type Rec = Record<string, unknown> & { id: string };
 type Dialog =
@@ -47,7 +48,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   const cfg = RECORDS[objectKey];
   const isNew = id === "new";
   const router = useRouter();
-  const { me, userId, isManager } = useAuth();
+  const { me, userId, isManager, can } = useAuth();
   const toast = useToast();
 
   const [catalog, setCatalog] = useState<Catalog | null>(null);
@@ -55,7 +56,6 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   const [labels, setLabels] = useState<Map<string, Map<string, string>>>(new Map());
   const [phones, setPhones] = useState<Map<string, string>>(new Map()); // טלפון של רשומה מקושרת (למשל הלקוחה בתור)
   const [children, setChildren] = useState<Record<string, Rec[]>>({});
-  const [address, setAddress] = useState<string | null | undefined>(undefined); // undefined = אין הרשאה
   const [nav, setNav] = useState<RecordNav | null>(null);
   const [tab, setTab] = useState(0);
   const [editing, setEditing] = useState(isNew);
@@ -75,8 +75,10 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   );
   const byKey = useMemo(() => new Map(fields.map((f) => [f.field_key, f])), [fields]);
   const editable = fields.filter((f) => f.is_editable);
-  const canEdit = cfg.editRole === "all" || isManager;
-  const canCreate = canEdit && !!obj?.can_create;
+  // מה מותר לי, לפי טבלת ההרשאות (המסד אוכף גם את ההיקף: שלי / הצוות שלי)
+  const canEdit = can(objectKey, "edit");
+  const canCreate = can(objectKey, "create") && !!obj?.can_create;
+  const canDelete = can(objectKey, "delete");
   const phoneField = fields.find((f) => f.field_type === "phone");
 
   useEffect(() => setNav(readNav(objectKey)), [objectKey]);
@@ -117,9 +119,9 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         );
         const from = params.get("from");
         if (from) {
-          const { data, error } = await supabase.from(objectKey).select(["id", ...editableFs.map((f) => f.field_key)].join(", ")).eq("id", from).maybeSingle();
+          const { data, error } = await supabase.rpc("get_record", { p_object: objectKey, p_id: from });
           if (error) throw error;
-          const src = data as unknown as Rec | null;
+          const src = data as Rec | null;
           if (src) {
             for (const f of editableFs) {
               if (cfg.noCopy?.includes(f.field_key)) continue;
@@ -134,9 +136,10 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         return;
       }
 
-      const { data, error } = await supabase.from(objectKey).select(["id", ...fs.map((f) => f.field_key)].join(", ")).eq("id", id).maybeSingle();
+      // דרך get_record: רק אם מותר לי לראות אותה, ובלי שדות שחסומים לתפקיד שלי
+      const { data, error } = await supabase.rpc("get_record", { p_object: objectKey, p_id: id });
       if (error) throw error;
-      const r = data as unknown as Rec | null;
+      const r = data as Rec | null;
       setRec(r);
       if (!r) return;
       const v = Object.fromEntries(fs.filter((f) => f.is_editable).map((f) => [f.field_key, toInput(f, r[f.field_key])]));
@@ -148,20 +151,22 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         cfg.children.map(async (ch, i) => {
           const hasStatus = cat.fields.some((f) => f.object_id === childObjs[i].id && f.field_key === "status");
           const cols = [...new Set(["id", ...ch.columns, ...(hasStatus ? ["status"] : []), ch.sort.field])];
-          const res = await supabase.from(ch.object).select(cols.join(", ")).eq(ch.fk, id).order(ch.sort.field, { ascending: ch.sort.asc }).limit(200);
+          // דרך run_view: אותו היקף שורות ואותה הסתרת שדות כמו ברשימות
+          const res = await supabase.rpc("run_view", {
+            p_object: ch.object,
+            p_def: { columns: cols.filter((c) => c !== "id"), filters: [{ field: ch.fk, op: "eq", value: id }], match: "all", sorts: [{ field: ch.sort.field, dir: ch.sort.asc ? "asc" : "desc" }] },
+            p_search: null,
+            p_limit: 200,
+            p_offset: 0,
+          });
           if (res.error) throw res.error;
-          kids[`${ch.object}:${ch.fk}`] = res.data as unknown as Rec[];
+          kids[`${ch.object}:${ch.fk}`] = (res.data as { rows: Rec[] }).rows;
         }),
       );
       setChildren(kids);
 
-      // כתובת מגורים של אשת צוות: רק למנהלת ולעובדת עצמה. לאחרות השדה לא מופיע בכלל.
-      if (objectKey === "staff" && (isManager || userId === id)) {
-        const res = await supabase.rpc("get_staff_address", { p_staff_id: id });
-        setAddress(res.error ? undefined : ((res.data as string | null) ?? null));
-      }
     },
-    [objectKey, id, isNew, cfg, isManager, userId],
+    [objectKey, id, isNew, cfg],
   );
 
   useEffect(() => {
@@ -243,8 +248,15 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       return;
     }
     const t = setTimeout(async () => {
-      const { data } = await supabase.from(objectKey).select(`id, ${obj.display_field}`).eq(phoneField.field_key, norm).neq("id", isNew ? "00000000-0000-0000-0000-000000000000" : id).maybeSingle();
-      const found = data as unknown as Rec | null;
+      // דרך run_view, כמו כל קריאה: רק רשומות שמותר לי לראות
+      const { data } = await supabase.rpc("run_view", {
+        p_object: objectKey,
+        p_def: { columns: [obj.display_field], filters: [{ field: phoneField.field_key, op: "eq", value: norm }], match: "all", sorts: [] },
+        p_search: null,
+        p_limit: 2,
+        p_offset: 0,
+      });
+      const found = ((data as { rows: Rec[] } | null)?.rows ?? []).find((r) => r.id !== id) ?? null;
       setExisting(found ? { id: found.id, name: String(found[obj.display_field] ?? "") } : null);
     }, 300);
     return () => clearTimeout(t);
@@ -571,7 +583,10 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
               {canCreate && !cfg.noDuplicate && (
                 <button type="button" className="btn outline" onClick={() => router.push(`${cfg.route}new?from=${id}`)}>שכפול</button>
               )}
-              {isManager && <button type="button" className="btn outline danger" onClick={askDelete}>מחיקה</button>}
+              {objectKey === "staff" && isManager && rec.id !== userId && (
+                <StaffStatusButton id={id} active={!!rec.is_active} onDone={() => catalog && load(catalog)} />
+              )}
+              {canDelete && <button type="button" className="btn outline danger" onClick={askDelete}>מחיקה</button>}
             </>
           )}
         </div>
@@ -602,7 +617,6 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         {formError && <p className="field-error form-error" role="alert">{formError}</p>}
         {groups.map((g) => {
           const gf = g.fields.map((k) => byKey.get(k)).filter(Boolean) as FieldMeta[];
-          const showAddress = objectKey === "staff" && g === cfg.groups[0] && address !== undefined && !isNew;
           if (!gf.length) return null;
           return (
             <section key={g.title} className="card group">
@@ -644,12 +658,6 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
                     </div>
                   ),
                 )}
-                {showAddress && (
-                  <div className="field-view">
-                    <span className="field-label">כתובת מגורים</span>
-                    <div>{address || <span className="muted">—</span>}</div>
-                  </div>
-                )}
               </div>
             </section>
           );
@@ -667,7 +675,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
                 </button>
               ))}
             </div>
-            {RECORDS[activeChild.object] && (RECORDS[activeChild.object].editRole === "all" || isManager) && (
+            {can(activeChild.object, "create") && (
               <button type="button" className="btn outline" onClick={() => setDialog({ kind: "child", child: activeChild })}>
                 {activeChild.addLabel}
               </button>
@@ -678,7 +686,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
             child={activeChild}
             fields={childMeta(activeChild.object).fields}
             textOf={textOf}
-            canEdit={RECORDS[activeChild.object]?.editRole === "all" || isManager}
+            canEdit={can(activeChild.object, "edit")}
             onStatus={(rowId, v) => changeChildStatus(`${activeChild.object}:${activeChild.fk}`, activeChild, rowId, v)}
             onEdit={(rowId) => setDialog({ kind: "child", child: activeChild, rowId })}
             onOpenFull={(rowId) => {
@@ -798,5 +806,46 @@ function ChildList({
         </li>
       ))}
     </ul>
+  );
+}
+
+// השבתה / הפעלה של משתמשת (מנהלת מערכת): לא מוחקים, כדי שכל מה שיצרה יישמר.
+// משביתה גם את ההתחברות ב-Supabase Auth, ולכן נעשית בשרת עם מפתח השירות.
+function StaffStatusButton({ id, active, onDone }: { id: string; active: boolean; onDone: () => void }) {
+  const toast = useToast();
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    setBusy(true);
+    try {
+      await adminApi("/api/users/status", { id, active: !active });
+      toast(active ? "המשתמשת הושבתה" : "המשתמשת הופעלה");
+      onDone();
+    } catch (e) {
+      toast(errorText(e), "err");
+    } finally {
+      setBusy(false);
+      setConfirm(false);
+    }
+  };
+  return (
+    <>
+      <button type="button" className={`btn outline${active ? " danger" : ""}`} disabled={busy} onClick={() => setConfirm(true)}>
+        {busy && <span className="spinner" aria-hidden="true" />}
+        {active ? "השבתה" : "הפעלה מחדש"}
+      </button>
+      {confirm && (
+        <Confirm
+          text={
+            active
+              ? "להשבית את המשתמשת? היא לא תוכל להיכנס למערכת, אבל כל הרשומות שיצרה יישמרו."
+              : "להפעיל מחדש את המשתמשת? היא תוכל להיכנס שוב."
+          }
+          confirmLabel={active ? "השבתה" : "הפעלה"}
+          onClose={() => setConfirm(false)}
+          onConfirm={run}
+        />
+      )}
+    </>
   );
 }

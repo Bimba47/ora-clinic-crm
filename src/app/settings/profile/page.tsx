@@ -9,8 +9,6 @@ import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import { errorText } from "@/lib/views";
 
-const ROLE_LABELS = { manager: "מנהלת", therapist: "מטפלת" } as const;
-
 const LANDING_OPTIONS = [
   { value: "/", label: "ראשי" },
   { value: "/clients", label: "לקוחות" },
@@ -36,13 +34,14 @@ export default function Page() {
   useEffect(() => {
     if (!userId) return;
     (async () => {
-      const [staff, address, pref] = await Promise.all([
-        supabase.from("staff").select("full_name, phone, email").eq("id", userId).single(),
-        supabase.rpc("get_staff_address", { p_staff_id: userId }),
+      // הפרטים שלי דרך get_me (כולל הכתובת שלי, גם אם היא חסומה לתפקיד שלי במסכי הצוות)
+      const [mine, pref] = await Promise.all([
+        supabase.rpc("get_me"),
         supabase.from("user_preferences").select("landing_path, email_notifications").eq("staff_id", userId).maybeSingle(),
       ]);
-      if (staff.data) {
-        const d = { ...(staff.data as Omit<Details, "address">), address: (address.data as string | null) ?? "" };
+      const m = mine.data as { full_name: string; phone: string; email: string; address: string | null } | null;
+      if (m) {
+        const d = { full_name: m.full_name, phone: m.phone, email: m.email, address: m.address ?? "" };
         setDetails(d);
         setSaved(d);
       }
@@ -154,8 +153,11 @@ export default function Page() {
             <input value={details.address} onChange={(e) => set("address", e.target.value)} autoComplete="street-address" />
           </label>
           <div className="field">
-            <span>תפקיד</span>
-            <div><span className={`tag tag-${me.role}`}>{ROLE_LABELS[me.role]}</span> <span className="muted">(רק המנהלת יכולה לשנות)</span></div>
+            <span>תפקיד וצוות</span>
+            <div>
+              <span className="tag">{me.role_name}</span> {me.team_name && <span className="tag">{me.team_name}</span>}{" "}
+              <span className="muted">(רק מנהלת מערכת יכולה לשנות)</span>
+            </div>
           </div>
           <div className="form-actions">
             <button type="submit" className="btn primary cta" disabled={busy === "details" || !changed}>

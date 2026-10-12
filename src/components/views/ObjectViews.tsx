@@ -52,7 +52,7 @@ export default function ObjectViews({
   headerActions?: React.ReactNode;
   reloadToken?: number;
 }) {
-  const { userId, isManager, me } = useAuth();
+  const { userId, isManager, me, can } = useAuth();
   const toast = useToast();
 
   const [catalog, setCatalog] = useState<Catalog | null>(null);
@@ -79,8 +79,9 @@ export default function ObjectViews({
   const fieldByKey = useMemo(() => new Map(fields.map((f) => [f.field_key, f])), [fields]);
   const view = views.find((v) => v.id === viewId) ?? null;
   const canEditView = !!view && (isManager || view.owner_id === userId);
-  // הוספה רק למי שמורשית (בטיפולים ובצוות: מנהלת בלבד, כמו ב-RLS)
-  const canCreate = !!obj?.can_create && (RECORDS[objectKey]?.editRole !== "manager" || isManager);
+  // הוספה ומחיקה לפי טבלת ההרשאות (המסד אוכף את אותו הדבר)
+  const canCreate = !!obj?.can_create && can(objectKey, "create");
+  const canDelete = can(objectKey, "delete");
   const router = useRouter();
   const pathname = usePathname();
   const lastSearch = useRef("");
@@ -416,7 +417,7 @@ export default function ObjectViews({
               <button type="button" className="btn outline" onClick={() => setDialog({ kind: "bulk-set" })}>שינוי ערך</button>
             )}
             <button type="button" className="btn outline" onClick={() => doExport(selected)}>ייצוא הנבחרות</button>
-            {isManager && <button type="button" className="btn outline danger" onClick={() => setDialog({ kind: "delete-rows" })}>מחיקה</button>}
+            {canDelete && <button type="button" className="btn outline danger" onClick={() => setDialog({ kind: "delete-rows" })}>מחיקה</button>}
             <button type="button" className="link-btn" onClick={() => setSelected(new Set())}>ניקוי הבחירה</button>
           </div>
         </div>
