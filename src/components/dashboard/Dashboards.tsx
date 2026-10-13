@@ -9,7 +9,7 @@ import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import Modal, { Confirm } from "@/components/Modal";
 import { errorText, loadCatalog, loadRefOptions, type Catalog, type RefOption } from "@/lib/views";
-import type { Dashboard, DashFilters, Widget } from "@/lib/dashboards";
+import { greeting, todayLong, type Dashboard, type DashFilters, type Widget } from "@/lib/dashboards";
 import WidgetView from "./WidgetView";
 import WidgetBuilder from "./WidgetBuilder";
 
@@ -161,18 +161,6 @@ export default function Dashboards() {
     }
   };
 
-  // הזזה צעד אחד (למעלה/למטה בסדר הלוח): מחליף מקום עם השכן. עובד בכל רוחב מסך, גם בנייד.
-  const step = (w: Widget, dir: -1 | 1) => {
-    const order = [...widgets].sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x);
-    const i = order.findIndex((x) => x.id === w.id);
-    const other = order[i + dir];
-    if (!other) return;
-    // השכן עובר למקום של הווידג'ט, בלי לחרוג מרוחב הלוח (אם הוא רחב יותר)
-    const list = widgets.map((x) => (x.id === other.id ? { ...x, position_x: clamp(w.position_x, 0, COLS - x.width), position_y: w.position_y } : x));
-    const box: Box = { position_x: clamp(other.position_x, 0, COLS - w.width), position_y: other.position_y, width: w.width, height: w.height };
-    commit(settle(list, w.id, box));
-  };
-
   const duplicateWidget = async (w: Widget) => {
     const { id: _id, ...rest } = w;
     void _id;
@@ -217,7 +205,11 @@ export default function Dashboards() {
     <div className="dashboards">
       <div className="dash-head">
         <div className="dash-pick">
-          {/* בלי כותרת: הלוח הוא המסך הראשי. כשיש כמה לוחות, בוחרים כאן */}
+          {/* ברכה עדינה בראש המסך, מעל סינון הלוח. כשיש כמה לוחות, בוחרים ביניהם לידה */}
+          <div className="dash-greeting">
+            <p className="dash-hello">{greeting()}, {(me?.full_name ?? "").split(" ")[0]}</p>
+            <p className="dash-date">{todayLong()}</p>
+          </div>
           {boards.length > 1 && (
             <select className="compact-select" value={current ?? ""} onChange={(e) => pick(e.target.value)} aria-label="בחירת לוח">
               {boards.map((b) => <option key={b.id} value={b.id}>{b.name}{b.is_shared ? "" : " (פרטי)"}</option>)}
@@ -277,7 +269,7 @@ export default function Dashboards() {
         </div>
       ) : (
         <div ref={gridRef} className={`dash-grid${canEdit ? " arrangeable" : ""}`} style={{ gridAutoRows: `${ROW_H}px`, gap: GAP }}>
-          {ordered.map((w, idx) => {
+          {ordered.map((w) => {
             const box = drag?.id === w.id ? drag.box : w;
             return (
               <section
@@ -301,8 +293,6 @@ export default function Dashboards() {
                         <div className="menu-list card">
                           <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; setBuilder(w); }}>עריכה</button>
                           <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; duplicateWidget(w); }}>שכפול</button>
-                          {idx > 0 && <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; step(w, -1); }}>הזזה למעלה</button>}
-                          {idx < ordered.length - 1 && <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; step(w, 1); }}>הזזה למטה</button>}
                           <button type="button" className="danger" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; setDelWidget(w); }}>מחיקה</button>
                         </div>
                       </details>

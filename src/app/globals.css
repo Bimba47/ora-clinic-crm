@@ -810,3 +810,29 @@ a.btn { text-decoration: none; }
 /* תפריט הווידג'ט נפתח מעל הכרטיס ולא נחתך בו: הכרטיס לא חותך, והתוכן נגלל בתוך widget-body */
 .dash-grid .widget { overflow: visible; }
 .dash-grid .widget:has(.widget-menu[open]) { z-index: 20; }
+
+/* v16.9: ברכה בראש המסך, סינון לוח צר, חלונית ווידג'ט בשלבים */
+.dash-greeting { display: flex; flex-direction: column; gap: 2px; }
+.dash-hello { margin: 0; font-size: 24px; font-weight: 400; color: var(--text); }
+.dash-date { margin: 0; font-size: 13px; color: var(--muted); }
+.dash-filters { align-self: flex-start; width: auto; max-width: 100%; padding: 12px 16px; gap: 8px 12px; }
+.dash-filters .field { flex: 0 1 150px; max-width: 160px; }
+.dash-filters .field > span { font-size: 12px; }
+.dash-filters input, .dash-filters select { min-height: 36px; height: 36px; font-size: 13px; }
+.wb-form { gap: 12px; }
+.wb-step { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 16px; }
+.wb-step > h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 600; }
+.wb-num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--soft); font-size: 12px; font-weight: 700; }
+.wb-step .panel { box-shadow: none; border: 0; padding: 0; background: transparent; }
+.wb-sub { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; border-top: 1px dashed var(--line); }
+.wb-hint { margin: 0; font-size: 12px; color: var(--muted); }
+.wb-columns { max-height: 150px; overflow: auto; }
+.wb-more > summary { cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px; }
+.wb-more > summary::-webkit-details-marker { display: none; }
+.wb-more > summary::before { content: "＋"; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--soft); font-size: 12px; }
+.wb-more[open] > summary::before { content: "−"; }
+@media (max-width: 767px) {
+  .dash-filters { align-self: stretch; }
+  .dash-filters .field { flex: 1 1 130px; max-width: none; }
+  .dash-hello { font-size: 20px; }
+}
