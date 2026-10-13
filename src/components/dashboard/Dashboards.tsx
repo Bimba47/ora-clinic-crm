@@ -286,7 +286,7 @@ export default function Dashboards() {
                   <WidgetView widget={w} catalog={catalog} dash={dash} reloadToken={reload} />
                 </div>
                 {editing && (
-                  <span className="resize-handle" aria-hidden="true" onPointerDown={(e) => startDrag(w, "resize", e)} title="שינוי גודל" />
+                  <span className="widget-resize" aria-hidden="true" onPointerDown={(e) => startDrag(w, "resize", e)} title="שינוי גודל" />
                 )}
               </section>
             );

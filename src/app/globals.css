@@ -709,7 +709,7 @@ a.btn { text-decoration: none; }
 .widget-text .widget-text-main { font-size: 18px; font-weight: 600; }
 .widget-text.title .widget-text-main { font-size: 30px; font-weight: 700; }
 .widget-text-sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
-.resize-handle { position: absolute; bottom: 4px; inset-inline-end: 4px; width: 18px; height: 18px; cursor: nesw-resize; touch-action: none; border-bottom: 2px solid var(--bronze); border-inline-end: 2px solid var(--bronze); border-end-end-radius: 6px; opacity: 0.7; }
+.widget-resize { position: absolute; bottom: 4px; inset-inline-end: 4px; width: 18px; height: 18px; cursor: nesw-resize; touch-action: none; border-bottom: 2px solid var(--bronze); border-inline-end: 2px solid var(--bronze); border-end-end-radius: 6px; opacity: 0.7; }
 .widget-skeleton { height: 100%; min-height: 60px; border-radius: 16px; }
 .widget-empty { margin: 8px 0; }
 .widget-error { font-size: 12px; }
@@ -780,7 +780,7 @@ a.btn { text-decoration: none; }
   .dash-grid .widget { grid-column: auto !important; grid-row: auto !important; }
   .dash-grid .widget:not(.widget-text):not(.widget-metric) { min-height: 280px; max-height: 460px; }
   .dash-grid .widget.widget-metric { min-height: 120px; }
-  .resize-handle { display: none; }
+  .widget-resize { display: none; }
   .dash-skeleton { grid-template-columns: 1fr 1fr; }
   .dash-filters { padding: 12px 16px; }
   .dash-filters .field { max-width: none; }
