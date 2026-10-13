@@ -24,7 +24,6 @@ const NAV: NavItem[] = [
   { label: "לקוחות", href: "/clients", icon: "users", mobile: true, object: "clients" },
   { label: "תורים", href: "/appointments", icon: "calendar", mobile: true, object: "appointments" },
   { label: "קריאות שירות", short: "קריאות", href: "/requests", icon: "ticket", mobile: true, object: "service_requests" },
-  { label: "משימות", href: "/tasks", icon: "task", object: "tasks" },
   { label: "התראות", href: "/notifications", icon: "bell" },
   { label: "הגדרות", href: "/settings", icon: "settings" },
 ];

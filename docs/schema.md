@@ -276,21 +276,9 @@
 - `sync_column_grants` (טריגר על `field_permissions`): שולל SELECT על עמודה חסומה.
 - `get_me()`, `get_my_permissions()`, `duplicate_role(role_id, name)` (מנהלת מערכת).
 
-## משימות (`0015_tasks`)
+## משימות: הוסר (`0023_remove_tasks`)
 
-### tasks (משימות)
-| שדה | תווית | סוג | חובה | ערכים / כלל |
-|---|---|---|---|---|
-| id | | uuid | ✓ | |
-| title | משימה | text | ✓ | לא ריק |
-| due_date | תאריך יעד | date | | |
-| status | סטטוס | enum `task_status` | ✓ | `open` פתוחה (ברירת מחדל), `done` בוצעה |
-| assigned_to | אחראית | uuid → staff | | "שלי" בהרשאות (`owner_field`) |
-| client_id | לקוחה | uuid → clients | | |
-| request_id | קריאה | uuid → service_requests | | נמחקת קריאה → ריק |
-| notes | הערות | text | | |
-| created_by, updated_by | | uuid → staff | | אוטומטי |
-| created_at, updated_at | | timestamptz | ✓ | אוטומטי |
+אובייקט המשימות נוצר ב-`0015_tasks` והוסר ב-`0023_remove_tasks` (v24): הוא לא באפיון וחפף לקריאות השירות. הטבלה, הקטלוג, ההרשאות ושני כללי האוטומציה שלו נמחקו. גיבוי: `versions/v24-tasks-removal/backup.json`. ביומן הפעילות נשארו שורות עם table_name = tasks, ולכן ה-check constraints מתירים את הערך.
 
 ## אוטומציות (`0016_automations`)
 

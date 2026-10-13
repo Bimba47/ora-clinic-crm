@@ -287,7 +287,11 @@ function newAction(type: Action["type"], schema: Schema, source: string): Action
     const target = rel ? objOf(schema, rel.object)! : obj;
     return { type, object: rel?.object ?? "", match_field: rel?.fields[0]?.key ?? "", field: target.fields.find((x) => !SYSTEM_FIELDS.includes(x.key))?.key ?? "", value: "" };
   }
-  if (type === "create_record") return createRecordFor(schema, "tasks", source);
+  // ברירת מחדל: אובייקט שמקושר לאובייקט של הכלל (למשל קריאה חדשה מלקוחה), ואחרת אובייקט אחר
+  if (type === "create_record") {
+    const target = relatedObjects(schema, source)[0]?.object ?? schema.objects.find((o) => o.key !== source)?.key ?? source;
+    return createRecordFor(schema, target, source);
+  }
   return { type: "notify", to: obj.owner_field ? "record_owner" : "{{user}}", message: "", kind: "system" };
 }
 
@@ -299,7 +303,7 @@ function createRecordFor(schema: Schema, target: string, source: string): Action
   return { type: "create_record", object: target, values, link_field: link?.key ?? "" };
 }
 
-// אובייקטים שיש בהם שדה מקושר לאובייקט של הכלל (למשל משימות → קריאה)
+// אובייקטים שיש בהם שדה מקושר לאובייקט של הכלל (למשל קריאות → לקוחה)
 function relatedObjects(schema: Schema, source: string) {
   return schema.objects
     .map((o) => ({ object: o.key, label: o.label_plural, fields: o.fields.filter((f) => f.type === "reference" && f.ref_object === source) }))

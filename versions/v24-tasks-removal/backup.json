@@ -1,0 +1,65 @@
+{
+  "note": "גיבוי לפני הסרת אובייקט המשימות (v24, 13.10.2026). הטבלה, הקטלוג והתצוגה נוצרים מחדש בהרצת supabase/migrations/0015_tasks.sql. כאן הנתונים שנוספו אחר כך.",
+  "automation_rules": [
+    {
+      "id": "3d80323f-c954-4f71-9c3e-f36105933e0d",
+      "name": "משימת מעקב לקריאה חדשה",
+      "object_name": "service_requests",
+      "trigger_event": "create",
+      "trigger_fields": [],
+      "is_active": true,
+      "conditions": { "match": "all", "rules": [] },
+      "actions": [
+        {
+          "type": "create_record",
+          "object": "tasks",
+          "values": {
+            "notes": "{{description}}",
+            "title": "מעקב: {{client_id:label}}",
+            "due_date": "{{today+1}}",
+            "client_id": "{{client_id}}",
+            "assigned_to": "{{assigned_to|user}}"
+          },
+          "link_field": "request_id"
+        }
+      ]
+    },
+    {
+      "id": "e6696507-c534-4bf7-a4dd-59b5822a30e8",
+      "name": "סגירת משימות פתוחות כשקריאה נסגרת",
+      "object_name": "service_requests",
+      "trigger_event": "update",
+      "trigger_fields": ["status"],
+      "is_active": true,
+      "conditions": { "match": "all", "rules": [{ "op": "changed_to", "field": "status", "value": "closed" }] },
+      "actions": [
+        { "type": "update_related", "field": "status", "value": "done", "object": "tasks", "match_field": "request_id" }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "5e130f29-7ef5-4650-9d19-839124c71e1c",
+      "title": "מעקב: ענבל מישאליאן",
+      "notes": "רצתה לברר מחירים",
+      "status": "done",
+      "due_date": "2026-10-14",
+      "client_id": "547b58bf-f2d7-46b7-a96c-9388d16fa4dd",
+      "request_id": "e698750d-7e49-4fc2-9ecb-65f2efb47f13",
+      "assigned_to": "a77dad4e-1ffc-4e1c-b6c6-a372ee6adce1",
+      "created_by": "b01aa816-1973-4872-87f8-d79731a2b1a6",
+      "updated_by": "b01aa816-1973-4872-87f8-d79731a2b1a6",
+      "created_at": "2026-10-13T08:23:12.728361+00:00",
+      "updated_at": "2026-10-13T08:26:49.155021+00:00"
+    }
+  ],
+  "role_permissions": [
+    { "role_id": "191d1962-1a47-42cf-b1a8-5533b538760a", "object_key": "tasks", "can_view": "all", "can_create": "all", "can_edit": "all", "can_delete": "none" },
+    { "role_id": "9f6a4565-dc41-4cbe-9773-a2c4a6035bec", "object_key": "tasks", "can_view": "all", "can_create": "all", "can_edit": "all", "can_delete": "all" }
+  ],
+  "field_placeholders": {
+    "title": "למשל: לחזור ללקוחה עם מועד חלופי",
+    "notes": "למשל: להציע את יום ה' בבוקר"
+  },
+  "dashboard_widget_title_before": "המשימות שלי"
+}

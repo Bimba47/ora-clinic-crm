@@ -577,8 +577,6 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .computed-link .open-count { font-size: 16px; }
 .computed-link:hover .open-meta { text-decoration: underline; }
 .computed-link .open-meta { color: var(--link); font-size: 12px; }
-/* משימה פתוחה: כמו "חדשה" */
-.tag-open { background: var(--primary); color: var(--text); }
 
 /* ===== אוטומציות (v14) ===== */
 .head-buttons { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }

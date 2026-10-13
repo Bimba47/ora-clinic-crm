@@ -17,7 +17,7 @@ import {
 import WidgetView from "./WidgetView";
 
 type Draft = Omit<Widget, "id" | "dashboard_id">;
-const OBJECTS = ["service_requests", "appointments", "clients", "tasks", "treatments", "staff"];
+const OBJECTS = ["service_requests", "appointments", "clients", "treatments", "staff"];
 const DEFAULT_SIZE: Record<WidgetType, [number, number]> = { metric: [3, 2], bar: [6, 4], pie: [6, 4], table: [6, 4], list: [6, 4], text: [12, 1] };
 // שדות מערכת שלא מועילים בבניית ווידג'ט ורק מאריכים את הרשימות
 const SYSTEM = ["updated_at", "updated_by"];
