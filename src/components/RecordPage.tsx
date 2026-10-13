@@ -447,7 +447,11 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         label: "התור הבא",
         tone: next ? "highlight" : undefined,
         value: next ? (
-          <Link href={recordHref("appointments", next.id)!} className="computed-link">
+          <Link
+            href={recordHref("appointments", next.id)!}
+            className="computed-link"
+            onClick={() => saveNav("appointments", { ids: [next.id], backHref: `${cfg.route}${id}`, backLabel: title })}
+          >
             <span className="next-date" dir="ltr">{formatDate(String(next.starts_at))}</span>
             <span className="next-time" dir="ltr">{formatTime(String(next.starts_at))}</span>
             <span className="next-meta">{textOf(af("treatment_id"), next)} · {textOf(af("therapist_id"), next)}</span>
@@ -461,7 +465,12 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         label: "קריאות פתוחות",
         value:
           openReqs.length === 1 ? (
-            <Link href={recordHref("service_requests", openReqs[0].id)!} className="computed-link">
+            <Link
+              href={recordHref("service_requests", openReqs[0].id)!}
+              className="computed-link"
+              // "חזרה" מהקריאה מובילה לכרטיס הלקוחה
+              onClick={() => saveNav("service_requests", { ids: openReqs.map((r) => r.id), backHref: `${cfg.route}${id}`, backLabel: title })}
+            >
               <span className="open-count">1</span>
               <span className="open-meta">{String(openReqs[0].description ?? "")}</span>
             </Link>
