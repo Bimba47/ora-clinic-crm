@@ -454,7 +454,33 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
           </Link>
         ) : "אין תור עתידי",
       });
-      computed.push({ label: "קריאות פתוחות", value: childRows("service_requests", "client_id").filter((r) => r.status !== "closed").length });
+      // קריאות פתוחות: קריאה אחת – קישור אליה. כמה – מעבר ללשונית הקריאות בכרטיס.
+      const openReqs = childRows("service_requests", "client_id").filter((r) => r.status !== "closed");
+      const reqTab = cfg.children.findIndex((c) => c.object === "service_requests");
+      computed.push({
+        label: "קריאות פתוחות",
+        value:
+          openReqs.length === 1 ? (
+            <Link href={recordHref("service_requests", openReqs[0].id)!} className="computed-link">
+              <span className="open-count">1</span>
+              <span className="open-meta">{String(openReqs[0].description ?? "")}</span>
+            </Link>
+          ) : openReqs.length > 1 && reqTab >= 0 ? (
+            <button
+              type="button"
+              className="computed-link link-like"
+              onClick={() => {
+                setTab(reqTab);
+                document.getElementById("record-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              <span className="open-count">{openReqs.length}</span>
+              <span className="open-meta">לרשימת הקריאות</span>
+            </button>
+          ) : (
+            openReqs.length
+          ),
+      });
     }
     if (objectKey === "service_requests" && rec.status !== "closed") {
       const age = now - new Date(String(rec.created_at)).getTime();
@@ -667,7 +693,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
 
       {/* רשומות מקושרות */}
       {!isNew && cfg.children.length > 0 && activeChild && (
-        <section className="card tabs-card">
+        <section className="card tabs-card" id="record-tabs">
           <div className="tabs-head">
             <div className="segmented" role="tablist" aria-label="רשומות מקושרות">
               {cfg.children.map((ch, i) => (

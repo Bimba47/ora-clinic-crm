@@ -572,3 +572,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 /* כרטיס תור: התאריך (שם הרשומה) בכתב קטן יותר */
 .record-head-appointments .record-title .page-title { font-size: 24px; }
 .record-head-appointments .record-title .title-sub { font-size: 14px; }
+/* קריאות פתוחות בכרטיס לקוחה: לחיצה מובילה לקריאה (או לרשימת הקריאות) */
+.computed-link.link-like { border: 0; background: none; padding: 0; font: inherit; cursor: pointer; text-align: start; }
+.computed-link .open-count { font-size: 16px; }
+.computed-link:hover .open-meta { text-decoration: underline; }
+.computed-link .open-meta { color: var(--link); font-size: 12px; }
