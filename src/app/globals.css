@@ -1016,5 +1016,6 @@ input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 .tag, .tag-select, .status-select { text-align: center; text-align-last: center; justify-content: center; }
 .tag-select { padding-inline: 26px; background-position: left 10px center; }
 
-/* כרטיס קריאת שירות: הסטטוס "חדשה" בוורוד כהה (בקשת ענבל) */
-.record-service_requests .tag-status-new { background: var(--ok); color: #FFFFFF; }
+/* קריאת שירות: הסטטוס "חדשה" בוורוד כהה בכל מקום (רשימה, קאנבן, לוח בקרה, כרטיסים) – בקשת ענבל */
+.tag.tag-new, .tag-select.tag-new, .status-select.tag-new, .lane-head.tag-new { background-color: var(--ok); color: #FFFFFF; }
+.tag-select.tag-new { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23FFFFFF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
