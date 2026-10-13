@@ -319,6 +319,45 @@
 - `public.automation_schema()`: אובייקטים, שדות ואופרטורים לבונה הכללים (מנהלת בלבד).
 - `public.automation_rule_list()`: הכללים עם ההרצה האחרונה ומספר ההצלחות והכישלונות.
 
+## לוחות בקרה (`0017_dashboards`)
+
+### dashboards (לוחות)
+| שדה | סוג | חובה | ערכים / כלל |
+|---|---|---|---|
+| id | uuid | ✓ | |
+| name | text | ✓ | |
+| owner_id | uuid → staff | | ברירת מחדל: מי שיצרה. ריק בלוח מערכת |
+| is_shared | boolean | ✓ | משותף לצוות (רק מנהלת מערכת) |
+| role_visibility | uuid[] | ✓ | לאילו תפקידים לוח משותף מוצג. ריק = לכולם |
+| filters | jsonb | ✓ | סינון ברירת מחדל: `{date_from, date_to, owner}` |
+| position | int | ✓ | סדר הלוחות |
+| created_at, updated_at, updated_by | | | אוטומטי |
+
+### dashboard_widgets (ווידג'טים)
+| שדה | סוג | חובה | ערכים / כלל |
+|---|---|---|---|
+| id | uuid | ✓ | |
+| dashboard_id | uuid → dashboards | ✓ | נמחק לוח → נמחקים הווידג'טים |
+| title | text | ✓ | |
+| widget_type | enum `widget_type` | ✓ | `table`, `bar`, `pie`, `metric`, `list`, `text` |
+| object_name | text | | ריק רק בטקסט |
+| filters | jsonb | ✓ | `{"match","rules":[{"field","op","value"}]}` |
+| group_by | text | | שדה לקיבוץ |
+| date_group | enum `widget_date_group` | ✓ | `none`, `day`, `week` (מיום ראשון), `month` |
+| aggregate | enum `widget_aggregate` | ✓ | `count`, `sum`, `avg`, `min`, `max`, `percent` |
+| aggregate_field | text | | שדה מספרי (לא בספירה) |
+| sort | text | | `value_desc`/`value_asc`/`label_asc`, או שדה (`:desc`) ברשימה |
+| limit | int | | 1-500 |
+| position_x, position_y, width, height | int | ✓ | גריד של 12 עמודות |
+| config | jsonb | ✓ | הגדרות לפי סוג (CLAUDE.md סעיף 8ה) |
+| created_at, updated_at, updated_by | | | אוטומטי |
+
+### פונקציות
+- `public.run_widget(widget, dash_filters)`: מריצה ווידג'ט (security invoker, RLS חל). מחזירה `{kind: metric|groups|pivot|rows, …}`.
+- `private.widget_field`, `private.widget_condition`, `private.widget_where`, `private.widget_label_expr`: בדיקת שדות מול הקטלוג ובניית התנאים עם פרמטרים.
+- `public.duplicate_dashboard(id, name)`: שכפול לוח עם הווידג'טים (העותק פרטי).
+- תבניות חדשות (גם באוטומציות): `{{now-48h}}`, `{{field:time}}`, `{{field:date}}`.
+
 ## מחושב בתצוגה, לא נשמר
 - **התור הבא** של לקוחה: התור הקרוב בעתיד שלא בוטל.
 - **קריאה ותיקה:** לא נסגרה ונפתחה לפני יותר מ-48 שעות.
