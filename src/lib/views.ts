@@ -37,6 +37,8 @@ export type FieldMeta = {
   is_editable: boolean;
   // שדה מחושב (object_fields.computed): ביטוי במסד, לתצוגה, מיון וסינון בלבד. לא נערך ולא מופיע בטופס.
   computed: string | null;
+  // דוגמה בשדה הריק בטופס (האפיון: "054-1234567", "למשל: מבקשת להזיז את התור")
+  placeholder: string | null;
   // רמז תצוגה לשדה מחושב (למשל "פתוחה כבר" בשעות, אדום מעל 48)
   display?: { display?: "hours_open"; warn_over?: number } | null;
 };
@@ -325,19 +327,36 @@ export function loadRefOptions(refObject: ObjectMeta, catalog: Catalog): Promise
   return p;
 }
 
-// הודעת שגיאה קריאה מתוך שגיאה של Supabase / Postgres
+// הודעת שגיאה קריאה מתוך שגיאה של Supabase / Postgres, בנוסח של האפיון.
+// הודעה שלא זוהתה ואינה בעברית (למשל שגיאה טכנית באנגלית) הופכת ל"השמירה נכשלה, נסי שוב".
 export function errorText(e: unknown): string {
   if (e && typeof e === "object" && "message" in e) {
     const m = String((e as { message: unknown }).message);
     if (m.includes("appointments_no_overlap")) return "למטפלת כבר יש תור בשעה הזו.";
     if (m.includes("appointments_opening_hours")) return "הקליניקה סגורה בשעה הזו.";
-    if (m.includes("service_requests_assignee_required")) return "קריאה בטיפול חייבת אחראית. שייכי אותה קודם.";
-    if (m.includes("duplicate key") && m.includes("phone")) return "כבר יש לקוחה עם הטלפון הזה.";
+    if (m.includes("service_requests_assignee_required")) return "יש לבחור אחראית.";
+    if (m.includes("duplicate key") && m.includes("phone")) return "מספר הטלפון כבר קיים במערכת.";
     if (m.includes("violates foreign key") && m.includes("delete")) return "אי אפשר למחוק רשומה שיש לה רשומות מקושרות.";
     if (m.includes("phone_format") || m.includes("phone_check")) return "מספר הטלפון לא תקין.";
+    if (m.includes("email_format") || m.includes("email_check")) return "כתובת האימייל לא תקינה.";
+    if (m.includes("staff_email_key")) return "כבר יש משתמשת עם האימייל הזה.";
     if (m.includes("roles_name_key")) return "כבר יש תפקיד בשם הזה.";
     if (m.includes("teams_name_key")) return "כבר יש צוות בשם הזה.";
-    return m;
+    if (m.includes("row-level security") || m.includes("permission denied")) return "אין לך הרשאה לפעולה הזו.";
+    if (m.includes("Failed to fetch") || m.includes("NetworkError")) return "אין חיבור לאינטרנט. נסי שוב.";
+    if (/[֐-׿]/.test(m)) return m;
   }
-  return "משהו השתבש. נסי שוב.";
+  return "השמירה נכשלה, נסי שוב.";
+}
+
+// לאיזה שדה שייכת שגיאה מהמסד, כדי להציג אותה ליד השדה ולא רק בראש הטופס (האפיון)
+export function errorField(e: unknown): string | null {
+  const m = e && typeof e === "object" && "message" in e ? String((e as { message: unknown }).message) : "";
+  if (m.includes("appointments_no_overlap") || m.includes("appointments_opening_hours") || /^ל.+ יש תור ב-/.test(m)) return "starts_at";
+  if (m.includes("duplicate key") && m.includes("phone")) return "phone";
+  if (m.includes("phone_format") || m.includes("phone_check")) return "phone";
+  if (m.includes("email_format") || m.includes("email_check") || m.includes("staff_email_key")) return "email";
+  if (m.includes("service_requests_assignee_required")) return "assigned_to";
+  if (m.includes('"בוצע" רק אחרי')) return "status";
+  return null;
 }

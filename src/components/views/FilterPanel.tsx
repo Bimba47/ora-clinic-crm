@@ -101,7 +101,7 @@ const RELATIVE_TIMES = [
 ];
 
 export function ValueInput({
-  field, catalog, value, onChange, required, id, allowRelative, relativeTimes = true,
+  field, catalog, value, onChange, required, id, allowRelative, relativeTimes = true, placeholder,
 }: {
   field: FieldMeta;
   catalog: Catalog;
@@ -111,6 +111,7 @@ export function ValueInput({
   id?: string;
   allowRelative?: boolean;
   relativeTimes?: boolean;
+  placeholder?: string;
 }) {
   // ערך יחסי: תאריך (היום, מחר...) או "אני" בשדה של אשת צוות
   if (allowRelative && (field.field_type === "date" || field.field_type === "datetime")) {
@@ -138,7 +139,7 @@ export function ValueInput({
       </span>
     );
   }
-  const common = { id, required, "aria-label": field.label, value, onChange: (e: { target: { value: string } }) => onChange(e.target.value) };
+  const common = { id, required, placeholder, "aria-label": field.label, value, onChange: (e: { target: { value: string } }) => onChange(e.target.value) };
   switch (field.field_type) {
     case "choice":
     case "boolean":

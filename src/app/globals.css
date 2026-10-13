@@ -932,7 +932,7 @@ button.hbar-row:hover, button.hbar-row:focus-visible { background: var(--bg); }
     appearance: none; -webkit-appearance: none; box-sizing: border-box; flex-shrink: 0;
     width: 44px; height: 44px; margin: -12px; padding: 0; cursor: pointer;
     border: 12px solid transparent; border-radius: 16px; background-clip: padding-box;
-    background-color: var(--card); box-shadow: inset 0 0 0 1.5px var(--bronze);
+    background-color: var(--card); box-shadow: inset 0 0 0 1.5px var(--line);
   }
   input[type="checkbox"]:not(.switch input):checked {
     background-color: var(--primary);
@@ -942,3 +942,33 @@ button.hbar-row:hover, button.hbar-row:focus-visible { background: var(--bg); }
   }
   input[type="checkbox"]:not(.switch input):focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--bronze); }
 }
+
+/* אחראית שנבחרת ישר מהשורה ברשימת הקריאות (v22) */
+.assign-select { width: 100%; max-width: 180px; min-height: 32px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background-color: var(--card); color: var(--link); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.assign-select:hover { border-color: var(--soft); background-color: var(--bg); }
+@media (max-width: 767px) { .assign-select { height: 44px; max-width: none; } }
+
+/* ===== עיצוב לפי המפרט באפיון (v22) ===== */
+/* תיבת סימון: מסומנת ברקע #E3BFA8 עם סימון #2C2520, כבויה עם מסגרת #EDE5DC */
+input[type="checkbox"], .perm-check input {
+  appearance: none; -webkit-appearance: none; flex-shrink: 0; box-sizing: border-box;
+  width: 18px; height: 18px; margin: 0; border: 1.5px solid var(--line); border-radius: 5px;
+  background-color: var(--card); cursor: pointer; vertical-align: middle;
+}
+input[type="checkbox"]:checked, .perm-check input:checked {
+  border-color: var(--primary); background-color: var(--primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10' viewBox='0 0 12 10'%3E%3Cpath d='M1 5l3.5 3.5L11 1' fill='none' stroke='%232C2520' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: center; background-size: 11px 9px;
+}
+input[type="checkbox"]:focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
+input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
+
+/* לשוניות: קו תחתון #E3BFA8 לפעילה, טקסט משני לשאר */
+.tabs-head .segmented, .segmented.tabs { background: none; box-shadow: none; padding: 0; border-radius: 0; gap: 16px; border-bottom: 1px solid var(--line); }
+.tabs-head .segmented button, .segmented.tabs button { border-radius: 0; padding: 0 4px; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--muted); background: none; }
+.tabs-head .segmented button.on, .segmented.tabs button.on { background: none; color: var(--text); border-bottom-color: var(--primary); }
+.tabs-head .segmented button:hover:not(.on), .segmented.tabs button:hover:not(.on) { color: var(--text); }
+
+/* כפתור ראשי: הצל של האפיון */
+.btn.primary { box-shadow: 0 4px 14px rgba(227, 191, 168, 0.45); }
+.btn.primary:hover:not(:disabled) { box-shadow: 0 6px 18px rgba(227, 191, 168, 0.6); }

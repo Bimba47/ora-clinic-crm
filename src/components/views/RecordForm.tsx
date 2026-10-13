@@ -1,14 +1,14 @@
 "use client";
 // טופס גנרי ליצירה ולעריכה בחלון (למשל הוספת תור מתוך כרטיס לקוחה): השדות, הסוגים ושדות החובה מגיעים מהקטלוג.
 // בעריכה הערכים נטענים מהמסד, ונשמרים רק השדות שהשתנו.
-// הבדיקות האמיתיות (טלפון, שעות פעילות, חפיפה, הרשאות) נעשות במסד, וההודעה שלו מוצגת ליד הכפתור.
+// הבדיקות האמיתיות (טלפון, שעות פעילות, חפיפה, הרשאות) נעשות במסד. הודעה של שדה מסוים מוצגת ליד השדה, ואחרת ליד הכפתור.
 // הרכיבים והפונקציות המשותפים (שדה קלט, המרת ערכים, העתקה משדה מקושר) משמשים גם את מסך הרשומה.
 
 import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import type { Catalog, FieldMeta, ObjectMeta, Row } from "@/lib/views";
-import { createRecord, errorText, loadRecord, updateRecords } from "@/lib/views";
+import { createRecord, errorField, errorText, loadRecord, updateRecords } from "@/lib/views";
 import { formatValue } from "@/lib/format";
 import { ValueInput } from "./FilterPanel";
 
@@ -69,17 +69,17 @@ export function FieldInput({
 }) {
   if (f.field_type === "datetime") {
     return (
-      <input id={id} type="datetime-local" dir="ltr" required={f.is_required} aria-invalid={invalid}
+      <input id={id} type="datetime-local" dir="ltr" required={f.is_required} aria-invalid={invalid} placeholder={f.placeholder ?? undefined}
         value={value} onChange={(e) => onChange(e.target.value)} />
     );
   }
   if (f.field_type === "long_text") {
     return (
-      <textarea id={id} required={f.is_required} rows={3} aria-invalid={invalid}
+      <textarea id={id} required={f.is_required} rows={3} aria-invalid={invalid} placeholder={f.placeholder ?? undefined}
         value={value} onChange={(e) => onChange(e.target.value)} />
     );
   }
-  return <ValueInput id={id} field={f} catalog={catalog} required={f.is_required} value={value} onChange={onChange} />;
+  return <ValueInput id={id} field={f} catalog={catalog} required={f.is_required} value={value} onChange={onChange} placeholder={f.placeholder ?? undefined} />;
 }
 
 export default function RecordForm({
@@ -104,6 +104,7 @@ export default function RecordForm({
   const [initial, setInitial] = useState<Record<string, string> | null>(editing ? null : empty);
   const [values, setValues] = useState<Record<string, string>>(empty);
   const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState<{ key: string; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -132,6 +133,7 @@ export default function RecordForm({
     if (!initial) return;
     setBusy(true);
     setError("");
+    setFieldError(null);
     try {
       if (row) {
         const changed = editable.filter((f) => values[f.field_key] !== initial[f.field_key]);
@@ -151,7 +153,14 @@ export default function RecordForm({
       }
       onSaved();
     } catch (err) {
-      setError(errorText(err));
+      const key = errorField(err);
+      if (key && editable.some((f) => f.field_key === key)) {
+        setFieldError({ key, text: errorText(err) });
+        document.getElementById(`rf-${key}`)?.focus();
+      } else {
+        setError(errorText(err));
+        toast(errorText(err), "err");
+      }
     } finally {
       setBusy(false);
     }
@@ -173,12 +182,13 @@ export default function RecordForm({
         {!initial && !error
           ? editable.map((f) => <div key={f.field_key} className="skeleton" style={{ height: 68 }} />)
           : editable.map((f) => (
-              <label key={f.field_key} className="field" htmlFor={`rf-${f.field_key}`}>
+              <label key={f.field_key} className={`field${fieldError?.key === f.field_key ? " has-error" : ""}`} htmlFor={`rf-${f.field_key}`}>
                 <span>
                   {f.label}
                   {f.is_required && <span aria-hidden="true"> *</span>}
                 </span>
-                <FieldInput id={`rf-${f.field_key}`} field={f} catalog={catalog} value={values[f.field_key]} onChange={(v) => setField(f, v)} />
+                <FieldInput id={`rf-${f.field_key}`} field={f} catalog={catalog} value={values[f.field_key]} invalid={fieldError?.key === f.field_key} onChange={(v) => { setField(f, v); if (fieldError?.key === f.field_key) setFieldError(null); }} />
+                {fieldError?.key === f.field_key && <span className="field-error" role="alert">{fieldError.text}</span>}
               </label>
             ))}
         {error && <p className="field-error" role="alert">{error}</p>}

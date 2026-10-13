@@ -10,7 +10,8 @@ import Modal, { Confirm } from "@/components/Modal";
 import Icon from "@/components/Icon";
 import {
   type Catalog, type FieldMeta, type Row, type ViewRow, type ViewState,
-  createView, deleteRecords, deleteView, errorText, loadCatalog, loadRecord, loadViewState, loadViews,
+  type RefOption,
+  createView, deleteRecords, deleteView, errorText, loadCatalog, loadRecord, loadRefOptions, loadViewState, loadViews,
   renameView, runView, saveViewState, setDefaultView, setViewShared, updateRecords,
 } from "@/lib/views";
 import { RECORDS, linkHref, recordHref, saveListSnapshot, saveNav, takeListSnapshot } from "@/lib/records";
@@ -70,6 +71,7 @@ export default function ObjectViews({
   const [panel, setPanel] = useState<"filters" | "columns" | null>(null);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [staffOpts, setStaffOpts] = useState<RefOption[]>([]); // לשיוך אחראית מהשורה
   const warnedRef = useRef(false);
 
   const obj = catalog?.objects.find((o) => o.object_key === objectKey) ?? null;
@@ -131,6 +133,14 @@ export default function ObjectViews({
     if (!me?.is_active) return;
     loadCatalog().then(setCatalog).catch((e) => setLoadError(errorText(e)));
   }, [me?.is_active]);
+
+  // אחראית שאפשר לבחור מהשורה: אשת צוות פעילה (מטפלת רק את עצמה, כמו שהמסד אוכף)
+  const assignSource = fields.find((f) => f.field_key === "assigned_to" && f.field_type === "reference" && f.is_editable);
+  useEffect(() => {
+    const staffObj = catalog?.objects.find((o) => o.id === assignSource?.ref_object_id);
+    if (!catalog || !staffObj) return;
+    loadRefOptions(staffObj, catalog).then((o) => setStaffOpts(o.filter((x) => !x.inactive))).catch(() => setStaffOpts([]));
+  }, [catalog, assignSource?.ref_object_id]);
 
   const reloadViews = useCallback(
     async (prefer?: string) => {
@@ -329,16 +339,18 @@ export default function ObjectViews({
   const bulkFields = choiceFields.filter((f) => f.is_editable);
   const activeFilters = state.filters.length;
 
-  // ===== שינוי סטטוס בשורה (Optimistic: מתעדכן מיד, וחוזר אחורה אם השמירה נכשלה) =====
+  // ===== שינוי סטטוס ואחראית בשורה =====
   const sf = fieldByKey.get("status");
   const statusField = sf && sf.field_type === "choice" && sf.is_editable && can(objectKey, "edit") ? sf : undefined;
-  const applyStatus = async (row: Row, value: string) => {
-    const prev = row.status;
-    const patchRows = (v: unknown) =>
-      setData((d) => (d ? { ...d, rows: d.rows.map((r) => (r.id === row.id ? { ...r, status: v } : r)) } : d));
-    patchRows(value);
+  // שינוי שדה אחד בשורה (סטטוס או אחראית). Optimistic: מתעדכן מיד, וחוזר אחורה אם השמירה נכשלה.
+  const applyField = async (row: Row, key: string, value: string, label?: string) => {
+    const labelKey = `${key}__label`;
+    const prev = { [key]: row[key], [labelKey]: row[labelKey] };
+    const patchRows = (p: Record<string, unknown>) =>
+      setData((d) => (d ? { ...d, rows: d.rows.map((r) => (r.id === row.id ? { ...r, ...p } : r)) } : d));
+    patchRows(label === undefined ? { [key]: value } : { [key]: value || null, [labelKey]: label });
     try {
-      const n = await updateRecords(objectKey, [row.id], { status: value });
+      const n = await updateRecords(objectKey, [row.id], { [key]: value || null });
       if (n === 0) throw new Error("אין לך הרשאה לשנות את הרשומה הזו.");
       toast(objectKey === "appointments" ? "התור עודכן" : objectKey === "service_requests" ? "הקריאה עודכנה" : "הסטטוס עודכן");
       setRefreshKey((k) => k + 1);
@@ -349,8 +361,12 @@ export default function ObjectViews({
   };
   const changeStatus = (row: Row, value: string) => {
     if (value === "cancelled") setDialog({ kind: "cancel-row", row, value });
-    else applyStatus(row, value);
+    else applyField(row, "status", value);
   };
+  const assignField = assignSource && can(objectKey, "edit") ? assignSource : undefined;
+  const assignOptions = staffOpts.filter((o) => isManager || o.value === userId);
+  const changeAssignee = (row: Row, value: string) =>
+    applyField(row, "assigned_to", value, staffOpts.find((o) => o.value === value)?.label ?? "");
   // "לבטל את התור של דנה לוי ביום ג׳ 14.10 ב-09:30?"
   const cancelText = (row: Row) => {
     const who = Object.entries(row).find(([k, v]) => k.endsWith("__label") && k.startsWith("client") && v)?.[1];
@@ -494,6 +510,9 @@ export default function ObjectViews({
           emptyLabel={obj.label}
           statusField={statusField}
           onStatus={statusField ? changeStatus : undefined}
+          assignField={assignField}
+          assignOptions={assignOptions}
+          onAssign={assignField ? changeAssignee : undefined}
         />
       ) : (
         <KanbanView
@@ -544,7 +563,7 @@ export default function ObjectViews({
           onClose={() => setDialog(null)}
           onConfirm={() => {
             setDialog(null);
-            applyStatus(dialog.row, dialog.value);
+            applyField(dialog.row, "status", dialog.value);
           }}
         />
       )}

@@ -228,3 +228,16 @@ export function greeting() {
 export function todayLong() {
   return new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
 }
+
+// כותרת ווידג'ט עם מספר התוצאות: {{count}} או {{count:יחיד:רבים}}.
+// למשל "{{count:תור אחד:תורים}} מחר" -> "4 תורים מחר" / "תור אחד מחר". עד שהתוצאה נטענת: "תורים מחר".
+export function widgetTitle(title: string, count?: number) {
+  return title
+    .replace(/\{\{count(?::([^:}]*):([^}]*))?\}\}/g, (_m, one?: string, many?: string) => {
+      if (count === undefined) return many ?? "";
+      if (one !== undefined && count === 1) return one;
+      return many !== undefined ? `${count} ${many}` : String(count);
+    })
+    .replace(/\s+/g, " ")
+    .trim();
+}

@@ -17,8 +17,11 @@ import {
 import { BarChart, DonutChart, type Datum } from "./Charts";
 
 export default function WidgetView({
-  widget: w, catalog, dash, reloadToken = 0, preview,
-}: { widget: Omit<Widget, "id" | "dashboard_id"> & { id?: string }; catalog: Catalog; dash: DashFilters; reloadToken?: number; preview?: boolean }) {
+  widget: w, catalog, dash, reloadToken = 0, preview, onCount,
+}: {
+  widget: Omit<Widget, "id" | "dashboard_id"> & { id?: string }; catalog: Catalog; dash: DashFilters; reloadToken?: number; preview?: boolean;
+  onCount?: (n: number) => void; // כמה רשומות בתוצאה (לכותרת עם {{count}}, למשל "4 תורים מחר")
+}) {
   const { userId, me } = useAuth();
   const router = useRouter();
   const toast = useToast();
@@ -32,7 +35,12 @@ export default function WidgetView({
     setError("");
     const t = setTimeout(() => {
       runWidget(w, dash)
-        .then((r) => !cancelled && setRes(r))
+        .then((r) => {
+          if (cancelled) return;
+          setRes(r);
+          if (r.kind === "rows") onCount?.(r.rows.length);
+          else if (r.kind === "metric") onCount?.(Number(r.value));
+        })
         .catch((e) => !cancelled && (setError(errorText(e)), setRes(null)));
     }, preview ? 300 : 0);
     return () => {

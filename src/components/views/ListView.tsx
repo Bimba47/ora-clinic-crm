@@ -28,10 +28,14 @@ type Props = {
   // שינוי סטטוס ישר מהרשימה (רק למי שמורשית לערוך)
   statusField?: FieldMeta;
   onStatus?: (row: Row, value: string) => void;
+  // שיוך אחראית ישר מהשורה (רק אשת צוות פעילה; מטפלת רואה רק את עצמה)
+  assignField?: FieldMeta;
+  assignOptions?: { value: string; label: string }[];
+  onAssign?: (row: Row, value: string) => void;
 };
 
 export default function ListView({
-  fields, state, data, loading, page, pageSize, onPage, selected, onSelect, onChange, onOpen, refHref, emptyAction, emptyLabel, statusField, onStatus,
+  fields, state, data, loading, page, pageSize, onPage, selected, onSelect, onChange, onOpen, refHref, emptyAction, emptyLabel, statusField, onStatus, assignField, assignOptions = [], onAssign,
 }: Props) {
   const byKey = new Map(fields.map((f) => [f.field_key, f]));
   const cols = state.columns.filter((c) => c.visible && byKey.has(c.field));
@@ -145,7 +149,7 @@ export default function ListView({
                       const text = formatValue(f, r);
                       const href = text ? refHref(f, r) : null;
                       // תא ריק מוסתר בכרטיס בנייד (בלי תווית בלי ערך)
-                      const cls = [isTag(f) && "center", isWarn(f, r) && "warn-cell", !text && "empty-cell"].filter(Boolean).join(" ") || undefined;
+                      const cls = [isTag(f) && "center", isWarn(f, r) && "warn-cell", !text && !(onAssign && assignField?.field_key === f.field_key) && "empty-cell"].filter(Boolean).join(" ") || undefined;
                       const cur = String(r[f.field_key] ?? "");
                       return (
                         <td key={c.field} className={cls} data-label={f.label} title={text}>
@@ -164,6 +168,20 @@ export default function ListView({
                                   {o.label}
                                 </option>
                               ))}
+                            </select>
+                          ) : onAssign && assignField?.field_key === f.field_key ? (
+                            <select
+                              className="assign-select"
+                              aria-label={f.label}
+                              value={cur}
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              onChange={(e) => onAssign(r, e.target.value)}
+                            >
+                              <option value="">ללא אחראית</option>
+                              {/* האחראית הנוכחית מופיעה גם אם היא לא ברשימה (למשל מושבתת, או מישהי אחרת אצל מטפלת) */}
+                              {cur && !assignOptions.some((o) => o.value === cur) && <option value={cur} disabled>{text}</option>}
+                              {assignOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                             </select>
                           ) : href ? (
                             <Link href={href} className="ref-link" onClick={(e) => e.stopPropagation()}>{text}</Link>

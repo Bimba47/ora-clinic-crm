@@ -9,7 +9,7 @@ import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import Modal, { Confirm } from "@/components/Modal";
 import { errorText, loadCatalog, loadRefOptions, type Catalog, type RefOption } from "@/lib/views";
-import { greeting, todayLong, type Dashboard, type DashFilters, type Widget } from "@/lib/dashboards";
+import { greeting, todayLong, widgetTitle, type Dashboard, type DashFilters, type Widget } from "@/lib/dashboards";
 import WidgetView from "./WidgetView";
 import WidgetBuilder from "./WidgetBuilder";
 
@@ -26,6 +26,7 @@ export default function Dashboards() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [boards, setBoards] = useState<Dashboard[] | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({}); // מספר התוצאות לכל ווידג'ט, לכותרת עם {{count}}
   const [current, setCurrent] = useState<string | null>(null);
   const [dash, setDash] = useState<DashFilters>({});
   const [staff, setStaff] = useState<RefOption[]>([]);
@@ -286,10 +287,10 @@ export default function Dashboards() {
               >
                 {(w.title || canEdit) && (
                   <div className={`widget-head${w.title ? "" : " floating"}`}>
-                    {w.title && <h2 className="widget-title">{w.title}</h2>}
+                    {w.title && <h2 className="widget-title">{widgetTitle(w.title, counts[w.id])}</h2>}
                     {canEdit && (
                       <details className="menu widget-menu">
-                        <summary className="icon-btn" aria-label={`פעולות: ${w.title || "ווידג'ט"}`}>⋯</summary>
+                        <summary className="icon-btn" aria-label={`פעולות: ${widgetTitle(w.title, counts[w.id]) || "ווידג'ט"}`}>⋯</summary>
                         <div className="menu-list card">
                           <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; setBuilder(w); }}>עריכה</button>
                           <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; duplicateWidget(w); }}>שכפול</button>
@@ -300,7 +301,7 @@ export default function Dashboards() {
                   </div>
                 )}
                 <div className="widget-body">
-                  <WidgetView widget={w} catalog={catalog} dash={dash} reloadToken={reload} />
+                  <WidgetView widget={w} catalog={catalog} dash={dash} reloadToken={reload} onCount={(n) => setCounts((c) => (c[w.id] === n ? c : { ...c, [w.id]: n }))} />
                 </div>
                 {canEdit && (
                   <span className="widget-resize" aria-hidden="true" onPointerDown={(e) => startDrag(w, "resize", e)} title="שינוי גודל" />

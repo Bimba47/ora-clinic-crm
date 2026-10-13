@@ -17,7 +17,7 @@ import RecordForm, { CREATED_TOAST, FieldInput, copyFromRef, toInput, toValue } 
 import { type ChildDef, type RecordNav, RECORDS, linkHref, markListRestore, readNav, recordHref, saveNav } from "@/lib/records";
 import {
   type Catalog, type FieldMeta, type Row,
-  createRecord, deleteRecords, errorText, loadCatalog, loadRefOptions, updateRecords,
+  createRecord, deleteRecords, errorField, errorText, loadCatalog, loadRefOptions, updateRecords,
 } from "@/lib/views";
 import { formatDate, formatDateTime, formatHours, formatPhone, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 import { adminApi } from "@/lib/adminApi";
@@ -330,7 +330,15 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       setEditing(false);
       if (catalog) await load(catalog);
     } catch (e) {
-      setFormError(errorText(e));
+      // שגיאה של שדה מסוים (חפיפה, שעות פעילות, טלפון קיים, אחראית) מוצגת ליד השדה, כמו באפיון
+      const key = errorField(e);
+      if (key && editable.some((f) => f.field_key === key)) {
+        setErrors({ [key]: errorText(e) });
+        document.getElementById(`rp-${key}`)?.focus();
+      } else {
+        setFormError(errorText(e));
+        toast(errorText(e), "err");
+      }
     } finally {
       setSaving(false);
     }
