@@ -263,7 +263,7 @@ export default function Dashboards() {
               >
                 {(w.title || canEdit) && (
                   <div
-                    className={`widget-head${editing ? " grab" : ""}`}
+                    className={`widget-head${editing ? " grab" : ""}${w.title ? "" : " floating"}`}
                     onPointerDown={(e) => {
                       if ((e.target as HTMLElement).closest("button, summary, a")) return;
                       startDrag(w, "move", e);

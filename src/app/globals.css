@@ -787,3 +787,7 @@ a.btn { text-decoration: none; }
   .donut { flex-direction: column; align-items: stretch; }
   .donut-svg { width: 160px; align-self: center; }
 }
+/* רשימה בלוח: שדה הסטטוס ברוחב התוכן, לא ברוחב השורה */
+.widget-list .status-select { width: auto; flex: 0 0 auto; }
+/* ווידג'ט בלי כותרת (טקסט): התפריט צף בפינה ולא דוחף את התוכן */
+.widget-head.floating { position: absolute; top: 0; inset-inline-end: 0; margin: 0; min-height: 0; z-index: 2; }
