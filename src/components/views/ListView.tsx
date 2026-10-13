@@ -144,7 +144,8 @@ export default function ListView({
                       const f = byKey.get(c.field)!;
                       const text = formatValue(f, r);
                       const href = text ? refHref(f, r) : null;
-                      const cls = [isTag(f) && "center", isWarn(f, r) && "warn-cell"].filter(Boolean).join(" ") || undefined;
+                      // תא ריק מוסתר בכרטיס בנייד (בלי תווית בלי ערך)
+                      const cls = [isTag(f) && "center", isWarn(f, r) && "warn-cell", !text && "empty-cell"].filter(Boolean).join(" ") || undefined;
                       const cur = String(r[f.field_key] ?? "");
                       return (
                         <td key={c.field} className={cls} data-label={f.label} title={text}>

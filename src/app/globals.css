@@ -897,3 +897,10 @@ a.btn { text-decoration: none; }
 /* שכחתי סיסמה (v19) */
 .login-switch { align-self: center; margin-top: -8px; }
 .login-card p { margin: 0; font-size: 14px; color: var(--muted); }
+
+/* בדיקת נייד (v20) */
+@media (max-width: 767px) {
+  .data-table td.empty-cell { display: none; }
+  /* כותרת קריאה: הכפתורים בשורה משלהם, כדי לא לדחוס את השדות */
+  .record-head.stacked { grid-template-columns: minmax(0, 1fr); align-items: start; }
+}
