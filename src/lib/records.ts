@@ -46,6 +46,10 @@ export const RECORDS: Record<string, RecordConfig> = {
         object: "service_requests", fk: "client_id", label: "קריאות שירות", addLabel: "+ קריאה חדשה",
         columns: ["description", "assigned_to", "created_at"], sort: { field: "created_at", asc: false },
       },
+      {
+        object: "tasks", fk: "client_id", label: "משימות", addLabel: "+ משימה חדשה",
+        columns: ["title", "due_date", "assigned_to"], sort: { field: "due_date", asc: true },
+      },
     ],
     noCopy: ["phone"],
     uniquePhone: true,
@@ -73,7 +77,12 @@ export const RECORDS: Record<string, RecordConfig> = {
       { title: "הקריאה", fields: ["client_id", "description"] },
       { title: "טיפול בקריאה", fields: ["status", "assigned_to", "closed_at"] },
     ],
-    children: [],
+    children: [
+      {
+        object: "tasks", fk: "request_id", label: "משימות", addLabel: "+ משימה חדשה",
+        columns: ["title", "due_date", "assigned_to"], sort: { field: "due_date", asc: true },
+      },
+    ],
     noCopy: ["status", "closed_at"],
   },
   staff: {
@@ -93,10 +102,26 @@ export const RECORDS: Record<string, RecordConfig> = {
         object: "service_requests", fk: "assigned_to", label: "קריאות באחריותה", addLabel: "+ קריאה חדשה",
         columns: ["description", "client_id", "created_at"], sort: { field: "created_at", asc: false },
       },
+      {
+        object: "tasks", fk: "assigned_to", label: "משימות באחריותה", addLabel: "+ משימה חדשה",
+        columns: ["title", "due_date", "client_id"], sort: { field: "due_date", asc: true },
+      },
     ],
     managerScreen: true,
     noDelete: "אשת צוות לא נמחקת, כי יש לה היסטוריה. כדי להפסיק את הגישה שלה משביתים אותה (סטטוס: מושבתת).",
     noDuplicate: "אשת צוות נוספת מתווספת דרך הזמנה למערכת, לא בשכפול.",
+  },
+  tasks: {
+    route: "/tasks/",
+    listHref: "/tasks",
+    header: ["due_date", "assigned_to", "client_id"],
+    groups: [
+      { title: "המשימה", fields: ["title", "due_date", "status"] },
+      { title: "שיוך", fields: ["assigned_to", "client_id", "request_id"] },
+      { title: "הערות", fields: ["notes"] },
+    ],
+    children: [],
+    noCopy: ["status"],
   },
   treatments: {
     route: "/settings/treatments/",

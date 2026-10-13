@@ -270,6 +270,55 @@
 - `sync_column_grants` (טריגר על `field_permissions`): שולל SELECT על עמודה חסומה.
 - `get_me()`, `get_my_permissions()`, `duplicate_role(role_id, name)` (מנהלת מערכת).
 
+## משימות (`0015_tasks`)
+
+### tasks (משימות)
+| שדה | תווית | סוג | חובה | ערכים / כלל |
+|---|---|---|---|---|
+| id | | uuid | ✓ | |
+| title | משימה | text | ✓ | לא ריק |
+| due_date | תאריך יעד | date | | |
+| status | סטטוס | enum `task_status` | ✓ | `open` פתוחה (ברירת מחדל), `done` בוצעה |
+| assigned_to | אחראית | uuid → staff | | "שלי" בהרשאות (`owner_field`) |
+| client_id | לקוחה | uuid → clients | | |
+| request_id | קריאה | uuid → service_requests | | נמחקת קריאה → ריק |
+| notes | הערות | text | | |
+| created_by, updated_by | | uuid → staff | | אוטומטי |
+| created_at, updated_at | | timestamptz | ✓ | אוטומטי |
+
+## אוטומציות (`0016_automations`)
+
+### automation_rules (כללים)
+| שדה | סוג | חובה | ערכים / כלל |
+|---|---|---|---|
+| id | uuid | ✓ | |
+| name | text | ✓ | לא ריק |
+| object_name | text | ✓ | `clients`, `appointments`, `service_requests`, `treatments`, `staff`, `tasks` |
+| is_active | boolean | ✓ | ברירת מחדל true |
+| trigger_event | enum `automation_event` | ✓ | `create`, `update`, `schedule` |
+| trigger_fields | text[] | ✓ | רק לעדכון. ריק = כל שינוי |
+| schedule_cron | text | | רק לתזמון (cron, לפי UTC) |
+| conditions | jsonb | ✓ | `{"match":"all"/"any","rules":[{"field","op","value"}]}` |
+| actions | jsonb | ✓ | מערך פעולות (לפחות אחת): update_field, update_related, create_record, notify |
+| created_at, updated_at, updated_by | | | אוטומטי |
+
+### automation_logs (לוג הרצות)
+| שדה | סוג | ערכים / כלל |
+|---|---|---|
+| id | uuid | |
+| rule_id | uuid → automation_rules | נמחק כלל → נמחק הלוג שלו |
+| object_name, record_id | text, uuid | הרשומה שעליה רץ הכלל (ריק בהרצה מתוזמנת שלא מצאה רשומות) |
+| status | enum `automation_log_status` | `success`, `failed`, `skipped` |
+| message | text | פירוט הפעולות או הודעת השגיאה |
+| executed_at | timestamptz | |
+
+### פונקציות
+- `private.automation_dispatch(object, event, new, old)`: המנוע. נקרא מהטריגר `private.automation_on_change` על כל טבלת אובייקט.
+- `private.automation_run_scheduled(rule_id)`: הרצה מתוזמנת (pg_cron, משימה `automation_<id>`).
+- `private.automation_conditions_met`, `private.automation_execute`, `private.automation_render` (תבניות), `private.automation_validate` (טריגר בדיקה), `private.automation_sync_cron` (טריגר תזמון).
+- `public.automation_schema()`: אובייקטים, שדות ואופרטורים לבונה הכללים (מנהלת בלבד).
+- `public.automation_rule_list()`: הכללים עם ההרצה האחרונה ומספר ההצלחות והכישלונות.
+
 ## מחושב בתצוגה, לא נשמר
 - **התור הבא** של לקוחה: התור הקרוב בעתיד שלא בוטל.
 - **קריאה ותיקה:** לא נסגרה ונפתחה לפני יותר מ-48 שעות.
