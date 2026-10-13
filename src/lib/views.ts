@@ -35,6 +35,10 @@ export type FieldMeta = {
   is_filterable: boolean;
   is_required: boolean;
   is_editable: boolean;
+  // שדה מחושב (object_fields.computed): ביטוי במסד, לתצוגה, מיון וסינון בלבד. לא נערך ולא מופיע בטופס.
+  computed: string | null;
+  // רמז תצוגה לשדה מחושב (למשל "פתוחה כבר" בשעות, אדום מעל 48)
+  display?: { display?: "hours_open"; warn_over?: number } | null;
 };
 
 export type ViewRow = {
@@ -126,6 +130,8 @@ export async function loadCatalog(): Promise<Catalog> {
   const access = ((perms.data as { fields?: Record<string, "hidden" | "read"> } | null)?.fields) ?? {};
   const visible = (fields.data as FieldMeta[])
     .filter((f) => access[`${keyOf.get(f.object_id)}.${f.field_key}`] !== "hidden")
+    // options של שדה בחירה הוא רשימה. בשדה מחושב זה רמז תצוגה, ולכן עובר ל-display
+    .map((f) => (f.options && !Array.isArray(f.options) ? { ...f, display: f.options as FieldMeta["display"], options: null } : f))
     .map((f) => (access[`${keyOf.get(f.object_id)}.${f.field_key}`] === "read" ? { ...f, is_editable: false } : f));
   return { objects: objs, fields: visible };
 }
@@ -324,7 +330,7 @@ export function errorText(e: unknown): string {
   if (e && typeof e === "object" && "message" in e) {
     const m = String((e as { message: unknown }).message);
     if (m.includes("appointments_no_overlap")) return "למטפלת כבר יש תור בשעה הזו.";
-    if (m.includes("appointments_opening_hours")) return "התור מחוץ לשעות הפעילות של הקליניקה.";
+    if (m.includes("appointments_opening_hours")) return "הקליניקה סגורה בשעה הזו.";
     if (m.includes("service_requests_assignee_required")) return "קריאה בטיפול חייבת אחראית. שייכי אותה קודם.";
     if (m.includes("duplicate key") && m.includes("phone")) return "כבר יש לקוחה עם הטלפון הזה.";
     if (m.includes("violates foreign key") && m.includes("delete")) return "אי אפשר למחוק רשומה שיש לה רשומות מקושרות.";

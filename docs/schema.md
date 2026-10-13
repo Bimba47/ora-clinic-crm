@@ -150,7 +150,7 @@
 |---|---|---|---|
 | id | uuid | ✓ | אוטומטי |
 | object_id | uuid → view_objects | ✓ | |
-| field_key | text | ✓ | ייחודי באובייקט. חייב להיות עמודה אמיתית בטבלה (נבדק בטריגר) |
+| field_key | text | ✓ | ייחודי באובייקט. חייב להיות עמודה אמיתית בטבלה (נבדק בטריגר), חוץ משדה מחושב |
 | label | text | ✓ | התווית בעברית |
 | field_type | enum `field_type` | ✓ | `text`, `long_text`, `phone`, `email`, `number`, `money`, `date`, `datetime`, `boolean`, `choice`, `reference` |
 | options | jsonb | ב-`choice` וב-`boolean` | מערך `[{"value", "label"}]` |
@@ -158,7 +158,10 @@
 | position | int | ✓ | סדר השדות |
 | default_visible, is_searchable, is_required, is_editable | boolean | ✓ | |
 | is_filterable | boolean | ✓ | ברירת מחדל `true`. `false` = לא מופיע בסינון ונחסם במסד (0006) |
+| computed | text | | שדה מחושב (0019): ביטוי SQL על הכינוי `t`, מוגדר רק במיגרציה. מוצג, ממוין ומסונן, לא נערך. ב-options אפשר רמז תצוגה (`{"display":"hours_open","warn_over":48}`) |
 | created_at, updated_at | timestamptz | ✓ | אוטומטי |
+
+שדות מחושבים (0019): `clients.next_appointment` (התור הבא, datetime), `clients.open_requests` (קריאות פתוחות, number), `service_requests.open_hours` (פתוחה כבר, שעות). התור והקריאות נספרים רק אם מותר לי לראות אותם.
 
 ### views (תצוגות)
 | שדה | סוג | חובה | ערכים / כלל |
@@ -185,6 +188,8 @@
 - `run_view`, `run_view_groups`: מריצות תצוגה. מאז v13 security definer, עם בדיקת היקף לכל שורה (`can_view_row`) והסתרת שדות חסומים.
 - `get_record(object, id)`: רשומה אחת עם תוויות לשדות מקושרים, לפי אותן הרשאות.
 - `save_view`, `create_view`, `set_default_view` (מנהלת בלבד): שמירה, יצירה ושכפול, ברירת מחדל.
+- ערך סינון עם `{{…}}` (היום, `week_start`, `week_end`, `user`) מחושב ב-`view_where` דרך `automation_render` (0019).
+- `private.check_appointment` (טריגר BEFORE על `appointments`, 0019): "בוצע" רק אחרי מועד התור, וחפיפה עם הודעה "ל<שם> יש תור ב-HH:MM עד HH:MM".
 
 ## הגדרות, העדפות ולוגו (`0009_settings_profile_notifications`)
 

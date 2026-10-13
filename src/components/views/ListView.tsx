@@ -5,7 +5,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import type { FieldMeta, Row, ViewState } from "@/lib/views";
-import { formatValue, isLtr } from "@/lib/format";
+import { formatValue, isLtr, isWarn } from "@/lib/format";
 
 // עמודה של תגיות (סטטוס, מקור, נקראה) ממורכזת
 const isTag = (f: FieldMeta) => f.field_type === "choice" || f.field_type === "boolean";
@@ -25,10 +25,13 @@ type Props = {
   refHref: (field: FieldMeta, row: Row) => string | null;
   emptyAction?: () => void;
   emptyLabel: string;
+  // שינוי סטטוס ישר מהרשימה (רק למי שמורשית לערוך)
+  statusField?: FieldMeta;
+  onStatus?: (row: Row, value: string) => void;
 };
 
 export default function ListView({
-  fields, state, data, loading, page, pageSize, onPage, selected, onSelect, onChange, onOpen, refHref, emptyAction, emptyLabel,
+  fields, state, data, loading, page, pageSize, onPage, selected, onSelect, onChange, onOpen, refHref, emptyAction, emptyLabel, statusField, onStatus,
 }: Props) {
   const byKey = new Map(fields.map((f) => [f.field_key, f]));
   const cols = state.columns.filter((c) => c.visible && byKey.has(c.field));
@@ -141,9 +144,27 @@ export default function ListView({
                       const f = byKey.get(c.field)!;
                       const text = formatValue(f, r);
                       const href = text ? refHref(f, r) : null;
+                      const cls = [isTag(f) && "center", isWarn(f, r) && "warn-cell"].filter(Boolean).join(" ") || undefined;
+                      const cur = String(r[f.field_key] ?? "");
                       return (
-                        <td key={c.field} className={isTag(f) ? "center" : undefined} data-label={f.label} title={text}>
-                          {href ? (
+                        <td key={c.field} className={cls} data-label={f.label} title={text}>
+                          {onStatus && statusField?.field_key === f.field_key && cur ? (
+                            // סטטוס נבחר ישר בשורה, בלי לפתוח את הרשומה. "בוצע" רק אחרי מועד התור.
+                            <select
+                              className={`tag tag-select tag-${cur} tag-${f.field_key}-${cur}`}
+                              aria-label={`${f.label}: ${text}`}
+                              value={cur}
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              onChange={(e) => onStatus(r, e.target.value)}
+                            >
+                              {f.options?.map((o) => (
+                                <option key={o.value} value={o.value} disabled={o.value === "done" && typeof r.starts_at === "string" && new Date(r.starts_at) > new Date()}>
+                                  {o.label}
+                                </option>
+                              ))}
+                            </select>
+                          ) : href ? (
                             <Link href={href} className="ref-link" onClick={(e) => e.stopPropagation()}>{text}</Link>
                           ) : f.field_type === "choice" || f.field_type === "boolean" ? (
                             text && <span className={`tag tag-${String(r[f.field_key])} tag-${f.field_key}-${String(r[f.field_key])}`}>{text}</span>

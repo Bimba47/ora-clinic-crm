@@ -15,7 +15,7 @@ import {
 } from "@/lib/views";
 import { RECORDS, linkHref, recordHref, saveListSnapshot, saveNav, takeListSnapshot } from "@/lib/records";
 import { openNotification } from "@/components/NotificationBell";
-import { formatValue } from "@/lib/format";
+import { formatTime, formatValue } from "@/lib/format";
 import ListView from "./ListView";
 import KanbanView from "./KanbanView";
 import FilterPanel from "./FilterPanel";
@@ -33,6 +33,7 @@ type Dialog =
   | { kind: "bulk-set" }
   | { kind: "create-record" }
   | { kind: "edit-record"; row: Row }
+  | { kind: "cancel-row"; row: Row; value: string }
   | null;
 
 function remember(objectKey: string, viewId?: string) {
@@ -328,6 +329,38 @@ export default function ObjectViews({
   const bulkFields = choiceFields.filter((f) => f.is_editable);
   const activeFilters = state.filters.length;
 
+  // ===== שינוי סטטוס בשורה (Optimistic: מתעדכן מיד, וחוזר אחורה אם השמירה נכשלה) =====
+  const sf = fieldByKey.get("status");
+  const statusField = sf && sf.field_type === "choice" && sf.is_editable && can(objectKey, "edit") ? sf : undefined;
+  const applyStatus = async (row: Row, value: string) => {
+    const prev = row.status;
+    const patchRows = (v: unknown) =>
+      setData((d) => (d ? { ...d, rows: d.rows.map((r) => (r.id === row.id ? { ...r, status: v } : r)) } : d));
+    patchRows(value);
+    try {
+      const n = await updateRecords(objectKey, [row.id], { status: value });
+      if (n === 0) throw new Error("אין לך הרשאה לשנות את הרשומה הזו.");
+      toast(objectKey === "appointments" ? "התור עודכן" : objectKey === "service_requests" ? "הקריאה עודכנה" : "הסטטוס עודכן");
+      setRefreshKey((k) => k + 1);
+    } catch (e) {
+      patchRows(prev);
+      toast(errorText(e), "err");
+    }
+  };
+  const changeStatus = (row: Row, value: string) => {
+    if (value === "cancelled") setDialog({ kind: "cancel-row", row, value });
+    else applyStatus(row, value);
+  };
+  // "לבטל את התור של דנה לוי ביום ג׳ 14.10 ב-09:30?"
+  const cancelText = (row: Row) => {
+    const who = Object.entries(row).find(([k, v]) => k.endsWith("__label") && k.startsWith("client") && v)?.[1];
+    const when = typeof row.starts_at === "string" ? new Date(row.starts_at) : null;
+    const day = when
+      ? ` ב${new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", weekday: "short" }).format(when)} ${new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", day: "numeric", month: "numeric" }).format(when)} ב-${formatTime(row.starts_at as string)}`
+      : "";
+    return `לבטל את ה${obj.label}${who ? ` של ${who}` : ""}${day}?`;
+  };
+
   return (
     <div className="views">
       <div className="views-head">
@@ -440,7 +473,7 @@ export default function ObjectViews({
         </div>
       )}
 
-      {panel === "filters" && <FilterPanel fields={fields} catalog={catalog} state={state} onChange={(p) => update(p, { debounce: true })} />}
+      {panel === "filters" && <FilterPanel fields={fields} catalog={catalog} state={state} onChange={(p) => update(p, { debounce: true })} allowRelative relativeTimes={false} />}
       {panel === "columns" && <ColumnsPanel fields={fields} state={state} onChange={(p) => update(p)} />}
 
       {state.view_type === "list" ? (
@@ -459,6 +492,8 @@ export default function ObjectViews({
           refHref={refHref}
           emptyAction={canCreate ? createNew : undefined}
           emptyLabel={obj.label}
+          statusField={statusField}
+          onStatus={statusField ? changeStatus : undefined}
         />
       ) : (
         <KanbanView
@@ -500,6 +535,17 @@ export default function ObjectViews({
           confirmLabel="מחיקה"
           onClose={() => setDialog(null)}
           onConfirm={doBulkDelete}
+        />
+      )}
+      {dialog?.kind === "cancel-row" && (
+        <Confirm
+          text={cancelText(dialog.row)}
+          confirmLabel={`כן, לבטל`}
+          onClose={() => setDialog(null)}
+          onConfirm={() => {
+            setDialog(null);
+            applyStatus(dialog.row, dialog.value);
+          }}
         />
       )}
       {dialog?.kind === "bulk-set" && (

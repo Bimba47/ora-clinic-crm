@@ -43,10 +43,25 @@ export function choiceLabel(field: FieldMeta, value: unknown) {
   return field.options?.find((o) => o.value === String(value))?.label ?? String(value);
 }
 
+// משך בשעות כטקסט: "5 שעות", "2 ימים ו-3 שעות"
+export function formatHours(h: number) {
+  const d = Math.floor(h / 24);
+  if (d === 0) return h <= 1 ? "פחות משעתיים" : `${h} שעות`;
+  return h % 24 ? `${d} ימים ו-${h % 24} שעות` : `${d} ימים`;
+}
+
+// שדה מחושב שעובר את הסף שלו (למשל קריאה פתוחה יותר מ-48 שעות) מסומן באדום
+export function isWarn(field: FieldMeta, row: Row) {
+  const limit = field.display?.warn_over;
+  const v = row[field.field_key];
+  return limit !== undefined && v !== null && v !== undefined && Number(v) > limit;
+}
+
 export function formatValue(field: FieldMeta, row: Row): string {
   const v = row[field.field_key];
   if (field.field_type === "reference") return String(row[`${field.field_key}__label`] ?? "");
   if (v === null || v === undefined || v === "") return "";
+  if (field.display?.display === "hours_open") return formatHours(Number(v));
   switch (field.field_type) {
     case "choice":
     case "boolean":
@@ -68,5 +83,6 @@ export function formatValue(field: FieldMeta, row: Row): string {
 
 // טקסט שמופיע בכיוון שמאל-לימין גם בתוך ממשק עברי (טלפון, אימייל, תאריך, סכום)
 export function isLtr(field: FieldMeta) {
+  if (field.display?.display === "hours_open") return false;
   return ["phone", "email", "date", "datetime", "money", "number"].includes(field.field_type);
 }

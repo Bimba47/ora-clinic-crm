@@ -19,7 +19,7 @@ import {
   type Catalog, type FieldMeta, type Row,
   createRecord, deleteRecords, errorText, loadCatalog, loadRefOptions, updateRecords,
 } from "@/lib/views";
-import { formatDate, formatDateTime, formatPhone, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
+import { formatDate, formatDateTime, formatHours, formatPhone, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 import { adminApi } from "@/lib/adminApi";
 
 type Rec = Record<string, unknown> & { id: string };
@@ -37,12 +37,7 @@ function normalizePhone(p: string) {
   return p.replace(/\D/g, "").replace(/^972/, "0");
 }
 
-function ago(ms: number) {
-  const h = Math.floor(ms / 3600000);
-  const d = Math.floor(h / 24);
-  if (d === 0) return h <= 1 ? "פחות משעתיים" : `${h} שעות`;
-  return h % 24 ? `${d} ימים ו-${h % 24} שעות` : `${d} ימים`;
-}
+const ago = (ms: number) => formatHours(Math.floor(ms / 3600000));
 
 export default function RecordPage({ objectKey, id }: { objectKey: string; id: string }) {
   const cfg = RECORDS[objectKey];
@@ -70,7 +65,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
 
   const obj = catalog?.objects.find((o) => o.object_key === objectKey);
   const fields = useMemo(
-    () => (catalog && obj ? catalog.fields.filter((f) => f.object_id === obj.id) : []),
+    () => (catalog && obj ? catalog.fields.filter((f) => f.object_id === obj.id && !f.computed) : []),
     [catalog, obj],
   );
   const byKey = useMemo(() => new Map(fields.map((f) => [f.field_key, f])), [fields]);
@@ -87,7 +82,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   const load = useCallback(
     async (cat: Catalog) => {
       const o = cat.objects.find((x) => x.object_key === objectKey)!;
-      const fs = cat.fields.filter((f) => f.object_id === o.id);
+      const fs = cat.fields.filter((f) => f.object_id === o.id && !f.computed);
       const childObjs = cfg.children.map((ch) => cat.objects.find((x) => x.object_key === ch.object)!);
 
       // שמות לשדות מקושרים, של הרשומה ושל השורות בלשוניות

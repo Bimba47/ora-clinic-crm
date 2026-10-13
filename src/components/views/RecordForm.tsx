@@ -96,7 +96,7 @@ export default function RecordForm({
   const toast = useToast();
   const editing = !!row;
   const editable = fields.filter((f) => f.is_editable);
-  const readOnly = editing ? fields.filter((f) => !f.is_editable && formatValue(f, row)) : [];
+  const readOnly = editing ? fields.filter((f) => !f.is_editable && !f.computed && formatValue(f, row)) : [];
   const empty = () => ({
     ...Object.fromEntries(editable.map((f) => [f.field_key, f.field_type === "boolean" && !editing ? "true" : ""])),
     ...(editing ? {} : preset),

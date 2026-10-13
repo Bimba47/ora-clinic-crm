@@ -5,15 +5,17 @@ import type { Catalog, FieldMeta, FilterDef, FilterOperator, ViewState } from "@
 import { DATE_OPERATOR_LABELS, OPERATOR_LABELS, needsValue, operatorsFor } from "@/lib/views";
 import RefSelect from "./RefSelect";
 
-// allowRelative: ערכים יחסיים (היום, מחר, לפני 48 שעות, "אני"). משמש את הווידג'טים בלוחות הבקרה, ולא את התצוגות.
+// allowRelative: ערכים יחסיים (היום, תחילת השבוע, "אני"), שמחושבים במסד ברגע ההרצה. בלוחות הבקרה ובתצוגות.
+// relativeTimes: גם "לפני 48 שעות" (רק בלוחות הבקרה. בתצוגה הסינון לפי יום).
 export default function FilterPanel({
-  fields, catalog, state, onChange, allowRelative,
+  fields, catalog, state, onChange, allowRelative, relativeTimes = true,
 }: {
   fields: FieldMeta[];
   catalog: Catalog;
   state: Pick<ViewState, "match" | "filters">;
   onChange: (patch: Partial<ViewState>) => void;
   allowRelative?: boolean;
+  relativeTimes?: boolean;
 }) {
   // רק שדות שמותר לסנן לפיהם (is_filterable בקטלוג, נאכף גם במסד)
   const filterable = fields.filter((f) => f.is_filterable);
@@ -65,7 +67,7 @@ export default function FilterPanel({
               ))}
             </select>
             {needsValue(flt.op) && (
-              <ValueInput field={field} catalog={catalog} value={flt.value} onChange={(value) => patch(i, { value })} allowRelative={allowRelative} />
+              <ValueInput field={field} catalog={catalog} value={flt.value} onChange={(value) => patch(i, { value })} allowRelative={allowRelative} relativeTimes={relativeTimes} />
             )}
             <button type="button" className="icon-btn" aria-label="הסרת התנאי" onClick={() => set(state.filters.filter((_, j) => j !== i))}>
               ✕
@@ -88,6 +90,8 @@ const RELATIVE_DATES = [
   { value: "{{today}}", label: "היום" },
   { value: "{{today+1}}", label: "מחר" },
   { value: "{{today-1}}", label: "אתמול" },
+  { value: "{{week_start}}", label: "תחילת השבוע (ראשון)" },
+  { value: "{{week_end}}", label: "סוף השבוע (שבת)" },
   { value: "{{today-7}}", label: "לפני 7 ימים" },
   { value: "{{today-30}}", label: "לפני 30 יום" },
 ];
@@ -97,7 +101,7 @@ const RELATIVE_TIMES = [
 ];
 
 export function ValueInput({
-  field, catalog, value, onChange, required, id, allowRelative,
+  field, catalog, value, onChange, required, id, allowRelative, relativeTimes = true,
 }: {
   field: FieldMeta;
   catalog: Catalog;
@@ -106,10 +110,11 @@ export function ValueInput({
   required?: boolean;
   id?: string;
   allowRelative?: boolean;
+  relativeTimes?: boolean;
 }) {
   // ערך יחסי: תאריך (היום, מחר...) או "אני" בשדה של אשת צוות
   if (allowRelative && (field.field_type === "date" || field.field_type === "datetime")) {
-    const options = field.field_type === "datetime" ? [...RELATIVE_DATES, ...RELATIVE_TIMES] : RELATIVE_DATES;
+    const options = field.field_type === "datetime" && relativeTimes ? [...RELATIVE_DATES, ...RELATIVE_TIMES] : RELATIVE_DATES;
     const rel = options.some((o) => o.value === value);
     return (
       <span className="relative-value">
@@ -126,7 +131,7 @@ export function ValueInput({
     return (
       <span className="relative-value">
         <select aria-label={`סוג ערך: ${field.label}`} value={me ? "me" : "other"} onChange={(e) => onChange(e.target.value === "me" ? "{{user}}" : "")}>
-          <option value="me">אני (מי שצופה בלוח)</option>
+          <option value="me">אני (המשתמשת המחוברת)</option>
           <option value="other">אשת צוות מסוימת</option>
         </select>
         {!me && <RefSelect field={field} catalog={catalog} value={value} onChange={onChange} id={id} />}
