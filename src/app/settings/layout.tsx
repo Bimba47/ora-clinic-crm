@@ -17,6 +17,7 @@ const SETTINGS_NAV: SubItem[] = [
   { label: "צוותים", href: "/settings/teams", managerOnly: true },
   { label: "מחירון", href: "/settings/treatments", managerOnly: true },
   { label: "אוטומציות", href: "/settings/automations", managerOnly: true },
+  { label: "API", href: "/settings/api", managerOnly: true },
   { label: "הפרופיל שלי", href: "/settings/profile", managerOnly: false },
 ];
 

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>קליניקת אורה · השאירי פרטים</title>
+<!--
+  טופס ליד לדוגמה: דף עצמאי, מחוץ למערכת, שמדבר רק עם ה-API (/api/v1).
+  פותחים את הקובץ מהמחשב (לחיצה כפולה), מדביקים מפתח API (מהמסך "מפתחות API" בהגדרות), וממלאים פרטים.
+  הדף יוצר לקוחה (POST /clients). אם הטלפון כבר קיים (409), הוא מוצא אותה (GET /clients?phone=...).
+  אחר כך הוא פותח קריאת שירות (POST /service_requests). המפתח לא נשמר בשום מקום.
+-->
+<style>
+  :root { --bg:#FAF6F0; --card:#FFFFFF; --soft:#F1D6D0; --line:#EDE5DC; --text:#2C2520; --muted:#6F635B; --ph:#A39A93; --primary:#E3BFA8; --bronze:#A67C52; --ok:#9E5F6A; --err:#B5533C; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: "Heebo", system-ui, sans-serif; font-size: 14px; display: grid; place-items: center; padding: 24px 16px; }
+  .card { background: var(--card); border-radius: 24px; box-shadow: 0 8px 30px rgba(44,37,32,.06); padding: 24px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 14px; }
+  h1 { margin: 0; font-size: 26px; font-weight: 500; }
+  p { margin: 0; color: var(--muted); }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+  input, select, textarea { font: inherit; font-size: 14px; color: var(--text); min-height: 44px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+  input::placeholder, textarea::placeholder { color: var(--ph); }
+  input:focus, select:focus, textarea:focus { outline: none; border: 2px solid var(--bronze); }
+  textarea { min-height: 88px; resize: vertical; }
+  button { min-height: 44px; border: 0; border-radius: 999px; background: var(--primary); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(227,191,168,.45); }
+  button:disabled { opacity: .5; cursor: default; }
+  details { border-top: 1px dashed var(--line); padding-top: 10px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  details label { margin-top: 10px; }
+  .ltr { direction: ltr; text-align: left; }
+  .result { border-radius: 16px; padding: 12px 14px; font-size: 13px; line-height: 1.6; }
+  .result.ok { background: #F6ECEE; color: var(--ok); }
+  .result.err { background: #F8E9E5; color: var(--err); }
+  .log { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--text); color: var(--bg); font-size: 12px; direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow: auto; }
+  .field-err { color: var(--err); font-size: 12px; }
+</style>
+</head>
+<body>
+  <form class="card" id="lead" novalidate>
+    <h1>קליניקת אורה</h1>
+    <p>השאירי פרטים ונחזור אלייך בהקדם.</p>
+
+    <label>שם מלא
+      <input name="full_name" required placeholder="למשל: דנה לוי" autocomplete="name">
+    </label>
+    <label>טלפון
+      <input name="phone" required class="ltr" inputmode="numeric" placeholder="054-1234567" autocomplete="tel">
+    </label>
+    <label>איך הגעת אלינו?
+      <select name="source">
+        <option value="website">אתר</option>
+        <option value="instagram">אינסטגרם</option>
+        <option value="facebook">פייסבוק</option>
+        <option value="referral">המלצה</option>
+        <option value="other">אחר</option>
+      </select>
+    </label>
+    <label>במה נוכל לעזור?
+      <textarea name="message" required placeholder="למשל: מתעניינת בטיפול פנים לפני אירוע"></textarea>
+    </label>
+
+    <details open>
+      <summary>חיבור ל-API (לבדיקה)</summary>
+      <label>כתובת המערכת
+        <input name="base" class="ltr" value="https://ora-clinic-crm-liart.vercel.app">
+      </label>
+      <label>מפתח API (לא נשמר)
+        <input name="key" type="password" class="ltr" placeholder="ora_…" autocomplete="off">
+      </label>
+    </details>
+
+    <button type="submit">שליחה</button>
+    <div id="result" hidden></div>
+    <pre class="log" id="log" hidden></pre>
+  </form>
+
+<script>
+  const form = document.getElementById("lead");
+  const resultBox = document.getElementById("result");
+  const logBox = document.getElementById("log");
+
+  function log(line) {
+    logBox.hidden = false;
+    logBox.textContent += line + "\n";
+  }
+
+  async function api(base, key, method, path, body) {
+    const res = await fetch(base.replace(/\/$/, "") + "/api/v1" + path, {
+      method,
+      headers: { "Authorization": "Bearer " + key, ...(body ? { "Content-Type": "application/json" } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json().catch(() => ({}));
+    log(method + " /api/v1" + path + "  →  " + res.status + (data.error ? "  " + data.error.code + ": " + data.error.message : ""));
+    return { status: res.status, data };
+  }
+
+  function show(ok, html) {
+    resultBox.hidden = false;
+    resultBox.className = "result " + (ok ? "ok" : "err");
+    resultBox.innerHTML = html;
+  }
+
+  // שגיאת שדה מה-API: מה נכשל ובאיזה שדה
+  function explain(err) {
+    const details = (err && err.details) || [];
+    const lines = details.map((d) => (d.field ? "<b>" + d.field + "</b>: " : "") + (d.message || d.code || ""));
+    return (err ? err.message : "שגיאה") + (lines.length ? "<br>" + lines.join("<br>") : "");
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(form));
+    logBox.textContent = "";
+    if (!f.key) return show(false, "צריך מפתח API (מהמסך מפתחות API בהגדרות המערכת)");
+    const btn = form.querySelector("button");
+    btn.disabled = true;
+    try {
+      // 1. לקוחה: יצירה, ואם הטלפון קיים – איתור
+      let client = await api(f.base, f.key, "POST", "/clients", { full_name: f.full_name, phone: f.phone, source: f.source });
+      let clientId = client.data.data && client.data.data.id;
+      let existing = false;
+      if (client.status === 409) {
+        const found = await api(f.base, f.key, "GET", "/clients?phone=" + encodeURIComponent(f.phone) + "&fields=full_name,phone&limit=1");
+        clientId = found.data.data && found.data.data[0] && found.data.data[0].id;
+        existing = true;
+      }
+      if (!clientId) return show(false, explain(client.data.error));
+
+      // 2. קריאת שירות על הפנייה
+      const req = await api(f.base, f.key, "POST", "/service_requests", { client_id: clientId, description: "פנייה מהאתר: " + f.message });
+      if (req.status !== 201) return show(false, explain(req.data.error));
+
+      show(true, "תודה! הפנייה נקלטה " + (existing ? "(הלקוחה כבר הייתה במערכת)" : "(לקוחה חדשה)") +
+        ".<br>מספר קריאה: <span class='ltr'>" + req.data.data.id.slice(0, 8) + "</span>");
+      form.full_name.value = ""; form.phone.value = ""; form.message.value = "";
+    } catch (err) {
+      show(false, "אין חיבור למערכת: " + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
