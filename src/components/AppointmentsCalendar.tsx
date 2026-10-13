@@ -11,7 +11,6 @@ import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import { errorText, loadCatalog, loadRefOptions, type Catalog, type RefOption } from "@/lib/views";
 import { saveNav } from "@/lib/records";
-import { CHART_COLORS } from "@/lib/dashboards";
 
 // שעות הפעילות – אותן שעות שהמסד אוכף (within_opening_hours ב-0001): א'-ה' 09:00-19:00, ו' 09:00-13:00, שבת סגור
 const OPEN = 9 * 60;
@@ -50,6 +49,10 @@ const dow = (date: string) => new Date(`${date}T12:00:00Z`).getUTCDay();
 const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 const dayLabel = (date: string) => new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "numeric" }).format(new Date(`${date}T12:00:00Z`));
 
+// צבע לכל מטפלת, מצבעי הסטטוסים של האפיון: גוונים שונים בבירור זה מזה
+const THERAPIST_COLORS = ["#E3BFA8", "#9E5F6A", "#C99A7A", "#A39A93", "#A67C52", "#F1D6D0"];
+const DARK_COLORS = ["#9E5F6A", "#A39A93", "#A67C52"]; // עליהם הטקסט לבן
+
 export default function AppointmentsCalendar() {
   const router = useRouter();
   const toast = useToast();
@@ -58,6 +61,11 @@ export default function AppointmentsCalendar() {
   const [therapists, setTherapists] = useState<RefOption[]>([]);
   const [treatments, setTreatments] = useState<RefOption[]>([]);
   const [anchor, setAnchor] = useState(() => ymd(new Date()));
+  // ?date=YYYY-MM-DD: חזרה ליום שבו נקבע תור חדש
+  useEffect(() => {
+    const d = new URLSearchParams(window.location.search).get("date");
+    if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) setAnchor(d);
+  }, []);
   const [mode, setMode] = useState<"week" | "day">("week");
   const [narrow, setNarrow] = useState(false);
   const [filterTherapist, setFilterTherapist] = useState("");
@@ -130,9 +138,9 @@ export default function AppointmentsCalendar() {
   // צבע לכל מטפלת לפי הסדר ברשימה (צבעי הגרפים של האפיון)
   const colorOf = (id: string) => {
     const i = therapists.findIndex((t) => t.value === id);
-    return CHART_COLORS[(i < 0 ? therapists.length : i) % CHART_COLORS.length];
+    return THERAPIST_COLORS[(i < 0 ? therapists.length : i) % THERAPIST_COLORS.length];
   };
-  const dark = (c: string) => ["#A67C52", "#9E5F6A", "#2C2520", "#C99A7A"].includes(c);
+  const dark = (c: string) => DARK_COLORS.includes(c);
 
   const pxPerMin = narrow ? PX_PER_MIN_MOBILE : PX_PER_MIN;
   const today = ymd(new Date());
@@ -153,7 +161,8 @@ export default function AppointmentsCalendar() {
   };
   const newAt = (date: string, minute: number) => {
     if (!can("appointments", "create")) return;
-    const q = new URLSearchParams({ starts_at: `${date}T${hhmm(minute)}` });
+    // אחרי השמירה חוזרים ליומן, לאותו יום
+    const q = new URLSearchParams({ starts_at: `${date}T${hhmm(minute)}`, return: `/appointments?date=${date}` });
     if (filterTherapist) q.set("therapist_id", filterTherapist);
     router.push(`/appointments/new?${q}`);
   };
@@ -162,25 +171,28 @@ export default function AppointmentsCalendar() {
     <div className="calendar">
       <div className="views-head">
         <h1 className="page-title">תורים</h1>
-        {can("appointments", "create") && <Link href="/appointments/new" className="btn primary cta">+ תור חדש</Link>}
+        {can("appointments", "create") && <Link href={`/appointments/new?return=${encodeURIComponent(`/appointments?date=${anchor}`)}`} className="btn primary cta">+ תור חדש</Link>}
       </div>
 
       <div className="cal-bar card">
-        <div className="segmented" role="tablist" aria-label="תצוגה">
-          <button type="button" role="tab" aria-selected className="on">יומן</button>
-          <Link href="/appointments/list" role="tab" aria-selected={false} className="seg-link">רשימה</Link>
-        </div>
-        <div className="cal-nav">
-          <button type="button" className="icon-btn" aria-label={mode === "week" ? "השבוע הקודם" : "היום הקודם"} onClick={() => step(-1)}>→</button>
-          <button type="button" className="btn outline" onClick={() => setAnchor(today)}>היום</button>
-          <button type="button" className="icon-btn" aria-label={mode === "week" ? "השבוע הבא" : "היום הבא"} onClick={() => step(1)}>←</button>
-          <span className="cal-title">{title}</span>
-        </div>
-        <div className="cal-filters">
+        {/* סדר הכפתורים: יומן/רשימה, יום/שבוע, ואז החצים */}
+        <div className="cal-controls">
+          <div className="segmented" role="tablist" aria-label="תצוגה">
+            <button type="button" role="tab" aria-selected className="on">יומן</button>
+            <Link href="/appointments/list" role="tab" aria-selected={false} className="seg-link">רשימה</Link>
+          </div>
           <div className="segmented small-seg" role="radiogroup" aria-label="יום או שבוע">
             <button type="button" role="radio" aria-checked={mode === "day"} className={mode === "day" ? "on" : ""} onClick={() => setMode("day")}>יום</button>
             <button type="button" role="radio" aria-checked={mode === "week"} className={mode === "week" ? "on" : ""} onClick={() => setMode("week")}>שבוע</button>
           </div>
+          <div className="cal-nav">
+            <button type="button" className="icon-btn" aria-label={mode === "week" ? "השבוע הקודם" : "היום הקודם"} onClick={() => step(-1)}>→</button>
+            <button type="button" className="btn outline" onClick={() => setAnchor(today)}>היום</button>
+            <button type="button" className="icon-btn" aria-label={mode === "week" ? "השבוע הבא" : "היום הבא"} onClick={() => step(1)}>←</button>
+          </div>
+          <span className="cal-title">{title}</span>
+        </div>
+        <div className="cal-filters">
           <select value={filterTherapist} onChange={(e) => setFilterTherapist(e.target.value)} aria-label="סינון לפי מטפלת">
             <option value="">כל המטפלות</option>
             {therapists.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}

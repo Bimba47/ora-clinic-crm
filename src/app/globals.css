@@ -972,3 +972,32 @@ input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 /* כפתור ראשי: הצל של האפיון */
 .btn.primary { box-shadow: 0 4px 14px rgba(227, 191, 168, 0.45); }
 .btn.primary:hover:not(:disabled) { box-shadow: 0 6px 18px rgba(227, 191, 168, 0.6); }
+
+/* ===== תיקוני ענבל (v23) ===== */
+/* לוח בקרה: בועית סינון התאריכים לכל הרוחב ונמוכה יותר (התווית ליד השדה) */
+.dash-filters { align-self: stretch; width: auto; max-width: none; padding: 8px 16px; align-items: center; gap: 8px 24px; }
+.dash-filters .field { flex: 1 1 0; min-width: 150px; max-width: none; flex-direction: row; align-items: center; gap: 8px; }
+.dash-filters .field > span { white-space: nowrap; margin: 0; }
+.dash-filters .field > input, .dash-filters .field > select { flex: 1 1 auto; min-width: 0; }
+
+/* מסכי רשומה: הכיתוב בכל הבועיות ממורכז (כותרת, שדות מחושבים, קבוצות שדות, פרטי מעקב). הלשוניות נשארות רשימה */
+.record .record-head, .record .record-head.stacked { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.record .record-title { align-items: center; }
+.record .header-fields { justify-content: center; flex: 0 1 auto; }
+.record .header-fields > div, .record .header-fields dd { display: flex; flex-direction: column; align-items: center; }
+.record .record-actions { margin-inline-start: 0; justify-content: center; }
+.record .computed-item { align-items: center; text-align: center; }
+.record .computed-link, .record .computed-link.link-like { align-items: center; text-align: center; }
+.record .group .section-title { text-align: center; }
+.record .field-view { align-items: center; text-align: center; }
+.record .group-fields .field > span:first-child { text-align: center; }
+.record .record-footer { justify-content: center; text-align: center; }
+
+/* יומן: יומן/רשימה, יום/שבוע, ואז החצים, בשורה אחת; הסינון בשורה מתחת */
+.cal-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; flex-basis: 100%; }
+.cal-bar .cal-filters { flex-basis: 100%; margin-inline-start: 0; }
+
+/* רשימת התורים: "יומן" בולט, ליד רשימה/קאנבן */
+.btn.calendar-btn { background: var(--bronze); color: #FFFFFF; gap: 6px; text-decoration: none; }
+.btn.calendar-btn svg { color: #FFFFFF; width: 18px; height: 18px; }
+.btn.calendar-btn:hover { background: var(--link); }

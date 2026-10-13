@@ -40,7 +40,7 @@ export const RECORDS: Record<string, RecordConfig> = {
     children: [
       {
         object: "appointments", fk: "client_id", label: "תורים", addLabel: "+ תור חדש",
-        columns: ["starts_at", "treatment_id", "therapist_id", "price"], sort: { field: "starts_at", asc: false },
+        columns: ["starts_at", "treatment_id", "therapist_id", "price"], sort: { field: "starts_at", asc: true },
       },
       {
         object: "service_requests", fk: "client_id", label: "קריאות שירות", addLabel: "+ קריאה חדשה",
@@ -96,7 +96,7 @@ export const RECORDS: Record<string, RecordConfig> = {
     children: [
       {
         object: "appointments", fk: "therapist_id", label: "תורים", addLabel: "+ תור חדש",
-        columns: ["starts_at", "client_id", "treatment_id"], sort: { field: "starts_at", asc: false },
+        columns: ["starts_at", "client_id", "treatment_id"], sort: { field: "starts_at", asc: true },
       },
       {
         object: "service_requests", fk: "assigned_to", label: "קריאות באחריותה", addLabel: "+ קריאה חדשה",
@@ -134,7 +134,7 @@ export const RECORDS: Record<string, RecordConfig> = {
     children: [
       {
         object: "appointments", fk: "treatment_id", label: "תורים", addLabel: "+ תור חדש",
-        columns: ["starts_at", "client_id", "therapist_id"], sort: { field: "starts_at", asc: false },
+        columns: ["starts_at", "client_id", "therapist_id"], sort: { field: "starts_at", asc: true },
       },
     ],
     managerScreen: true,

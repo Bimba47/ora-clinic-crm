@@ -89,6 +89,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               title="חזרה למסך הקודם"
               onClick={(e) => {
                 e.preventDefault();
+                window.dispatchEvent(new Event("ora:back")); // מסך רשומה מסמן שהרשימה תחזור באותו מצב
                 if (window.history.length > 1) router.back();
                 else router.push("/");
               }}

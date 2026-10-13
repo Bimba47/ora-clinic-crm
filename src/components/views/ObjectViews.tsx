@@ -46,12 +46,14 @@ function remember(objectKey: string, viewId?: string) {
   }
 }
 
-// headerActions: כפתורים נוספים בכותרת (למשל "סמני הכול כנקרא"). reloadToken: שינוי שלו טוען את הרשימה מחדש.
+// headerActions: כפתורים נוספים בכותרת (למשל "סמני הכול כנקרא"). viewBarActions: כפתורים בשורת התצוגה, ליד רשימה/קאנבן
+// (למשל "יומן" בתורים). reloadToken: שינוי שלו טוען את הרשימה מחדש.
 export default function ObjectViews({
-  objectKey, headerActions, reloadToken = 0,
+  objectKey, headerActions, viewBarActions, reloadToken = 0,
 }: {
   objectKey: string;
   headerActions?: React.ReactNode;
+  viewBarActions?: React.ReactNode;
   reloadToken?: number;
 }) {
   const { userId, isManager, me, can } = useAuth();
@@ -444,6 +446,7 @@ export default function ObjectViews({
             </button>
           ))}
         </div>
+        {viewBarActions}
 
         {state.view_type === "kanban" && (
           <label className="kanban-pick">

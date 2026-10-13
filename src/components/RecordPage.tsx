@@ -77,6 +77,12 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   const phoneField = fields.find((f) => f.field_type === "phone");
 
   useEffect(() => setNav(readNav(objectKey)), [objectKey]);
+  // החץ "חזרה" בכותרת העליונה: הרשימה חוזרת עם אותו סינון, מיון, חיפוש ועמוד
+  useEffect(() => {
+    const onBack = () => markListRestore(objectKey);
+    window.addEventListener("ora:back", onBack);
+    return () => window.removeEventListener("ora:back", onBack);
+  }, [objectKey]);
 
   // ===== טעינה =====
   const load = useCallback(
@@ -318,7 +324,9 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         const newId = await createRecord(objectKey, payload);
         toast(CREATED_TOAST[objectKey] ?? "הרשומה נשמרה");
         dirtyRef.current = false;
-        router.replace(`${cfg.route}${newId}`);
+        // נפתחה ממסך אחר שמבקש לחזור אליו (למשל תור חדש מהיומן): חוזרים לשם. אחרת לרשומה החדשה.
+        const ret = new URLSearchParams(window.location.search).get("return");
+        router.replace(ret && ret.startsWith("/") && !ret.startsWith("//") ? ret : `${cfg.route}${newId}`);
         return;
       }
       const changed = editable.filter((f) => values[f.field_key] !== snapshot[f.field_key]);
@@ -524,7 +532,6 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   return (
     <div className="record">
       <div className="record-top">
-        <button type="button" className="back-link" onClick={back}>→ {nav?.backLabel ?? obj.label_plural}</button>
         {idx >= 0 && (
           <nav className="record-nav" aria-label="מעבר בין רשומות">
             <button type="button" className="btn outline" disabled={!prevId} onClick={() => prevId && leave(() => router.push(`${cfg.route}${prevId}`))}>→ הקודמת</button>
