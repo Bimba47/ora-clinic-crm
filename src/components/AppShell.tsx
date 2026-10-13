@@ -7,7 +7,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Icon, { type IconName } from "./Icon";
-import { AuthProvider, useAuth } from "./Auth";
+import { AuthProvider, PUBLIC_PATHS, useAuth } from "./Auth";
 import { ToastProvider } from "./Toast";
 import { Brand, SettingsProvider } from "./Settings";
 import NotificationBell from "./NotificationBell";
@@ -54,7 +54,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   const newRequests = useNewRequestsCount(userId, pathname);
   const badgeFor = (item: NavItem) => (item.href === "/requests" ? newRequests : 0);
 
-  if (pathname === "/login" || pathname === "/accept-invite") return <>{children}</>;
+  if (PUBLIC_PATHS.includes(pathname)) return <>{children}</>;
   if (!ready || !userId) {
     return (
       <div className="shell-loading" aria-busy="true">

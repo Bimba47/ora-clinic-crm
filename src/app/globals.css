@@ -893,3 +893,7 @@ a.btn { text-decoration: none; }
 .tag-select option { background: var(--card); color: var(--text); }
 /* שדה מחושב מעל הסף (קריאה פתוחה יותר מ-48 שעות): אדום מודגש, כמו "לא נקראה" */
 .data-table td.warn-cell { color: var(--err); font-weight: 700; }
+
+/* שכחתי סיסמה (v19) */
+.login-switch { align-self: center; margin-top: -8px; }
+.login-card p { margin: 0; font-size: 14px; color: var(--muted); }

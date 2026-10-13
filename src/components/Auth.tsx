@@ -48,8 +48,8 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// מסכים שנפתחים גם בלי משתמשת מחוברת (כניסה, וקבלת הזמנה)
-const PUBLIC_PATHS = ["/login", "/accept-invite"];
+// מסכים שנפתחים גם בלי משתמשת מחוברת (כניסה, קבלת הזמנה, איפוס סיסמה)
+export const PUBLIC_PATHS = ["/login", "/accept-invite", "/reset-password"];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -86,11 +86,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => load(data.session?.user.id ?? null, data.session?.user.email));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       load(session?.user.id ?? null, session?.user.email);
+      // קישור איפוס סיסמה: גם אם Supabase החזיר לכתובת הראשית, עוברים למסך בחירת הסיסמה
+      if (event === "PASSWORD_RECOVERY") router.replace("/reset-password");
     });
     return () => sub.subscription.unsubscribe();
-  }, [load]);
+  }, [load, router]);
 
   useEffect(() => {
     if (!ready) return;
