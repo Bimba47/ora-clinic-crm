@@ -30,7 +30,6 @@ export default function Dashboards() {
   const [dash, setDash] = useState<DashFilters>({});
   const [staff, setStaff] = useState<RefOption[]>([]);
   const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
-  const [editing, setEditing] = useState(false);
   const [builder, setBuilder] = useState<Widget | "new" | null>(null);
   const [dialog, setDialog] = useState<null | "new" | "settings" | "delete" | "duplicate">(null);
   const [delWidget, setDelWidget] = useState<Widget | null>(null);
@@ -75,7 +74,6 @@ export default function Dashboards() {
   useEffect(() => {
     if (!board) return;
     try { localStorage.setItem("ora:dashboard", board.id); } catch {}
-    setEditing(false);
     setDash({ ...board.filters, owner: board.filters.owner ?? (isManager ? "" : userId ?? "") });
     supabase
       .from("dashboard_widgets")
@@ -101,17 +99,24 @@ export default function Dashboards() {
   // ===== סידור: גרירה ושינוי גודל, ושמירה מיד בשורת הווידג'ט =====
   const gridRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ id: string; box: Box } | null>(null);
+  // עומדים על ווידג'ט וגוררים, בלי מצב עריכה. הגרירה מתחילה רק אחרי תזוזה של כמה פיקסלים,
+  // כך שלחיצה רגילה עדיין פותחת את הרשימה המסוננת. במסך צר (עמודה אחת) מזיזים מהתפריט.
   const startDrag = (w: Widget, mode: "move" | "resize", e: React.PointerEvent) => {
-    if (!editing || !gridRef.current) return;
-    // במסך צר הלוח הוא עמודה אחת: מזיזים בכפתורים, וגרירה לא חוסמת גלילה
+    if (!canEdit || !gridRef.current || e.button !== 0) return;
     if (window.matchMedia("(max-width: 767px)").matches) return;
-    e.preventDefault();
     const colW = (gridRef.current.clientWidth + GAP) / COLS;
     const sx = e.clientX;
     const sy = e.clientY;
     const orig: Box = { position_x: w.position_x, position_y: w.position_y, width: w.width, height: w.height };
     let box = orig;
+    let active = mode === "resize";
+    if (active) e.preventDefault();
     const onMove = (ev: PointerEvent) => {
+      if (!active) {
+        if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < 6) return;
+        active = true;
+      }
+      ev.preventDefault();
       const dc = Math.round(-(ev.clientX - sx) / colW); // מימין לשמאל: תזוזה שמאלה = עמודה גבוהה יותר
       const dr = Math.round((ev.clientY - sy) / (ROW_H + GAP));
       box = mode === "move"
@@ -122,6 +127,9 @@ export default function Dashboards() {
     const onUp = async () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      if (!active) return; // זו הייתה לחיצה, לא גרירה
+      // הלחיצה שמגיעה בסוף הגרירה לא פותחת את הרשימה
+      window.addEventListener("click", (ce) => { ce.stopPropagation(); ce.preventDefault(); }, { capture: true, once: true });
       setDrag(null);
       await commit(settle(widgets, w.id, box));
     };
@@ -207,7 +215,7 @@ export default function Dashboards() {
     <div className="dashboards">
       <div className="dash-head">
         <div className="dash-pick">
-          <h1 className="page-title">{board?.name ?? "לוחות בקרה"}</h1>
+          {/* בלי כותרת: הלוח הוא המסך הראשי. כשיש כמה לוחות, בוחרים כאן */}
           {boards.length > 1 && (
             <select className="compact-select" value={current ?? ""} onChange={(e) => pick(e.target.value)} aria-label="בחירת לוח">
               {boards.map((b) => <option key={b.id} value={b.id}>{b.name}{b.is_shared ? "" : " (פרטי)"}</option>)}
@@ -215,11 +223,6 @@ export default function Dashboards() {
           )}
         </div>
         <div className="head-buttons">
-          {canEdit && (
-            <button type="button" className={`btn outline${editing ? " on" : ""}`} onClick={() => setEditing(!editing)} aria-pressed={editing}>
-              {editing ? "סיום סידור" : "סידור הלוח"}
-            </button>
-          )}
           <details className="menu">
             <summary className="btn outline" aria-label="פעולות לוח">⋯</summary>
             <div className="menu-list card">
@@ -271,17 +274,17 @@ export default function Dashboards() {
           {canEdit && <button type="button" className="btn primary" onClick={() => setBuilder("new")}>הוסיפי ווידג'ט</button>}
         </div>
       ) : (
-        <div ref={gridRef} className={`dash-grid${editing ? " editing" : ""}`} style={{ gridAutoRows: `${ROW_H}px`, gap: GAP }}>
+        <div ref={gridRef} className={`dash-grid${canEdit ? " arrangeable" : ""}`} style={{ gridAutoRows: `${ROW_H}px`, gap: GAP }}>
           {ordered.map((w, idx) => {
             const box = drag?.id === w.id ? drag.box : w;
             return (
               <section
                 key={w.id}
                 // מחלקת הסוג היא w-type-*, כדי שלא תתנגש בעיצוב התוכן (widget-metric, widget-list...)
-                className={`card widget w-type-${w.widget_type}${drag?.id === w.id ? " dragging" : ""}${editing ? " grab" : ""}`}
+                className={`card widget w-type-${w.widget_type}${drag?.id === w.id ? " dragging" : ""}${canEdit ? " grab" : ""}`}
                 style={{ gridColumn: `${box.position_x + 1} / span ${box.width}`, gridRow: `${box.position_y + 1} / span ${box.height}` }}
-                // בסידור הלוח גוררים את כל הווידג'ט (לא רק את הכותרת)
-                onPointerDown={editing ? (e) => {
+                // עומדים על כל מקום בווידג'ט וגוררים
+                onPointerDown={canEdit ? (e) => {
                   if ((e.target as HTMLElement).closest("button, summary, a, select, input, .widget-resize")) return;
                   startDrag(w, "move", e);
                 } : undefined}
@@ -289,18 +292,14 @@ export default function Dashboards() {
                 {(w.title || canEdit) && (
                   <div className={`widget-head${w.title ? "" : " floating"}`}>
                     {w.title && <h2 className="widget-title">{w.title}</h2>}
-                    {editing && (
-                      <span className="widget-move">
-                        <button type="button" className="icon-btn" aria-label={`הזזה למעלה: ${w.title || "ווידג'ט"}`} disabled={idx === 0} onClick={() => step(w, -1)}>▲</button>
-                        <button type="button" className="icon-btn" aria-label={`הזזה למטה: ${w.title || "ווידג'ט"}`} disabled={idx === ordered.length - 1} onClick={() => step(w, 1)}>▼</button>
-                      </span>
-                    )}
                     {canEdit && (
                       <details className="menu widget-menu">
                         <summary className="icon-btn" aria-label={`פעולות: ${w.title || "ווידג'ט"}`}>⋯</summary>
                         <div className="menu-list card">
                           <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; setBuilder(w); }}>עריכה</button>
                           <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; duplicateWidget(w); }}>שכפול</button>
+                          {idx > 0 && <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; step(w, -1); }}>הזזה למעלה</button>}
+                          {idx < ordered.length - 1 && <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; step(w, 1); }}>הזזה למטה</button>}
                           <button type="button" className="danger" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; setDelWidget(w); }}>מחיקה</button>
                         </div>
                       </details>
@@ -310,7 +309,7 @@ export default function Dashboards() {
                 <div className="widget-body">
                   <WidgetView widget={w} catalog={catalog} dash={dash} reloadToken={reload} />
                 </div>
-                {editing && (
+                {canEdit && (
                   <span className="widget-resize" aria-hidden="true" onPointerDown={(e) => startDrag(w, "resize", e)} title="שינוי גודל" />
                 )}
               </section>
@@ -340,7 +339,6 @@ export default function Dashboards() {
           toast("הלוח נוצר");
           setDialog(null);
           await afterBoardChange(data.id);
-          setEditing(true);
         }} />
       )}
       {dialog === "duplicate" && board && (
@@ -379,7 +377,7 @@ const hit = (a: Box, b: Box) =>
 // אחרי גרירה או שינוי גודל:
 // 1. נחיתה בדיוק על ווידג'ט באותו גודל = החלפת מקומות.
 // 2. אחרת הווידג'ט שזז נשאר במקומו, ומי שמתנגש בו יורד מתחתיו.
-// 3. בסוף כולם "עולים" למעלה כמה שאפשר, כדי שלא יישארו חורים בלוח.
+// 3. בלי דחיסה: אפשר להשאיר מקום ריק, ושאר הווידג'טים לא זזים.
 function settle(ws: Widget[], movedId: string, box: Box): Widget[] {
   const orig = ws.find((w) => w.id === movedId)!;
   const moved = { ...orig, ...box };
@@ -402,15 +400,8 @@ function settle(ws: Widget[], movedId: string, box: Box): Widget[] {
     }
     list = placed;
   }
-  // דחיסה למעלה, לפי הסדר מלמעלה למטה
-  const sorted = [...list].sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x);
-  const done: Widget[] = [];
-  for (const w of sorted) {
-    const cur = { ...w };
-    while (cur.position_y > 0 && !done.some((d) => hit({ ...cur, position_y: cur.position_y - 1 }, d))) cur.position_y -= 1;
-    done.push(cur);
-  }
-  return done;
+  // בלי דחיסה: מקום ריק נשאר ריק, וכל ווידג'ט שלא נפגע נשאר בדיוק במקומו
+  return list;
 }
 
 function NameDialog({ title, initial, onClose, onSave }: { title: string; initial: string; onClose: () => void; onSave: (name: string) => Promise<void> }) {

@@ -798,3 +798,12 @@ a.btn { text-decoration: none; }
 .widget-move + .widget-menu { margin-inline-start: 0; }
 .dash-grid.editing .widget-body { pointer-events: none; }
 .dash-grid.editing .widget { box-shadow: 0 0 0 2px var(--soft), var(--shadow); }
+
+/* v16.5: גרירה בלי מצב עריכה, ברכה עדינה, תפריט ווידג'ט צפוף */
+.widget-text.title .widget-text-main { font-size: 24px; font-weight: 400; color: var(--text); }
+.widget-text.title .widget-text-sub { font-size: 13px; }
+.widget-resize { opacity: 0; transition: opacity 150ms; }
+.widget:hover .widget-resize { opacity: 0.7; }
+.widget.grab .widget-body { cursor: default; }
+.widget-menu .menu-list { padding: 4px; min-width: 120px; gap: 0; }
+.widget-menu .menu-list button { min-height: 32px; padding: 0 10px; font-size: 13px; border-radius: 8px; }
