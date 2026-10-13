@@ -53,7 +53,7 @@ export const RECORDS: Record<string, RecordConfig> = {
   appointments: {
     route: "/appointments/",
     listHref: "/appointments/list",
-    header: ["status", "client_id", "therapist_id"],
+    header: ["client_id", "therapist_id"],
     groups: [
       { title: "לקוחה וטיפול", fields: ["client_id", "treatment_id", "therapist_id"] },
       { title: "מועד", fields: ["starts_at", "duration_minutes"] },

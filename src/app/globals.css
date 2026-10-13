@@ -569,3 +569,6 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .title-sub .sub-time { margin-right: 16px; } /* השעה משמאל לתאריך: רווח מימינה (רכיב ltr, ולכן לא inline-start) */
 /* כרטיס לקוחה: שם בכתב קטן יותר */
 .record-head-clients .record-title .page-title { font-size: 24px; }
+/* כרטיס תור: התאריך (שם הרשומה) בכתב קטן יותר */
+.record-head-appointments .record-title .page-title { font-size: 24px; }
+.record-head-appointments .record-title .title-sub { font-size: 14px; }
