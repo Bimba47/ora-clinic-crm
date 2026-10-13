@@ -10,7 +10,13 @@ export type FieldType =
 export type FilterOperator =
   | "eq" | "neq" | "contains" | "not_contains" | "gt" | "gte" | "lt" | "lte" | "is_empty" | "is_not_empty";
 
-export type ChoiceOption = { value: string; label: string };
+// retired: ערך שיצא משימוש. לא מוצע לבחירה, אבל רשומות קיימות עדיין מציגות את התווית שלו.
+// כדי להוציא ערך מרשימה סגורה מסמנים retired במקום למחוק אותו מהקטלוג.
+export type ChoiceOption = { value: string; label: string; retired?: boolean };
+
+// האפשרויות לבחירה: בלי ערכים שיצאו משימוש, חוץ מהערך הנוכחי של הרשומה (שלא ייעלם מהבחירה)
+export const pickOptions = (options: ChoiceOption[] | null | undefined, current?: unknown) =>
+  (options ?? []).filter((o) => !o.retired || o.value === String(current ?? ""));
 
 export type ObjectMeta = {
   id: string;
@@ -341,6 +347,7 @@ export function errorText(e: unknown): string {
     if (m.includes("phone_format") || m.includes("phone_check")) return "מספר הטלפון לא תקין.";
     if (m.includes("email_format") || m.includes("email_check")) return "כתובת האימייל לא תקינה.";
     if (m.includes("staff_email_key")) return "כבר יש משתמשת עם האימייל הזה.";
+    if (/_len"/.test(m)) return "הטקסט ארוך מדי (עד 200 תווים בשם, ועד 2000 בתיאור ובהערות).";
     if (m.includes("roles_name_key")) return "כבר יש תפקיד בשם הזה.";
     if (m.includes("teams_name_key")) return "כבר יש צוות בשם הזה.";
     if (m.includes("row-level security") || m.includes("permission denied")) return "אין לך הרשאה לפעולה הזו.";
@@ -357,7 +364,9 @@ export function errorField(e: unknown): string | null {
   if (m.includes("מטפלת פעילה")) return "therapist_id";
   if (m.startsWith("הטיפול הזה הוצא משימוש")) return "treatment_id";
   if (m.includes("duplicate key") && m.includes("phone")) return "phone";
-  if (m.includes("phone_format") || m.includes("phone_check")) return "phone";
+  if (m.includes("phone_format") || m.includes("phone_check") || m.startsWith("מספר הטלפון לא תקין")) return "phone";
+  const len = m.match(/"(?:clients|appointments|service_requests|treatments|staff)_(\w+)_len"/);
+  if (len) return len[1];
   if (m.includes("email_format") || m.includes("email_check") || m.includes("staff_email_key")) return "email";
   if (m.includes("service_requests_assignee_required")) return "assigned_to";
   if (m.includes('"בוצע" רק אחרי')) return "status";

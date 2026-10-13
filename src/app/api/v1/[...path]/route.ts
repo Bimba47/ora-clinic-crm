@@ -94,6 +94,13 @@ async function handle(req: Request, ctx: Ctx) {
   return json(result.status, result.body, result.status === 429 ? { "Retry-After": "60" } : {});
 }
 
+// פעולה שלא נתמכת: 405 בפורמט השגיאה של ה-API (ולא גוף ריק)
+function notAllowed() {
+  return json(405, errorBody(405, "method_not_allowed", "פעולה לא נתמכת. אפשר: GET, POST, PATCH, DELETE"), { Allow: "GET, POST, PATCH, DELETE, OPTIONS" });
+}
+export const PUT = notAllowed;
+export const HEAD = notAllowed;
+
 export const GET = handle;
 export const POST = handle;
 export const PATCH = handle;

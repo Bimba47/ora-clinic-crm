@@ -66,7 +66,7 @@ export type DashFilters = { date_from?: string; date_to?: string; owner?: string
 
 export type Group = { key: string | null; label: string | null; value: number; split?: string | null; split_label?: string | null };
 export type WidgetResult =
-  | { kind: "metric"; value: number; previous?: number; change?: number | null; days?: number }
+  | { kind: "metric"; value: number | null; previous?: number; change?: number | null; days?: number } // null = אין נתונים (ממוצע וכו׳)
   | { kind: "groups"; groups: Group[] }
   | { kind: "pivot"; groups: Group[] }
   | { kind: "rows"; rows: (Record<string, unknown> & { id: string; __message?: string; __phone?: string })[]; columns: string[] }

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
-import { errorText, type Catalog, type FieldMeta } from "@/lib/views";
+import { errorText, pickOptions, type Catalog, type FieldMeta } from "@/lib/views";
 import { formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 import { recordHref } from "@/lib/records";
 import {
@@ -110,8 +110,11 @@ export default function WidgetView({
     const up = res.change !== undefined && res.change !== null && res.change > 0;
     const down = res.change !== undefined && res.change !== null && res.change < 0;
     return (
-      <button type="button" className={`widget-metric${cfg.tone === "danger" && res.value > 0 ? " danger" : ""}`} onClick={() => drill()} disabled={preview}>
-        <span className="metric-value" dir="ltr">{Number(res.value).toLocaleString("he-IL", { maximumFractionDigits: 1 })}{cfg.suffix ?? ""}</span>
+      <button type="button" className={`widget-metric${cfg.tone === "danger" && (res.value ?? 0) > 0 ? " danger" : ""}`} onClick={() => drill()} disabled={preview}>
+        {/* ממוצע / מינימום / מקסימום / אחוז בלי נתונים: "—" ולא 0 */}
+        {res.value === null || res.value === undefined
+          ? <span className="metric-value metric-empty" title="אין נתונים">—</span>
+          : <span className="metric-value" dir="ltr">{Number(res.value).toLocaleString("he-IL", { maximumFractionDigits: 1 })}{cfg.suffix ?? ""}</span>}
         {res.change !== undefined && (
           <span className={`metric-change${up ? " up" : down ? " down" : ""}`}>
             {res.change === null ? "אין נתונים לתקופה הקודמת" : `${up ? "▲" : down ? "▼" : "•"} ${Math.abs(res.change)}% לעומת ${res.days} הימים הקודמים`}
@@ -239,7 +242,7 @@ export default function WidgetView({
                   aria-label={statusField.label}
                   disabled={preview}
                 >
-                  {statusField.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {pickOptions(statusField.options, row[statusField.field_key]).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               )}
               {cfg.whatsapp && row.__phone && (

@@ -4,7 +4,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import type { FieldMeta, Row, ViewState } from "@/lib/views";
+import { pickOptions, type FieldMeta, type Row, type ViewState } from "@/lib/views";
 import { formatValue, isLtr, isWarn } from "@/lib/format";
 
 // עמודה של תגיות (סטטוס, מקור, נקראה) ממורכזת
@@ -163,7 +163,7 @@ export default function ListView({
                               onKeyDown={(e) => e.stopPropagation()}
                               onChange={(e) => onStatus(r, e.target.value)}
                             >
-                              {f.options?.map((o) => (
+                              {pickOptions(f.options, cur).map((o) => (
                                 <option key={o.value} value={o.value} disabled={o.value === "done" && typeof r.starts_at === "string" && new Date(r.starts_at) > new Date()}>
                                   {o.label}
                                 </option>

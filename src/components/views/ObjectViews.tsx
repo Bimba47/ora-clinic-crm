@@ -13,6 +13,7 @@ import {
   type RefOption,
   createView, deleteRecords, deleteView, errorText, loadCatalog, loadRecord, loadRefOptions, loadViewState, loadViews,
   renameView, runView, saveViewState, setDefaultView, setViewShared, updateRecords,
+  pickOptions,
 } from "@/lib/views";
 import { RECORDS, linkHref, recordHref, saveListSnapshot, saveNav, takeListSnapshot } from "@/lib/records";
 import { openNotification } from "@/components/NotificationBell";
@@ -313,7 +314,13 @@ export default function ObjectViews({
   const doExport = async (only?: Set<string>) => {
     if (!state || !obj) return;
     try {
-      const all = (await runView(objectKey, state, { search: debounced, limit: 5000 })).rows;
+      // הכול, בחלקים של 5,000 (מגבלת בקשה אחת)
+      const all: Row[] = [];
+      for (let offset = 0; ; offset += 5000) {
+        const page = await runView(objectKey, state, { search: debounced, limit: 5000, offset });
+        all.push(...page.rows);
+        if (page.rows.length < 5000 || all.length >= page.total) break;
+      }
       const rows = only ? all.filter((r) => only.has(r.id)) : all;
       const cols = state.columns.filter((c) => c.visible).map((c) => fieldByKey.get(c.field)).filter(Boolean) as FieldMeta[];
       const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
@@ -675,7 +682,7 @@ function BulkSetDialog({
         <label className="field">
           <span>ערך חדש</span>
           <select value={value} onChange={(e) => setValue(e.target.value)}>
-            {field.options?.map((o) => (
+            {pickOptions(field.options).map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>

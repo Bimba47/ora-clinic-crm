@@ -4,7 +4,7 @@
 // הבדיקות האמיתיות (טלפון, שעות פעילות, חפיפה, הרשאות) נעשות במסד. הודעה של שדה מסוים מוצגת ליד השדה, ואחרת ליד הכפתור.
 // הרכיבים והפונקציות המשותפים (שדה קלט, המרת ערכים, העתקה משדה מקושר) משמשים גם את מסך הרשומה.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Modal from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import type { Catalog, FieldMeta, ObjectMeta, Row } from "@/lib/views";
@@ -83,7 +83,7 @@ export function FieldInput({
   }
   if (f.field_type === "long_text") {
     return (
-      <textarea id={id} required={f.is_required} rows={3} aria-invalid={invalid} placeholder={f.placeholder ?? undefined}
+      <textarea id={id} required={f.is_required} rows={3} aria-invalid={invalid} placeholder={f.placeholder ?? undefined} maxLength={2000}
         value={value} onChange={(e) => onChange(e.target.value)} />
     );
   }
@@ -136,9 +136,11 @@ export default function RecordForm({
     }
   };
 
+  const busyRef = useRef(false); // לחיצה כפולה מהירה: שמירה אחת בלבד
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!initial) return;
+    if (!initial || busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     setError("");
     setFieldError(null);
@@ -170,6 +172,7 @@ export default function RecordForm({
         toast(errorText(err), "err");
       }
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   };

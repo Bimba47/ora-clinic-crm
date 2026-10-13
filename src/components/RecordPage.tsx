@@ -18,6 +18,7 @@ import { type ChildDef, type RecordNav, RECORDS, linkHref, markListRestore, read
 import {
   type Catalog, type FieldMeta, type Row,
   createRecord, deleteRecords, errorField, errorText, loadCatalog, loadRefOptions, updateRecords,
+  pickOptions,
 } from "@/lib/views";
 import { formatDate, formatDateTime, formatHours, formatPhone, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 import { adminApi } from "@/lib/adminApi";
@@ -218,6 +219,38 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       go();
     }
   };
+  // כפתור "אחורה" של הדפדפן: כשיש שינוי שלא נשמר מוסיפים כניסה בהיסטוריה (אותה כתובת),
+  // ולחיצה על "אחורה" נתפסת בה ושואלת לפני יציאה. כשהשינוי נשמר או בוטל, הכניסה מוסרת.
+  const guardRef = useRef(false);
+  const skipPopRef = useRef(false);
+  useEffect(() => {
+    if (dirty && !guardRef.current) {
+      window.history.pushState(window.history.state, "", window.location.href);
+      guardRef.current = true;
+    } else if (!dirty && guardRef.current) {
+      guardRef.current = false;
+      skipPopRef.current = true;
+      window.history.back();
+    }
+  }, [dirty]);
+  useEffect(() => {
+    const onPop = () => {
+      if (skipPopRef.current) {
+        skipPopRef.current = false;
+        return;
+      }
+      if (!guardRef.current) return;
+      if (window.confirm(LEAVE_MSG)) {
+        guardRef.current = false;
+        dirtyRef.current = false;
+        window.history.back();
+      } else {
+        window.history.pushState(window.history.state, "", window.location.href);
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   // כניסה לעריכה: הטופס יכול להיות מתחת לקצה המסך (בייחוד בטלפון), ולכן עוברים לשדה ומתמקדים בו.
   // לחיצה על שדה מסוים פותחת את העריכה ישר בו, ו"עריכה" פותחת בשדה הראשון.
@@ -302,7 +335,9 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
     }
   };
 
+  const savingRef = useRef(false); // לחיצה כפולה מהירה או Enter כפול: שמירה אחת בלבד
   const save = async () => {
+    if (savingRef.current) return;
     // שדה חובה ריק חוסם שמירה ומסומן בדיוק איפה
     const errs: Record<string, string> = {};
     editable.forEach((f) => {
@@ -315,6 +350,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       document.getElementById(`rp-${first.field_key}`)?.focus();
       return;
     }
+    savingRef.current = true;
     setSaving(true);
     try {
       if (isNew) {
@@ -324,6 +360,15 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         const newId = await createRecord(objectKey, payload);
         toast(CREATED_TOAST[objectKey] ?? "הרשומה נשמרה");
         dirtyRef.current = false;
+        // קודם מסירים את כניסת ההגנה מההיסטוריה, כדי ש"אחורה" מהרשומה החדשה לא יחזיר לטופס הריק
+        if (guardRef.current) {
+          guardRef.current = false;
+          skipPopRef.current = true;
+          await new Promise<void>((resolve) => {
+            window.addEventListener("popstate", () => resolve(), { once: true });
+            window.history.back();
+          });
+        }
         // נפתחה ממסך אחר שמבקש לחזור אליו (למשל תור חדש מהיומן): חוזרים לשם. אחרת לרשומה החדשה.
         const ret = new URLSearchParams(window.location.search).get("return");
         router.replace(ret && ret.startsWith("/") && !ret.startsWith("//") ? ret : `${cfg.route}${newId}`);
@@ -348,6 +393,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         toast(errorText(e), "err");
       }
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -833,7 +879,7 @@ function ChildList({
                 onKeyDown={(e) => e.stopPropagation()}
                 onChange={(e) => onStatus(r.id, e.target.value)}
               >
-                {statusField.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {pickOptions(statusField.options, r.status).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             ) : (
               <span className={`tag tag-${r.status}`}>{textOf(statusField, r)}</span>

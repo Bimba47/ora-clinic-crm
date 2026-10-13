@@ -2,7 +2,7 @@
 // בניית סינון: שדה, אופרטור שמתאים לסוג השדה, וערך. כמה תנאים יחד, עם "וגם" או "או".
 
 import type { Catalog, FieldMeta, FilterDef, FilterOperator, ViewState } from "@/lib/views";
-import { DATE_OPERATOR_LABELS, OPERATOR_LABELS, needsValue, operatorsFor } from "@/lib/views";
+import { DATE_OPERATOR_LABELS, OPERATOR_LABELS, needsValue, operatorsFor, pickOptions } from "@/lib/views";
 import RefSelect from "./RefSelect";
 
 // allowRelative: ערכים יחסיים (היום, תחילת השבוע, "אני"), שמחושבים במסד ברגע ההרצה. בלוחות הבקרה ובתצוגות.
@@ -146,7 +146,7 @@ export function ValueInput({
       return (
         <select {...common}>
           <option value="">בחרי…</option>
-          {field.options?.map((o) => (
+          {pickOptions(field.options, value).map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
@@ -162,8 +162,8 @@ export function ValueInput({
     case "phone":
       return <input type="tel" inputMode="numeric" dir="ltr" {...common} />;
     case "email":
-      return <input type="email" dir="ltr" {...common} />;
+      return <input type="email" dir="ltr" maxLength={200} {...common} />;
     default:
-      return <input type="text" {...common} />;
+      return <input type="text" maxLength={200} {...common} />;
   }
 }

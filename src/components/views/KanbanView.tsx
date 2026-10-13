@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/Toast";
 import type { FieldMeta, Row, ViewState } from "@/lib/views";
-import { errorText, runView, runViewGroups, updateRecords } from "@/lib/views";
+import { errorText, pickOptions, runView, runViewGroups, updateRecords } from "@/lib/views";
 import { formatValue, isLtr } from "@/lib/format";
 
 const MAX_CARDS = 500;
@@ -52,7 +52,8 @@ export default function KanbanView({
   if (!group) return <div className="card empty"><p>בחרי שדה לקיבוץ.</p></div>;
 
   const cols = state.columns.filter((c) => c.visible && byKey.has(c.field) && c.field !== group.field_key);
-  const lanes = [...(group.options ?? [])];
+  // עמודה של ערך שיצא משימוש מוצגת רק אם יש בה רשומות
+  const lanes = (group.options ?? []).filter((o) => !o.retired || counts[o.value]);
   if (counts[""]) lanes.push({ value: "", label: "ללא ערך" });
   const valueOf = (r: Row) => (r[group.field_key] === null || r[group.field_key] === undefined ? "" : String(r[group.field_key]));
 
@@ -135,7 +136,7 @@ export default function KanbanView({
                   <label className="kcard-move" onClick={(e) => e.stopPropagation()}>
                     <span className="sr-only">העברה ל</span>
                     <select value={lane.value} onChange={(e) => move(r.id, e.target.value)} aria-label="העברה לעמודה">
-                      {(group.options ?? []).map((o) => (
+                      {pickOptions(group.options, lane.value).map((o) => (
                         <option key={o.value} value={o.value}>{o.label}</option>
                       ))}
                     </select>
