@@ -1,6 +1,7 @@
-import { redirect } from "next/navigation";
+"use client";
+// יומן תורים (מודול 6 באפיון). הרשימה נמצאת ב-/appointments/list, ויש מעבר ביניהם.
+import AppointmentsCalendar from "@/components/AppointmentsCalendar";
 
-// היומן הוויזואלי ייבנה בשלב נפרד. עד אז "תורים" פותח את רשימת התורים.
 export default function Page() {
-  redirect("/appointments/list");
+  return <AppointmentsCalendar />;
 }
