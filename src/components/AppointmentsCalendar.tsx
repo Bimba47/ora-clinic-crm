@@ -50,7 +50,7 @@ const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${St
 const dayLabel = (date: string) => new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "numeric" }).format(new Date(`${date}T12:00:00Z`));
 
 // צבע לכל מטפלת, מצבעי הסטטוסים של האפיון: גוונים שונים בבירור זה מזה
-const THERAPIST_COLORS = ["#E3BFA8", "#9E5F6A", "#C99A7A", "#A39A93", "#A67C52", "#F1D6D0"];
+const THERAPIST_COLORS = ["#E3BFA8", "#9E5F6A", "#A39A93", "#C99A7A", "#A67C52", "#F1D6D0"]; // ורוד בהיר, ורוד כהה, אפור – כמו הסטטוסים
 const DARK_COLORS = ["#9E5F6A", "#A39A93", "#A67C52"]; // עליהם הטקסט לבן
 
 export default function AppointmentsCalendar() {

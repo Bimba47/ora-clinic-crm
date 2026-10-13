@@ -1001,3 +1001,17 @@ input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 .btn.calendar-btn { background: var(--bronze); color: #FFFFFF; gap: 6px; text-decoration: none; }
 .btn.calendar-btn svg { color: #FFFFFF; width: 18px; height: 18px; }
 .btn.calendar-btn:hover { background: var(--link); }
+
+/* ===== תיקוני ענבל 2 (v23.1) ===== */
+/* רשימות: כל הכותרות והערכים שמתחתיהן ממורכזים (גם בטבלאות של לוח הבקרה) */
+.data-table th, .data-table td, .widget-table th, .widget-table td { text-align: center; }
+.data-table th .th-btn { justify-content: center; width: 100%; }
+.data-table td .assign-select { margin-inline: auto; display: block; text-align: center; text-align-last: center; }
+@media (max-width: 767px) {
+  /* בנייד השורה היא כרטיס עם "תווית: ערך", ולכן נשאר מיושר לימין */
+  .data-table td, .data-table td.center { text-align: start; }
+  .data-table td .assign-select { margin-inline: 0; }
+}
+/* בועיות (תגיות, וסטטוס שנבחר מהשורה): הכיתוב תמיד במרכז. החץ יושב בריפוד סימטרי, כדי שלא יזיז את הטקסט */
+.tag, .tag-select, .status-select { text-align: center; text-align-last: center; justify-content: center; }
+.tag-select { padding-inline: 26px; background-position: left 10px center; }
