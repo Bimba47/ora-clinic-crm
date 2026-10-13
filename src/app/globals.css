@@ -998,9 +998,9 @@ input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 .cal-bar .cal-filters { flex-basis: 100%; margin-inline-start: 0; }
 
 /* רשימת התורים: "יומן" בולט, ליד רשימה/קאנבן */
-.btn.calendar-btn { background: var(--bronze); color: #FFFFFF; gap: 6px; text-decoration: none; }
+.btn.calendar-btn { background: var(--ok); color: #FFFFFF; gap: 6px; text-decoration: none; }
 .btn.calendar-btn svg { color: #FFFFFF; width: 18px; height: 18px; }
-.btn.calendar-btn:hover { background: var(--link); }
+.btn.calendar-btn:hover { background: #8A5059; }
 
 /* ===== תיקוני ענבל 2 (v23.1) ===== */
 /* רשימות: כל הכותרות והערכים שמתחתיהן ממורכזים (גם בטבלאות של לוח הבקרה) */

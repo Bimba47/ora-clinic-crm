@@ -149,10 +149,8 @@ export default function AppointmentsCalendar() {
   const hours: number[] = [];
   for (let m = OPEN; m <= maxClose; m += 60) hours.push(m);
 
+  // החצים בלבד (בלי "היום" ובלי כותרת תאריך, לבקשת ענבל): התאריכים מופיעים בכותרות הימים
   const step = (n: number) => setAnchor(addDays(anchor, n * (mode === "week" ? 7 : 1)));
-  const title = mode === "week"
-    ? `${dayLabel(days[0])} – ${dayLabel(days[days.length - 1])}`
-    : `יום ${DAY_NAMES[dow(anchor)]}, ${dayLabel(anchor)}`;
 
   const openAppt = (a: Appt) => {
     const ids = (appts ?? []).map((x) => x.id);
@@ -187,10 +185,8 @@ export default function AppointmentsCalendar() {
           </div>
           <div className="cal-nav">
             <button type="button" className="icon-btn" aria-label={mode === "week" ? "השבוע הקודם" : "היום הקודם"} onClick={() => step(-1)}>→</button>
-            <button type="button" className="btn outline" onClick={() => setAnchor(today)}>היום</button>
             <button type="button" className="icon-btn" aria-label={mode === "week" ? "השבוע הבא" : "היום הבא"} onClick={() => step(1)}>←</button>
           </div>
-          <span className="cal-title">{title}</span>
         </div>
         <div className="cal-filters">
           <select value={filterTherapist} onChange={(e) => setFilterTherapist(e.target.value)} aria-label="סינון לפי מטפלת">
