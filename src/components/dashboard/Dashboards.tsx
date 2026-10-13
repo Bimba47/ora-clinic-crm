@@ -115,6 +115,7 @@ export default function Dashboards() {
       if (!active) {
         if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < 6) return;
         active = true;
+        window.getSelection()?.removeAllRanges(); // בלי סימון טקסט בזמן גרירה
       }
       ev.preventDefault();
       const dc = Math.round(-(ev.clientX - sx) / colW); // מימין לשמאל: תזוזה שמאלה = עמודה גבוהה יותר
@@ -285,7 +286,8 @@ export default function Dashboards() {
                 style={{ gridColumn: `${box.position_x + 1} / span ${box.width}`, gridRow: `${box.position_y + 1} / span ${box.height}` }}
                 // עומדים על כל מקום בווידג'ט וגוררים
                 onPointerDown={canEdit ? (e) => {
-                  if ((e.target as HTMLElement).closest("button, summary, a, select, input, .widget-resize")) return;
+                  // תוכן הווידג'ט (מספר, שורות, עמודות) גרירה מתחילה גם ממנו; לחיצה בסוף גרירה לא נחשבת
+                  if ((e.target as HTMLElement).closest(".widget-menu, select, input, .widget-resize, .wa-btn")) return;
                   startDrag(w, "move", e);
                 } : undefined}
               >
