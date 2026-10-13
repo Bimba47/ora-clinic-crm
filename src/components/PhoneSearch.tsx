@@ -20,7 +20,8 @@ export default function PhoneSearch() {
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  const digits = q.replace(/\D/g, "");
+  // ספרות בלבד, ו-972 בהתחלה הופך ל-0 (כמו הנרמול במסד)
+  const digits = q.replace(/\D/g, "").replace(/^972/, "0");
   const isPhone = /^[\d\s\-+()]+$/.test(q.trim());
   const ready = isPhone ? digits.length >= 3 : q.trim().length >= 2;
 
@@ -95,6 +96,8 @@ export default function PhoneSearch() {
         <Icon name="search" />
         <input
           type="search"
+          // טלפון נשאר משמאל לימין, ושם בעברית מימין לשמאל
+          dir={q && !isPhone ? "rtl" : "ltr"}
           inputMode="tel"
           aria-label="חיפוש לקוחה לפי טלפון"
           placeholder="054-1234567"
@@ -110,6 +113,11 @@ export default function PhoneSearch() {
           aria-controls="phone-search-results"
           aria-autocomplete="list"
         />
+        {q && (
+          <button type="button" className="search-clear" aria-label="ניקוי החיפוש" onClick={() => { setQ(""); setHits(null); }}>
+            ✕
+          </button>
+        )}
       </label>
       {open && ready && hits && (
         <div className="search-results card" id="phone-search-results" role="listbox">
