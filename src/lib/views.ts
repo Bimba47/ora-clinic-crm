@@ -353,7 +353,9 @@ export function errorText(e: unknown): string {
 // לאיזה שדה שייכת שגיאה מהמסד, כדי להציג אותה ליד השדה ולא רק בראש הטופס (האפיון)
 export function errorField(e: unknown): string | null {
   const m = e && typeof e === "object" && "message" in e ? String((e as { message: unknown }).message) : "";
-  if (m.includes("appointments_no_overlap") || m.includes("appointments_opening_hours") || /^ל.+ יש תור ב-/.test(m)) return "starts_at";
+  if (m.includes("appointments_no_overlap") || m.includes("appointments_opening_hours") || /^ל.+ יש תור ב-/.test(m) || m.startsWith("תאריך התור")) return "starts_at";
+  if (m.includes("מטפלת פעילה")) return "therapist_id";
+  if (m.startsWith("הטיפול הזה הוצא משימוש")) return "treatment_id";
   if (m.includes("duplicate key") && m.includes("phone")) return "phone";
   if (m.includes("phone_format") || m.includes("phone_check")) return "phone";
   if (m.includes("email_format") || m.includes("email_check") || m.includes("staff_email_key")) return "email";

@@ -14,7 +14,7 @@ const CORS = {
 };
 
 type Ctx = { params: Promise<{ path: string[] }> };
-type ApiResult = { status: number; body: unknown; key_id?: string; key_name?: string };
+type ApiResult = { status: number; body: unknown; key_id?: string; key_name?: string; skip_log?: boolean };
 
 function json(status: number, body: unknown, extra: Record<string, string> = {}) {
   return new Response(JSON.stringify(body, null, 2), {
@@ -32,6 +32,8 @@ async function handle(req: Request, ctx: Ctx) {
   const [object, id, ...rest] = path ?? [];
   const method = req.method.toUpperCase();
   const key = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
+  // כתובת השולח: להגבלת קצב של בקשות בלי מפתח תקין
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || null;
 
   let result: ApiResult;
   if (!object || rest.length > 0) {
@@ -62,6 +64,7 @@ async function handle(req: Request, ctx: Ctx) {
         p_id: id ?? null,
         p_query: Object.fromEntries(url.searchParams),
         p_body: body,
+        p_ip: ip,
       });
       result = error
         ? { status: 500, body: errorBody(500, "server_error", "שגיאה בשרת. נסי שוב") }
@@ -72,7 +75,8 @@ async function handle(req: Request, ctx: Ctx) {
   const duration = Date.now() - started;
   // רישום כל בקשה: מפתח, נתיב, קוד תגובה וזמן תגובה (גם 401, בלי מפתח מזוהה)
   const err = (result.body as { error?: { code?: string } } | null)?.error;
-  await adminClient()
+  // בקשה שנחסמה בלי מפתח תקין (הצפה) לא נרשמת, כדי שלא תנפח את הלוג
+  if (!result.skip_log) await adminClient()
     .from("api_logs")
     .insert({
       key_id: result.key_id ?? null,
@@ -83,6 +87,7 @@ async function handle(req: Request, ctx: Ctx) {
       status: result.status,
       duration_ms: duration,
       error_code: err?.code ?? null,
+      ip,
     })
     .then(() => undefined, () => undefined);
 
