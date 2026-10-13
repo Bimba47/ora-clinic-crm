@@ -917,8 +917,9 @@ button.hbar-row:hover, button.hbar-row:focus-visible { background: var(--bg); }
 
 /* ===== אזורי מגע של 44px לפחות בנייד (האפיון: "לכל כפתור ושורה") ===== */
 @media (max-width: 767px) {
-  button, select, summary, .btn, .seg-link, .link-btn, .legend-item, .hbar-row, .widget-metric, .wa-btn, label.check-field, .search { min-height: 44px; }
-  input:not([type="checkbox"]):not([type="radio"]):not([type="search"]) { min-height: 44px; }
+  /* !important: רצפה של נגישות, גוברת על גדלים מצומצמים בכללים ספציפיים יותר (תפריטים, סינון הלוח) */
+  button, select, summary, .btn, .seg-link, .link-btn, .legend-item, .hbar-row, .widget-metric, .wa-btn, label.check-field, .search { min-height: 44px !important; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="search"]) { min-height: 44px !important; }
   .icon-btn, summary.icon-btn, .group-btn, .cell-link, .row-actions a.link-btn { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
   .tag-select, .status-select, .perm-action select { min-height: 44px; height: 44px; }
   /* קישור בתוך טקסט (לקוחה, מטפלת, טלפון): השורה כולה בגובה 44px */
