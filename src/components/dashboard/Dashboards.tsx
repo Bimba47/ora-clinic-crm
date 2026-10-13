@@ -103,6 +103,8 @@ export default function Dashboards() {
   const [drag, setDrag] = useState<{ id: string; box: Box } | null>(null);
   const startDrag = (w: Widget, mode: "move" | "resize", e: React.PointerEvent) => {
     if (!editing || !gridRef.current) return;
+    // במסך צר הלוח הוא עמודה אחת: מזיזים בכפתורים, וגרירה לא חוסמת גלילה
+    if (window.matchMedia("(max-width: 767px)").matches) return;
     e.preventDefault();
     const colW = (gridRef.current.clientWidth + GAP) / COLS;
     const sx = e.clientX;
@@ -121,27 +123,44 @@ export default function Dashboards() {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       setDrag(null);
-      const placed = settle(widgets, w.id, box);
-      const changed = placed.filter((p) => {
-        const old = widgets.find((x) => x.id === p.id)!;
-        return old.position_x !== p.position_x || old.position_y !== p.position_y || old.width !== p.width || old.height !== p.height;
-      });
-      setWidgets(placed);
-      const results = await Promise.all(
-        changed.map((p) =>
-          supabase.from("dashboard_widgets")
-            .update({ position_x: p.position_x, position_y: p.position_y, width: p.width, height: p.height })
-            .eq("id", p.id),
-        ),
-      );
-      const failed = results.find((r) => r.error);
-      if (failed) {
-        toast(errorText(failed.error), "err");
-        setWidgets(widgets);
-      }
+      await commit(settle(widgets, w.id, box));
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+  };
+
+  // שמירה מיד: רק הווידג'טים שהמיקום או הגודל שלהם השתנו
+  const commit = async (placed: Widget[]) => {
+    const before = widgets;
+    const changed = placed.filter((p) => {
+      const old = before.find((x) => x.id === p.id)!;
+      return old.position_x !== p.position_x || old.position_y !== p.position_y || old.width !== p.width || old.height !== p.height;
+    });
+    if (changed.length === 0) return;
+    setWidgets(placed);
+    const results = await Promise.all(
+      changed.map((p) =>
+        supabase.from("dashboard_widgets")
+          .update({ position_x: p.position_x, position_y: p.position_y, width: p.width, height: p.height })
+          .eq("id", p.id),
+      ),
+    );
+    const failed = results.find((r) => r.error);
+    if (failed) {
+      toast(errorText(failed.error), "err");
+      setWidgets(before);
+    }
+  };
+
+  // הזזה צעד אחד (למעלה/למטה בסדר הלוח): מחליף מקום עם השכן. עובד בכל רוחב מסך, גם בנייד.
+  const step = (w: Widget, dir: -1 | 1) => {
+    const order = [...widgets].sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x);
+    const i = order.findIndex((x) => x.id === w.id);
+    const other = order[i + dir];
+    if (!other) return;
+    const list = widgets.map((x) => (x.id === other.id ? { ...x, position_x: w.position_x, position_y: w.position_y } : x));
+    const box: Box = { position_x: clamp(other.position_x, 0, COLS - w.width), position_y: other.position_y, width: w.width, height: w.height };
+    commit(settle(list, w.id, box));
   };
 
   const duplicateWidget = async (w: Widget) => {
@@ -253,23 +272,29 @@ export default function Dashboards() {
         </div>
       ) : (
         <div ref={gridRef} className={`dash-grid${editing ? " editing" : ""}`} style={{ gridAutoRows: `${ROW_H}px`, gap: GAP }}>
-          {ordered.map((w) => {
+          {ordered.map((w, idx) => {
             const box = drag?.id === w.id ? drag.box : w;
             return (
               <section
                 key={w.id}
-                className={`card widget widget-${w.widget_type}${drag?.id === w.id ? " dragging" : ""}`}
+                // מחלקת הסוג היא w-type-*, כדי שלא תתנגש בעיצוב התוכן (widget-metric, widget-list...)
+                className={`card widget w-type-${w.widget_type}${drag?.id === w.id ? " dragging" : ""}${editing ? " grab" : ""}`}
                 style={{ gridColumn: `${box.position_x + 1} / span ${box.width}`, gridRow: `${box.position_y + 1} / span ${box.height}` }}
+                // בסידור הלוח גוררים את כל הווידג'ט (לא רק את הכותרת)
+                onPointerDown={editing ? (e) => {
+                  if ((e.target as HTMLElement).closest("button, summary, a, select, input, .widget-resize")) return;
+                  startDrag(w, "move", e);
+                } : undefined}
               >
                 {(w.title || canEdit) && (
-                  <div
-                    className={`widget-head${editing ? " grab" : ""}${w.title ? "" : " floating"}`}
-                    onPointerDown={(e) => {
-                      if ((e.target as HTMLElement).closest("button, summary, a")) return;
-                      startDrag(w, "move", e);
-                    }}
-                  >
+                  <div className={`widget-head${w.title ? "" : " floating"}`}>
                     {w.title && <h2 className="widget-title">{w.title}</h2>}
+                    {editing && (
+                      <span className="widget-move">
+                        <button type="button" className="icon-btn" aria-label={`הזזה למעלה: ${w.title || "ווידג'ט"}`} disabled={idx === 0} onClick={() => step(w, -1)}>▲</button>
+                        <button type="button" className="icon-btn" aria-label={`הזזה למטה: ${w.title || "ווידג'ט"}`} disabled={idx === ordered.length - 1} onClick={() => step(w, 1)}>▼</button>
+                      </span>
+                    )}
                     {canEdit && (
                       <details className="menu widget-menu">
                         <summary className="icon-btn" aria-label={`פעולות: ${w.title || "ווידג'ט"}`}>⋯</summary>

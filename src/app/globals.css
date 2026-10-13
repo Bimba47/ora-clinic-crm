@@ -696,16 +696,17 @@ a.btn { text-decoration: none; }
 .widget:hover { box-shadow: var(--shadow-hover); }
 .widget.dragging { opacity: 0.85; z-index: 5; box-shadow: var(--shadow-hover); }
 .widget-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; margin-bottom: 4px; }
-.widget-head.grab { cursor: grab; touch-action: none; }
-.widget-head.grab:active { cursor: grabbing; }
+.widget.grab { cursor: grab; user-select: none; }
+@media (min-width: 768px) { .widget.grab { touch-action: none; } }
+.widget.grab:active { cursor: grabbing; }
 .widget-title { font-size: 16px; font-weight: 600; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .widget-menu { margin-inline-start: auto; }
 .widget-menu summary { list-style: none; width: 32px; height: 32px; }
 .widget-menu summary::-webkit-details-marker { display: none; }
 .widget-menu .menu-list { inset-inline-start: auto; inset-inline-end: 0; min-width: 140px; }
 .widget-body { flex: 1; min-height: 0; overflow: auto; }
-.widget.widget-text { background: transparent; box-shadow: none; padding: 0 4px; overflow: visible; }
-.widget.widget-text .widget-body { overflow: visible; }
+.widget.w-type-text { background: transparent; box-shadow: none; padding: 0 4px; overflow: visible; }
+.widget.w-type-text .widget-body { overflow: visible; }
 .widget-text .widget-text-main { font-size: 18px; font-weight: 600; }
 .widget-text.title .widget-text-main { font-size: 30px; font-weight: 700; }
 .widget-text-sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
@@ -778,8 +779,8 @@ a.btn { text-decoration: none; }
 @media (max-width: 767px) {
   .dash-grid { display: flex; flex-direction: column; gap: 16px !important; }
   .dash-grid .widget { grid-column: auto !important; grid-row: auto !important; }
-  .dash-grid .widget:not(.widget-text):not(.widget-metric) { min-height: 280px; max-height: 460px; }
-  .dash-grid .widget.widget-metric { min-height: 120px; }
+  .dash-grid .widget:not(.w-type-text):not(.w-type-metric) { min-height: 280px; max-height: 460px; }
+  .dash-grid .widget.w-type-metric { min-height: 120px; }
   .widget-resize { display: none; }
   .dash-skeleton { grid-template-columns: 1fr 1fr; }
   .dash-filters { padding: 12px 16px; }
@@ -791,3 +792,9 @@ a.btn { text-decoration: none; }
 .widget-list .status-select { width: auto; flex: 0 0 auto; }
 /* ווידג'ט בלי כותרת (טקסט): התפריט צף בפינה ולא דוחף את התוכן */
 .widget-head.floating { position: absolute; top: 0; inset-inline-end: 0; margin: 0; min-height: 0; z-index: 2; }
+/* סידור הלוח: כפתורי הזזה, והתוכן לא לחיץ (כדי שגרירה לא תפתח רשימה) */
+.widget-move { display: inline-flex; gap: 2px; margin-inline-start: auto; }
+.widget-move .icon-btn { width: 32px; height: 32px; font-size: 12px; }
+.widget-move + .widget-menu { margin-inline-start: 0; }
+.dash-grid.editing .widget-body { pointer-events: none; }
+.dash-grid.editing .widget { box-shadow: 0 0 0 2px var(--soft), var(--shadow); }
