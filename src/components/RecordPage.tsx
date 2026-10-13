@@ -530,7 +530,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
   const activeChild = cfg.children[tab];
 
   return (
-    <div className="record">
+    <div className={`record record-${objectKey}`}>
       <div className="record-top">
         {idx >= 0 && (
           <nav className="record-nav" aria-label="מעבר בין רשומות">
