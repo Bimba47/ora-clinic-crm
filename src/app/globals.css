@@ -807,3 +807,6 @@ a.btn { text-decoration: none; }
 .widget.grab .widget-body { cursor: default; }
 .widget-menu .menu-list { padding: 4px; min-width: 120px; gap: 0; }
 .widget-menu .menu-list button { min-height: 32px; padding: 0 10px; font-size: 13px; border-radius: 8px; }
+/* תפריט הווידג'ט נפתח מעל הכרטיס ולא נחתך בו: הכרטיס לא חותך, והתוכן נגלל בתוך widget-body */
+.dash-grid .widget { overflow: visible; }
+.dash-grid .widget:has(.widget-menu[open]) { z-index: 20; }
