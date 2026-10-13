@@ -32,7 +32,7 @@ export const RECORDS: Record<string, RecordConfig> = {
   clients: {
     route: "/clients/",
     listHref: "/clients",
-    header: ["phone", "source"],
+    header: ["phone"],
     groups: [
       { title: "פרטים אישיים", fields: ["full_name", "phone", "notes"] },
       { title: "שיווק", fields: ["source"] },

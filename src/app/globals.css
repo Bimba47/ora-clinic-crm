@@ -567,3 +567,5 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 .record-head.stacked .record-title .page-title { font-size: 20px; line-height: 1.4; }
 /* "נפתחה": רווח בין התאריך לשעה */
 .title-sub .sub-time { margin-right: 16px; } /* השעה משמאל לתאריך: רווח מימינה (רכיב ltr, ולכן לא inline-start) */
+/* כרטיס לקוחה: שם בכתב קטן יותר */
+.record-head-clients .record-title .page-title { font-size: 24px; }

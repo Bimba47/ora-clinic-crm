@@ -497,7 +497,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
       </div>
 
       {/* כותרת: שם הרשומה, השדות הקריטיים והפעולות */}
-      <header className={`card record-head${cfg.stackedHeader ? " stacked" : ""}`}>
+      <header className={`card record-head record-head-${objectKey}${cfg.stackedHeader ? " stacked" : ""}`}>
         <div className="record-title">
           <span className="muted">{obj.label}</span>
           {isNew ? (
