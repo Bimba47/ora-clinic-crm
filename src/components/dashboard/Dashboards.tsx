@@ -197,7 +197,15 @@ export default function Dashboards() {
     setCurrent((selectId && list.find((b) => b.id === selectId)?.id) || list[0]?.id || null);
   };
 
-  const ordered = useMemo(() => [...widgets].sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x), [widgets]);
+  // ווידג'ט שמוגבל לתפקידים (config.roles) מוצג רק להם. מי שעורכת את הלוח רואה הכול, כדי לסדר ולערוך.
+  // כשחלק מהווידג'טים מוסתרים, הלוח מסודר מחדש לתצוגה בלבד (בלי חורים), והסידור השמור לא משתנה.
+  const shown = useMemo(() => {
+    if (canEdit) return widgets;
+    const vis = widgets.filter((w) => !w.config?.roles?.length || (!!me?.role_id && w.config.roles.includes(me.role_id)));
+    return vis.length === widgets.length ? vis : reflow(vis);
+  }, [widgets, canEdit, me?.role_id]);
+  const roleNames = (ids?: string[]) => (ids ?? []).map((id) => roles.find((r) => r.id === id)?.name).filter(Boolean).join(", ");
+  const ordered = useMemo(() => [...shown].sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x), [shown]);
 
   if (error) return <div className="card"><p className="field-error">{error}</p></div>;
   if (!catalog || !boards) return <div className="dash-skeleton" aria-busy="true">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" />)}</div>;
@@ -263,7 +271,7 @@ export default function Dashboards() {
           <p>עוד אין לוחות בקרה</p>
           <button type="button" className="btn primary" onClick={() => setDialog("new")}>צרי לוח ראשון</button>
         </div>
-      ) : widgets.length === 0 ? (
+      ) : shown.length === 0 ? (
         <div className="card empty">
           <p>הלוח ריק</p>
           {canEdit && <button type="button" className="btn primary" onClick={() => setBuilder("new")}>הוסיפי ווידג'ט</button>}
@@ -288,6 +296,7 @@ export default function Dashboards() {
                 {(w.title || canEdit) && (
                   <div className={`widget-head${w.title ? "" : " floating"}`}>
                     {w.title && <h2 className="widget-title">{widgetTitle(w.title, counts[w.id])}</h2>}
+                    {canEdit && !!w.config?.roles?.length && <span className="widget-roles" title="מוצג רק לתפקידים האלה">{roleNames(w.config.roles)}</span>}
                     {canEdit && (
                       <details className="menu widget-menu">
                         <summary className="icon-btn" aria-label={`פעולות: ${widgetTitle(w.title, counts[w.id]) || "ווידג'ט"}`}>⋯</summary>
@@ -315,6 +324,7 @@ export default function Dashboards() {
       {builder && board && (
         <WidgetBuilder
           catalog={catalog}
+          roles={roles}
           dashboardId={board.id}
           widget={builder === "new" ? null : builder}
           nextY={nextY}
@@ -473,4 +483,36 @@ function SettingsDialog({
       </form>
     </Modal>
   );
+}
+
+// סידור לתצוגה כשחלק מהווידג'טים מוסתרים: כל ווידג'ט עולה למקום הפנוי הראשון לפי סדר הקריאה,
+// ושורה שנשאר בה מקום מתחלקת שווה בין הווידג'טים שבה (למשל 3 מונים ברוחב 4 במקום 3).
+function reflow(ws: Widget[]): Widget[] {
+  const placed: Widget[] = [];
+  for (const w of [...ws].sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x)) {
+    let spot: Box | null = null;
+    for (let y = 0; !spot; y++) {
+      for (let x = 0; x + w.width <= COLS; x++) {
+        const box = { position_x: x, position_y: y, width: w.width, height: w.height };
+        if (!placed.some((p) => hit(p, box))) { spot = box; break; }
+      }
+    }
+    placed.push({ ...w, ...spot });
+  }
+  const bands = new Map<string, Widget[]>();
+  for (const w of placed) {
+    const k = `${w.position_y}:${w.height}`;
+    bands.set(k, [...(bands.get(k) ?? []), w]);
+  }
+  for (const row of bands.values()) {
+    const used = row.reduce((s, w) => s + w.width, 0);
+    const alone = !placed.some((p) => !row.includes(p) && p.position_y < row[0].position_y + row[0].height && row[0].position_y < p.position_y + p.height);
+    if (used >= COLS || !alone) continue;
+    const each = Math.floor(COLS / row.length);
+    row.sort((a, b) => a.position_x - b.position_x).forEach((w, i) => {
+      w.position_x = i * each;
+      w.width = i === row.length - 1 ? COLS - i * each : each;
+    });
+  }
+  return placed;
 }

@@ -30,6 +30,7 @@ export type WidgetConfig = {
   text?: string;               // ווידג'ט טקסט
   subtext?: string;
   size?: "title" | "normal";
+  roles?: string[];            // אילו תפקידים רואים את הווידג'ט (ריק = כולם). מי שעורכת את הלוח רואה הכול
 };
 
 export type Widget = {

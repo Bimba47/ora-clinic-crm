@@ -23,9 +23,10 @@ const DEFAULT_SIZE: Record<WidgetType, [number, number]> = { metric: [3, 2], bar
 const SYSTEM = ["updated_at", "updated_by"];
 
 export default function WidgetBuilder({
-  catalog, dashboardId, widget, nextY, dash, onClose, onSaved,
+  catalog, dashboardId, widget, nextY, dash, roles = [], onClose, onSaved,
 }: {
   catalog: Catalog;
+  roles?: { id: string; name: string }[];
   dashboardId: string;
   widget: Widget | null;
   nextY: number;
@@ -277,6 +278,24 @@ export default function WidgetBuilder({
               <details className="wb-step wb-more">
                 <summary>הגדרות נוספות</summary>
                 <div className="wb-grid">
+                  {roles.length > 0 && (
+                    <fieldset className="field wb-roles">
+                      <span>מוצג לתפקידים (בלי סימון = לכולם)</span>
+                      {roles.map((r) => {
+                        const on = (d.config.roles ?? []).includes(r.id);
+                        return (
+                          <label key={r.id} className="check-field compact">
+                            <input type="checkbox" checked={on} onChange={() => {
+                              const cur = d.config.roles ?? [];
+                              const next = on ? cur.filter((x) => x !== r.id) : [...cur, r.id];
+                              setCfg({ roles: next.length ? next : undefined });
+                            }} />
+                            <span>{r.name}</span>
+                          </label>
+                        );
+                      })}
+                    </fieldset>
+                  )}
                   {dates.length > 0 && (
                     <label className="field">
                       <span>טווח התאריכים של הלוח חל על</span>
