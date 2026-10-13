@@ -40,7 +40,8 @@ export type FieldMeta = {
   // דוגמה בשדה הריק בטופס (האפיון: "054-1234567", "למשל: מבקשת להזיז את התור")
   placeholder: string | null;
   // רמז תצוגה לשדה מחושב (למשל "פתוחה כבר" בשעות, אדום מעל 48)
-  display?: { display?: "hours_open"; warn_over?: number } | null;
+  // hours_open: "2 ימים ו-3 שעות". record_link: קישור לרשומה לפי object_key + record_id בשורה. hidden: נטען לשורה בלבד, לא עמודה
+  display?: { display?: "hours_open" | "record_link" | "hidden"; warn_over?: number } | null;
 };
 
 export type ViewRow = {

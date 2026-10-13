@@ -78,7 +78,12 @@ export default function ObjectViews({
 
   const obj = catalog?.objects.find((o) => o.object_key === objectKey) ?? null;
   const fields = useMemo(
-    () => (catalog && obj ? catalog.fields.filter((f) => f.object_id === obj.id) : []),
+    // שדה "hidden" (למשל לאן מובילה התראה) לא מוצג כעמודה, אבל נטען לכל שורה
+    () => (catalog && obj ? catalog.fields.filter((f) => f.object_id === obj.id && f.display?.display !== "hidden") : []),
+    [catalog, obj],
+  );
+  const rowExtras = useMemo(
+    () => (catalog && obj ? catalog.fields.filter((f) => f.object_id === obj.id && f.display?.display === "hidden").map((f) => f.field_key) : []),
     [catalog, obj],
   );
   const fieldByKey = useMemo(() => new Map(fields.map((f) => [f.field_key, f])), [fields]);
@@ -122,7 +127,9 @@ export default function ObjectViews({
   const refHref = (f: FieldMeta, row: Row) =>
     f.field_type === "reference"
       ? linkHref(catalog?.objects.find((o) => o.id === f.ref_object_id)?.object_key, row[f.field_key], isManager)
-      : null;
+      : f.display?.display === "record_link" // למשל התראה: קישור לקריאה שהיא מדברת עליה
+        ? linkHref(row.object_key as string | undefined, row.record_id, isManager)
+        : null;
   // הוספה: אובייקט עם מסך רשומה נפתח במסך "חדש", אחרת בחלון
   const createNew = () => {
     const cfg = RECORDS[objectKey];
@@ -205,14 +212,14 @@ export default function ObjectViews({
     if (!state || state.view_type !== "list") return;
     let cancelled = false;
     setLoading(true);
-    runView(objectKey, state, { search: debounced, limit: PAGE_SIZE, offset: page * PAGE_SIZE })
+    runView(objectKey, state, { search: debounced, limit: PAGE_SIZE, offset: page * PAGE_SIZE, extraFields: rowExtras })
       .then((d) => !cancelled && setData(d))
       .catch((e) => !cancelled && toast(errorText(e), "err"))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
-  }, [objectKey, state, debounced, page, refreshKey, reloadToken, toast]);
+  }, [objectKey, state, debounced, page, refreshKey, reloadToken, toast, rowExtras]);
 
   // ===== שמירת הגדרות =====
   // כל שינוי חל מיד על המסך. אם מותר לשנות את התצוגה, הוא נשמר במסד.

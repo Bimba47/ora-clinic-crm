@@ -58,6 +58,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
+  const [about, setAbout] = useState<Record<string, string>>({}); // על מה ההתראה: תיאור הקריאה, לפי מזהה
   const box = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
@@ -70,7 +71,16 @@ export default function NotificationBell() {
         .limit(SHOWN),
       supabase.from("notifications").select("id", { count: "exact", head: true }).eq("is_read", false),
     ]);
-    if (!list.error) setItems(list.data as Notification[]);
+    if (!list.error) {
+      const rows = list.data as Notification[];
+      setItems(rows);
+      // תיאור הקריאה שההתראה מדברת עליה (רק מה שמותר לי לראות, לפי RLS)
+      const ids = rows.filter((n) => n.object_key === "service_requests" && n.record_id).map((n) => n.record_id as string);
+      if (ids.length) {
+        const { data } = await supabase.from("service_requests").select("id, description").in("id", ids);
+        setAbout(Object.fromEntries((data ?? []).map((r) => [r.id as string, r.description as string])));
+      }
+    }
     if (!count.error) setUnread(count.count ?? 0);
   }, [userId, me?.is_active]);
 
@@ -146,6 +156,7 @@ export default function NotificationBell() {
                 <li key={n.id}>
                   <button type="button" className={n.is_read ? "" : "unread"} onClick={() => choose(n)}>
                     <span className="bell-msg">{n.message}</span>
+                    {n.record_id && about[n.record_id] && <span className="bell-about">{about[n.record_id]}</span>}
                     <span className="muted">
                       {KIND_LABELS[n.kind]} · {timeAgo(n.created_at)}
                     </span>
