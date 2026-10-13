@@ -167,7 +167,8 @@ export default function Dashboards() {
     const i = order.findIndex((x) => x.id === w.id);
     const other = order[i + dir];
     if (!other) return;
-    const list = widgets.map((x) => (x.id === other.id ? { ...x, position_x: w.position_x, position_y: w.position_y } : x));
+    // השכן עובר למקום של הווידג'ט, בלי לחרוג מרוחב הלוח (אם הוא רחב יותר)
+    const list = widgets.map((x) => (x.id === other.id ? { ...x, position_x: clamp(w.position_x, 0, COLS - x.width), position_y: w.position_y } : x));
     const box: Box = { position_x: clamp(other.position_x, 0, COLS - w.width), position_y: other.position_y, width: w.width, height: w.height };
     commit(settle(list, w.id, box));
   };
