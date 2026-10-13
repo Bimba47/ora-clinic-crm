@@ -1019,3 +1019,5 @@ input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 /* קריאת שירות: הסטטוס "חדשה" בוורוד כהה בכל מקום (רשימה, קאנבן, לוח בקרה, כרטיסים) – בקשת ענבל */
 .tag.tag-new, .tag-select.tag-new, .status-select.tag-new, .lane-head.tag-new { background-color: var(--ok); color: #FFFFFF; }
 .tag-select.tag-new { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23FFFFFF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+/* קריאת שירות: "נסגרה" באפור, כמו "בוטל" (בקשת ענבל, כדי להבדיל מ"חדשה" בוורוד כהה) */
+.tag.tag-closed, .tag-select.tag-closed, .status-select.tag-closed, .lane-head.tag-closed { background-color: var(--placeholder); color: #FFFFFF; }
