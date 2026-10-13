@@ -5,13 +5,15 @@ import type { Catalog, FieldMeta, FilterDef, FilterOperator, ViewState } from "@
 import { DATE_OPERATOR_LABELS, OPERATOR_LABELS, needsValue, operatorsFor } from "@/lib/views";
 import RefSelect from "./RefSelect";
 
+// allowRelative: ערכים יחסיים (היום, מחר, לפני 48 שעות, "אני"). משמש את הווידג'טים בלוחות הבקרה, ולא את התצוגות.
 export default function FilterPanel({
-  fields, catalog, state, onChange,
+  fields, catalog, state, onChange, allowRelative,
 }: {
   fields: FieldMeta[];
   catalog: Catalog;
-  state: ViewState;
+  state: Pick<ViewState, "match" | "filters">;
   onChange: (patch: Partial<ViewState>) => void;
+  allowRelative?: boolean;
 }) {
   // רק שדות שמותר לסנן לפיהם (is_filterable בקטלוג, נאכף גם במסד)
   const filterable = fields.filter((f) => f.is_filterable);
@@ -63,7 +65,7 @@ export default function FilterPanel({
               ))}
             </select>
             {needsValue(flt.op) && (
-              <ValueInput field={field} catalog={catalog} value={flt.value} onChange={(value) => patch(i, { value })} />
+              <ValueInput field={field} catalog={catalog} value={flt.value} onChange={(value) => patch(i, { value })} allowRelative={allowRelative} />
             )}
             <button type="button" className="icon-btn" aria-label="הסרת התנאי" onClick={() => set(state.filters.filter((_, j) => j !== i))}>
               ✕
@@ -82,8 +84,20 @@ export default function FilterPanel({
   );
 }
 
+const RELATIVE_DATES = [
+  { value: "{{today}}", label: "היום" },
+  { value: "{{today+1}}", label: "מחר" },
+  { value: "{{today-1}}", label: "אתמול" },
+  { value: "{{today-7}}", label: "לפני 7 ימים" },
+  { value: "{{today-30}}", label: "לפני 30 יום" },
+];
+const RELATIVE_TIMES = [
+  { value: "{{now-48h}}", label: "לפני 48 שעות" },
+  { value: "{{now-24h}}", label: "לפני 24 שעות" },
+];
+
 export function ValueInput({
-  field, catalog, value, onChange, required, id,
+  field, catalog, value, onChange, required, id, allowRelative,
 }: {
   field: FieldMeta;
   catalog: Catalog;
@@ -91,7 +105,34 @@ export function ValueInput({
   onChange: (v: string) => void;
   required?: boolean;
   id?: string;
+  allowRelative?: boolean;
 }) {
+  // ערך יחסי: תאריך (היום, מחר...) או "אני" בשדה של אשת צוות
+  if (allowRelative && (field.field_type === "date" || field.field_type === "datetime")) {
+    const options = field.field_type === "datetime" ? [...RELATIVE_DATES, ...RELATIVE_TIMES] : RELATIVE_DATES;
+    const rel = options.some((o) => o.value === value);
+    return (
+      <span className="relative-value">
+        <select aria-label={`סוג ערך: ${field.label}`} value={rel ? value : ""} onChange={(e) => onChange(e.target.value)}>
+          <option value="">תאריך מסוים</option>
+          {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        {!rel && <input type="date" dir="ltr" aria-label={field.label} value={value} onChange={(e) => onChange(e.target.value)} />}
+      </span>
+    );
+  }
+  if (allowRelative && field.field_type === "reference" && catalog.objects.find((o) => o.id === field.ref_object_id)?.object_key === "staff") {
+    const me = value === "{{user}}";
+    return (
+      <span className="relative-value">
+        <select aria-label={`סוג ערך: ${field.label}`} value={me ? "me" : "other"} onChange={(e) => onChange(e.target.value === "me" ? "{{user}}" : "")}>
+          <option value="me">אני (מי שצופה בלוח)</option>
+          <option value="other">אשת צוות מסוימת</option>
+        </select>
+        {!me && <RefSelect field={field} catalog={catalog} value={value} onChange={onChange} id={id} />}
+      </span>
+    );
+  }
   const common = { id, required, "aria-label": field.label, value, onChange: (e: { target: { value: string } }) => onChange(e.target.value) };
   switch (field.field_type) {
     case "choice":
