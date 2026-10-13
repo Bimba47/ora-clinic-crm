@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import Modal, { Confirm } from "@/components/Modal";
-import RecordForm, { CREATED_TOAST, FieldInput, copyFromRef, toInput, toValue } from "@/components/views/RecordForm";
+import RecordForm, { CREATED_TOAST, FieldInput, copyFromRef, newDefault, toInput, toValue } from "@/components/views/RecordForm";
 import { type ChildDef, type RecordNav, RECORDS, linkHref, markListRestore, readNav, recordHref, saveNav } from "@/lib/records";
 import {
   type Catalog, type FieldMeta, type Row,
@@ -110,7 +110,7 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
         const params = new URLSearchParams(window.location.search);
         const editableFs = fs.filter((f) => f.is_editable);
         const v: Record<string, string> = Object.fromEntries(
-          editableFs.map((f) => [f.field_key, f.field_type === "boolean" ? "true" : params.get(f.field_key) ?? ""]),
+          editableFs.map((f) => [f.field_key, params.get(f.field_key) ?? newDefault(f)]),
         );
         const from = params.get("from");
         if (from) {

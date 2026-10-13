@@ -56,6 +56,14 @@ export async function copyFromRef(catalog: Catalog, editable: FieldMeta[], f: Fi
   return Object.fromEntries(copy.map((x) => [x.field_key, toInput(x, rec[x.field_key])])) as Record<string, string>;
 }
 
+// ערך התחלתי ברשומה חדשה: בוליאני "כן", ושדה בחירה חובה מתחיל באפשרות הראשונה,
+// שהיא ברירת המחדל במסד (סטטוס: עתידי, חדשה, פתוחה – כמו באפיון)
+export function newDefault(f: FieldMeta) {
+  if (f.field_type === "boolean") return "true";
+  if (f.field_type === "choice" && f.is_required) return f.options?.[0]?.value ?? "";
+  return "";
+}
+
 // שדה קלט אחד לפי סוג השדה בקטלוג
 export function FieldInput({
   field: f, catalog, value, onChange, id, invalid,
@@ -98,7 +106,7 @@ export default function RecordForm({
   const editable = fields.filter((f) => f.is_editable);
   const readOnly = editing ? fields.filter((f) => !f.is_editable && !f.computed && formatValue(f, row)) : [];
   const empty = () => ({
-    ...Object.fromEntries(editable.map((f) => [f.field_key, f.field_type === "boolean" && !editing ? "true" : ""])),
+    ...Object.fromEntries(editable.map((f) => [f.field_key, editing ? "" : newDefault(f)])),
     ...(editing ? {} : preset),
   });
   const [initial, setInitial] = useState<Record<string, string> | null>(editing ? null : empty);

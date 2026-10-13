@@ -158,6 +158,7 @@
 | position | int | ✓ | סדר השדות |
 | default_visible, is_searchable, is_required, is_editable | boolean | ✓ | |
 | is_filterable | boolean | ✓ | ברירת מחדל `true`. `false` = לא מופיע בסינון ונחסם במסד (0006) |
+| placeholder | text | | דוגמה בשדה הריק בטופס (0020) |
 | computed | text | | שדה מחושב (0019): ביטוי SQL על הכינוי `t`, מוגדר רק במיגרציה. מוצג, ממוין ומסונן, לא נערך. ב-options אפשר רמז תצוגה (`{"display":"hours_open","warn_over":48}`) |
 | created_at, updated_at | timestamptz | ✓ | אוטומטי |
 
