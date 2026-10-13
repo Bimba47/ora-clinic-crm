@@ -642,3 +642,5 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
   .auto-table td[data-label]::before, .log-table td[data-label]::before { content: attr(data-label) ": "; color: var(--muted); font-size: 12px; }
   .row-actions { text-align: start; }
 }
+/* קישור שנראה ככפתור: בלי קו תחתון */
+a.btn { text-decoration: none; }

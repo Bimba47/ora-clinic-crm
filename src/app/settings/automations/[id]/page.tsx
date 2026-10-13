@@ -361,7 +361,9 @@ function ActionEditor({ ctx, action: a, onChange }: { ctx: Ctx; action: Action; 
   if (a.type === "create_record") {
     const target = objOf(schema, a.object)!;
     const links = target.fields.filter((f) => f.type === "reference" && f.ref_object === source);
-    const used = Object.keys(a.values);
+    // השדות לפי הסדר שלהם בקטלוג (המסד שומר את המפתחות בסדר אחר)
+    const order = (k: string) => target.fields.findIndex((f) => f.key === k);
+    const used = Object.keys(a.values).sort((x, y) => order(x) - order(y));
     const free = target.fields.filter((f) => !SYSTEM_FIELDS.includes(f.key) && !used.includes(f.key) && f.key !== a.link_field);
     return (
       <div className="auto-stack">
