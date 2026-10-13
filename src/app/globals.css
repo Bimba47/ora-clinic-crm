@@ -921,7 +921,9 @@ button.hbar-row:hover, button.hbar-row:focus-visible { background: var(--bg); }
   .icon-btn, summary.icon-btn, .group-btn, .cell-link, .row-actions a.link-btn { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
   .tag-select, .status-select, .perm-action select { min-height: 44px; height: 44px; }
   /* קישור בתוך טקסט (לקוחה, מטפלת, טלפון): השורה כולה בגובה 44px */
-  a.ref-link, a.ref-phone { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+  a.ref-link { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+  /* הטלפון נשאר בשורה משלו מתחת לשם (כמו במחשב), רק גבוה יותר */
+  a.ref-phone { display: flex; align-items: center; min-height: 44px; }
   summary, .segmented button, .seg-link { min-width: 44px; }
   /* מתג: אזור הלחיצה גבוה מהמתג עצמו */
   .switch::before { content: ""; position: absolute; inset: -10px -4px; }
