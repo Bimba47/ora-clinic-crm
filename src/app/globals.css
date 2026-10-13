@@ -887,7 +887,8 @@ a.btn { text-decoration: none; }
 
 /* ===== שיפורי רשימות (v18) ===== */
 /* סטטוס שנבחר ישר בשורה: נראה כמו התגית, עם חץ קטן */
-.tag-select { appearance: none; -webkit-appearance: none; border: 0; height: auto; min-height: 28px; width: auto; padding: 2px 26px 2px 12px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-size: 4px 4px, 4px 4px; background-position: left 12px center, left 8px center; background-repeat: no-repeat; }
+.tag-select { appearance: none; -webkit-appearance: none; border: 0; height: auto; min-height: 28px; width: auto; padding: 2px 12px 2px 28px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%232C2520' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: left 12px center; background-size: 10px 6px; }
+.tag-select.tag-done, .tag-select.tag-closed, .tag-select.tag-cancelled { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23FFFFFF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 .tag-select:focus-visible { outline: 2px solid var(--bronze); outline-offset: 1px; }
 .tag-select option { background: var(--card); color: var(--text); }
 /* שדה מחושב מעל הסף (קריאה פתוחה יותר מ-48 שעות): אדום מודגש, כמו "לא נקראה" */
