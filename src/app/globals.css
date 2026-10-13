@@ -904,3 +904,39 @@ a.btn { text-decoration: none; }
   /* כותרת קריאה: הכפתורים בשורה משלהם, כדי לא לדחוס את השדות */
   .record-head.stacked { grid-template-columns: minmax(0, 1fr); align-items: start; }
 }
+
+/* גרף עמודות ב-HTML (v21): כל שורה כפתור, כדי שאזור הלחיצה לא יתכווץ עם הגרף */
+.hbar-chart { display: flex; flex-direction: column; gap: 2px; }
+.hbar-row { display: grid; grid-template-columns: minmax(0, 120px) minmax(0, 1fr) auto; align-items: center; gap: 8px; width: 100%; min-height: 32px; padding: 0 6px; border: 0; border-radius: 8px; background: none; font: inherit; color: var(--text); text-align: start; }
+button.hbar-row { cursor: pointer; }
+button.hbar-row:hover, button.hbar-row:focus-visible { background: var(--bg); }
+.hbar-label { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbar-track { display: flex; align-items: center; min-width: 0; }
+.hbar-fill { display: block; height: 18px; border-radius: 999px; }
+.hbar-value { min-width: 40px; font-size: 12px; font-weight: 600; color: var(--muted); text-align: end; }
+
+/* ===== אזורי מגע של 44px לפחות בנייד (האפיון: "לכל כפתור ושורה") ===== */
+@media (max-width: 767px) {
+  button, select, summary, .btn, .seg-link, .link-btn, .legend-item, .hbar-row, .widget-metric, .wa-btn, label.check-field, .search { min-height: 44px; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="search"]) { min-height: 44px; }
+  .icon-btn, summary.icon-btn, .group-btn, .cell-link, .row-actions a.link-btn { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .tag-select, .status-select, .perm-action select { min-height: 44px; height: 44px; }
+  /* קישור בתוך טקסט (לקוחה, מטפלת, טלפון): השורה כולה בגובה 44px */
+  a.ref-link, a.ref-phone { display: inline-flex; align-items: center; min-height: 44px; }
+  /* מתג: אזור הלחיצה גבוה מהמתג עצמו */
+  .switch::before { content: ""; position: absolute; inset: -10px -4px; }
+  /* תיבת סימון: נראית 20px, אזור הלחיצה 44px (מסגרת שקופה סביבה, בלי לשנות את הפריסה) */
+  input[type="checkbox"]:not(.switch input) {
+    appearance: none; -webkit-appearance: none; box-sizing: border-box; flex-shrink: 0;
+    width: 44px; height: 44px; margin: -12px; padding: 0; cursor: pointer;
+    border: 12px solid transparent; border-radius: 16px; background-clip: padding-box;
+    background-color: var(--card); box-shadow: inset 0 0 0 1.5px var(--bronze);
+  }
+  input[type="checkbox"]:not(.switch input):checked {
+    background-color: var(--primary);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10' viewBox='0 0 12 10'%3E%3Cpath d='M1 5l3.5 3.5L11 1' fill='none' stroke='%232C2520' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: center; background-size: 12px 10px;
+    box-shadow: none;
+  }
+  input[type="checkbox"]:not(.switch input):focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--bronze); }
+}

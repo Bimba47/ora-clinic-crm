@@ -18,6 +18,7 @@ const OPEN = 9 * 60;
 const CLOSE: Record<number, number> = { 0: 19 * 60, 1: 19 * 60, 2: 19 * 60, 3: 19 * 60, 4: 19 * 60, 5: 13 * 60 };
 const SLOT = 30;          // משבצת ללחיצה: חצי שעה
 const PX_PER_MIN = 1.2;   // גובה דקה בפיקסלים
+const PX_PER_MIN_MOBILE = 1.6; // בנייד: חצי שעה = 48px, אזור מגע של 44px לפחות (האפיון)
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 const TZ = "Asia/Jerusalem";
 
@@ -58,6 +59,7 @@ export default function AppointmentsCalendar() {
   const [treatments, setTreatments] = useState<RefOption[]>([]);
   const [anchor, setAnchor] = useState(() => ymd(new Date()));
   const [mode, setMode] = useState<"week" | "day">("week");
+  const [narrow, setNarrow] = useState(false);
   const [filterTherapist, setFilterTherapist] = useState("");
   const [filterTreatment, setFilterTreatment] = useState("");
   const [showCancelled, setShowCancelled] = useState(false);
@@ -66,7 +68,10 @@ export default function AppointmentsCalendar() {
   // בנייד (מתחת ל-768px) נפתחת תצוגה יומית
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
-    const apply = () => setMode(mq.matches ? "day" : "week");
+    const apply = () => {
+      setMode(mq.matches ? "day" : "week");
+      setNarrow(mq.matches);
+    };
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
@@ -129,9 +134,10 @@ export default function AppointmentsCalendar() {
   };
   const dark = (c: string) => ["#A67C52", "#9E5F6A", "#2C2520", "#C99A7A"].includes(c);
 
+  const pxPerMin = narrow ? PX_PER_MIN_MOBILE : PX_PER_MIN;
   const today = ymd(new Date());
   const maxClose = Math.max(...days.map((d) => CLOSE[dow(d)] ?? OPEN));
-  const height = (maxClose - OPEN) * PX_PER_MIN;
+  const height = (maxClose - OPEN) * pxPerMin;
   const hours: number[] = [];
   for (let m = OPEN; m <= maxClose; m += 60) hours.push(m);
 
@@ -216,7 +222,7 @@ export default function AppointmentsCalendar() {
           {/* עמודת השעות */}
           <div className="cal-hours" style={{ height }}>
             {hours.map((m) => (
-              <span key={m} className="cal-hour" style={{ top: (m - OPEN) * PX_PER_MIN }} dir="ltr">{hhmm(m)}</span>
+              <span key={m} className="cal-hour" style={{ top: (m - OPEN) * pxPerMin }} dir="ltr">{hhmm(m)}</span>
             ))}
           </div>
 
@@ -233,13 +239,13 @@ export default function AppointmentsCalendar() {
                     key={m}
                     type="button"
                     className={`cal-slot${m % 60 === 0 ? " hour" : ""}`}
-                    style={{ top: (m - OPEN) * PX_PER_MIN, height: SLOT * PX_PER_MIN }}
+                    style={{ top: (m - OPEN) * pxPerMin, height: SLOT * pxPerMin }}
                     aria-label={`תור חדש ביום ${DAY_NAMES[dow(d)]} ${dayLabel(d)} בשעה ${hhmm(m)}`}
                     onClick={() => newAt(d, m)}
                   />
                 ))}
                 {close < maxClose && (
-                  <div className="cal-closed" style={{ top: (close - OPEN) * PX_PER_MIN, height: (maxClose - close) * PX_PER_MIN }}>סגור</div>
+                  <div className="cal-closed" style={{ top: (close - OPEN) * pxPerMin, height: (maxClose - close) * pxPerMin }}>סגור</div>
                 )}
                 {dayAppts.map((a) => {
                   const start = minutesOf(a.starts_at);
@@ -251,8 +257,8 @@ export default function AppointmentsCalendar() {
                       type="button"
                       className={`cal-appt${a.status === "cancelled" ? " cancelled" : ""}${a.status === "done" ? " done" : ""}`}
                       style={{
-                        top: (start - OPEN) * PX_PER_MIN,
-                        height: Math.max(a.duration_minutes * PX_PER_MIN - 2, 18),
+                        top: (start - OPEN) * pxPerMin,
+                        height: Math.max(a.duration_minutes * pxPerMin - 2, narrow ? 44 : 18),
                         insetInlineStart: `calc(${(lane / of) * 100}% + 2px)`,
                         width: `calc(${100 / of}% - 4px)`,
                         background: bg,

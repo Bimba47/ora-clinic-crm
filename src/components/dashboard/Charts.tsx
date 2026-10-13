@@ -8,43 +8,33 @@ export type Datum = { key: string | null; label: string; value: number };
 
 const fmt = (v: number, suffix = "") => `${Number.isInteger(v) ? v.toLocaleString("he-IL") : v.toLocaleString("he-IL", { maximumFractionDigits: 1 })}${suffix}`;
 
+// כל שורה היא כפתור בגובה קבוע (בנייד 44px לפחות, לפי האפיון), כדי שאזור הלחיצה לא יקטן כשהגרף מתכווץ
 export function BarChart({ data, suffix, onPick }: { data: Datum[]; suffix?: string; onPick?: (d: Datum) => void }) {
   if (data.length === 0) return <p className="muted widget-empty">אין נתונים</p>;
   const max = Math.max(...data.map((d) => d.value), 0) || 1;
-  const rowH = 32;
-  const labelW = 120;
-  const valueW = 56;
-  const width = 400;
-  const barMax = width - labelW - valueW;
-  const height = data.length * rowH;
   return (
-    <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="גרף עמודות" preserveAspectRatio="xMidYMin meet">
+    <div className="hbar-chart" role="list" aria-label="גרף עמודות">
       {data.map((d, i) => {
-        const w = Math.max((d.value / max) * barMax, d.value > 0 ? 2 : 0);
-        const y = i * rowH;
-        return (
-          <g
-            key={d.key ?? `null-${i}`}
-            className={onPick ? "chart-hit" : undefined}
-            onClick={onPick ? (e) => { e.stopPropagation(); onPick(d); } : undefined}
-            role={onPick ? "button" : undefined}
-            tabIndex={onPick ? 0 : undefined}
-            onKeyDown={onPick ? (e) => e.key === "Enter" && onPick(d) : undefined}
-          >
-            <title>{`${d.label}: ${fmt(d.value, suffix)}`}</title>
-            {/* רקע השורה לאזור לחיצה נוח */}
-            <rect x={0} y={y} width={width} height={rowH} fill="transparent" />
-            <text x={width - 4} y={y + rowH / 2} textAnchor="start" dominantBaseline="middle" className="chart-label" direction="rtl">
-              {d.label.length > 16 ? `${d.label.slice(0, 15)}…` : d.label}
-            </text>
-            <rect x={width - labelW - w} y={y + 7} width={w} height={rowH - 14} rx={(rowH - 14) / 2} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-            <text x={width - labelW - w - 6} y={y + rowH / 2} textAnchor="end" dominantBaseline="middle" className="chart-value" direction="ltr">
-              {fmt(d.value, suffix)}
-            </text>
-          </g>
+        const pct = d.value > 0 ? Math.max((d.value / max) * 100, 1) : 0;
+        const inner = (
+          <>
+            <span className="hbar-label">{d.label}</span>
+            <span className="hbar-track">
+              <span className="hbar-fill" style={{ width: `${pct}%`, background: CHART_COLORS[i % CHART_COLORS.length] }} />
+            </span>
+            <span className="hbar-value" dir="ltr">{fmt(d.value, suffix)}</span>
+          </>
+        );
+        const title = `${d.label}: ${fmt(d.value, suffix)}`;
+        return onPick ? (
+          <button key={d.key ?? `null-${i}`} type="button" role="listitem" className="hbar-row chart-hit" title={title} onClick={(e) => { e.stopPropagation(); onPick(d); }}>
+            {inner}
+          </button>
+        ) : (
+          <div key={d.key ?? `null-${i}`} role="listitem" className="hbar-row" title={title}>{inner}</div>
         );
       })}
-    </svg>
+    </div>
   );
 }
 
