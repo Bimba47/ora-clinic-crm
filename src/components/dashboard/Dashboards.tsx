@@ -347,24 +347,45 @@ function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));
 }
 
-// אחרי גרירה: הווידג'ט שזז נשאר במקומו החדש, ווידג'טים שמתנגשים בו יורדים למטה
+const hit = (a: Box, b: Box) =>
+  a.position_x < b.position_x + b.width && b.position_x < a.position_x + a.width &&
+  a.position_y < b.position_y + b.height && b.position_y < a.position_y + a.height;
+
+// אחרי גרירה או שינוי גודל:
+// 1. נחיתה בדיוק על ווידג'ט באותו גודל = החלפת מקומות.
+// 2. אחרת הווידג'ט שזז נשאר במקומו, ומי שמתנגש בו יורד מתחתיו.
+// 3. בסוף כולם "עולים" למעלה כמה שאפשר, כדי שלא יישארו חורים בלוח.
 function settle(ws: Widget[], movedId: string, box: Box): Widget[] {
-  const moved = { ...ws.find((w) => w.id === movedId)!, ...box };
-  const others = ws.filter((w) => w.id !== movedId).sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x);
-  const placed: Widget[] = [moved];
-  const hit = (a: Box, b: Box) =>
-    a.position_x < b.position_x + b.width && b.position_x < a.position_x + a.width &&
-    a.position_y < b.position_y + b.height && b.position_y < a.position_y + a.height;
-  for (const o of others) {
-    const cur = { ...o };
-    let blocker = placed.find((p) => hit(cur, p));
-    while (blocker) {
-      cur.position_y = blocker.position_y + blocker.height;
-      blocker = placed.find((p) => hit(cur, p));
+  const orig = ws.find((w) => w.id === movedId)!;
+  const moved = { ...orig, ...box };
+  const swapWith = ws.find((w) => w.id !== movedId && w.position_x === box.position_x && w.position_y === box.position_y
+    && w.width === box.width && w.height === box.height);
+  let list = ws.map((w) =>
+    w.id === movedId ? moved
+      : swapWith && w.id === swapWith.id ? { ...w, position_x: orig.position_x, position_y: orig.position_y }
+      : { ...w });
+  if (!swapWith) {
+    const others = list.filter((w) => w.id !== movedId).sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x);
+    const placed: Widget[] = [moved];
+    for (const cur of others) {
+      let blocker = placed.find((p) => hit(cur, p));
+      while (blocker) {
+        cur.position_y = blocker.position_y + blocker.height;
+        blocker = placed.find((p) => hit(cur, p));
+      }
+      placed.push(cur);
     }
-    placed.push(cur);
+    list = placed;
   }
-  return placed;
+  // דחיסה למעלה, לפי הסדר מלמעלה למטה
+  const sorted = [...list].sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x);
+  const done: Widget[] = [];
+  for (const w of sorted) {
+    const cur = { ...w };
+    while (cur.position_y > 0 && !done.some((d) => hit({ ...cur, position_y: cur.position_y - 1 }, d))) cur.position_y -= 1;
+    done.push(cur);
+  }
+  return done;
 }
 
 function NameDialog({ title, initial, onClose, onSave }: { title: string; initial: string; onClose: () => void; onSave: (name: string) => Promise<void> }) {
