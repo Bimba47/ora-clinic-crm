@@ -114,7 +114,7 @@ body {
 }
 .icon-btn:hover:not(:disabled) { background: var(--soft); }
 
-.content { padding: 8px 24px 24px; }
+.content { padding: 8px 24px 104px; } /* מקום לכפתור "+" הצף */
 
 /* ===== תוכן ===== */
 .page-title { font-size: 30px; font-weight: 700; margin: 0 0 24px; }
@@ -453,7 +453,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
   .history li { align-items: flex-start; }
   .sidebar { display: none; }
   .topbar { padding: 12px 16px; }
-  .content { padding: 8px 16px 96px; }
+  .content { padding: 8px 16px 168px; }
   .page-title { font-size: 24px; }
 
   .bottom-nav {
@@ -644,3 +644,30 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--bronze);
 }
 /* קישור שנראה ככפתור: בלי קו תחתון */
 a.btn { text-decoration: none; }
+
+/* ===== חיפוש בכותרת, "+" צף ובאדג' קריאות (v15) ===== */
+.phone-search { position: relative; flex: 1; max-width: 420px; }
+.phone-search .search { max-width: none; }
+.search input[type="search"]::-webkit-search-cancel-button { cursor: pointer; }
+.search-results { position: absolute; top: calc(100% + 8px); inset-inline: 0; z-index: 40; padding: 8px; display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow-hover); }
+.search-hit { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 16px; background: transparent; font: inherit; color: var(--text); cursor: pointer; text-align: start; }
+.search-hit.active { background: var(--soft); }
+.search-hit-name { font-weight: 600; }
+.search-hit-phone { color: var(--muted); font-size: 12px; }
+.search-empty { padding: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.search-empty p { margin: 0; }
+.nav-badge { margin-inline-start: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--err); color: #FFFFFF; font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; line-height: 1; }
+.quick-add { position: fixed; bottom: 24px; inset-inline-end: 24px; z-index: 30; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.quick-add-btn { width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--primary); color: var(--text); display: grid; place-items: center; cursor: pointer; box-shadow: 0 4px 14px rgba(227, 191, 168, 0.45), var(--shadow); transition: transform 150ms; }
+.quick-add-btn.open { transform: rotate(45deg); }
+.quick-add-btn:focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
+.quick-add-menu { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.quick-add-item { min-height: 44px; padding: 0 20px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--card); color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px; box-shadow: var(--shadow-hover); white-space: nowrap; }
+.quick-add-item:hover { background: var(--soft); }
+
+@media (max-width: 767px) {
+  .quick-add { bottom: calc(88px + env(safe-area-inset-bottom)); inset-inline-end: 16px; }
+  .phone-search { max-width: none; }
+  .bottom-nav .nav-item { position: relative; }
+  .bottom-nav .nav-badge { position: absolute; top: 2px; inset-inline-start: calc(50% + 6px); margin: 0; min-width: 18px; height: 18px; font-size: 12px; }
+}

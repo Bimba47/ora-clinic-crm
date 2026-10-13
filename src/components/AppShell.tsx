@@ -11,6 +11,10 @@ import { AuthProvider, useAuth } from "./Auth";
 import { ToastProvider } from "./Toast";
 import { Brand, SettingsProvider } from "./Settings";
 import NotificationBell from "./NotificationBell";
+import PhoneSearch from "./PhoneSearch";
+import QuickAdd from "./QuickAdd";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type NavItem = { label: string; short?: string; href: string; icon: IconName; mobile?: boolean; object?: string };
 
@@ -29,13 +33,14 @@ function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href.split("/").slice(0, 2).join("/"));
 }
 
-function NavEntry({ item, compact }: { item: NavItem; compact?: boolean }) {
+function NavEntry({ item, compact, badge }: { item: NavItem; compact?: boolean; badge?: number }) {
   const pathname = usePathname();
   const active = isActive(pathname, item.href);
   return (
     <Link href={item.href} className={`nav-item${active ? " active" : ""}`} aria-current={active ? "page" : undefined}>
       <Icon name={item.icon} />
       <span>{compact && item.short ? item.short : item.label}</span>
+      {badge ? <span className="nav-badge" aria-label={`${badge} קריאות חדשות שמשויכות אלייך`}>{badge}</span> : null}
     </Link>
   );
 }
@@ -46,6 +51,8 @@ function Shell({ children }: { children: React.ReactNode }) {
   const { ready, userId, me, signOut, can } = useAuth();
   // פריט תפריט של אובייקט מוצג רק לתפקיד שיש לו הרשאת צפייה בו
   const nav = NAV.filter((item) => !item.object || can(item.object, "view"));
+  const newRequests = useNewRequestsCount(userId, pathname);
+  const badgeFor = (item: NavItem) => (item.href === "/requests" ? newRequests : 0);
 
   if (pathname === "/login" || pathname === "/accept-invite") return <>{children}</>;
   if (!ready || !userId) {
@@ -62,7 +69,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <div className="brand"><Brand /></div>
         <nav>
           {nav.map((item) => (
-            <NavEntry key={item.href} item={item} />
+            <NavEntry key={item.href} item={item} badge={badgeFor(item)} />
           ))}
         </nav>
         <div className="sidebar-foot">
@@ -89,10 +96,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               <Icon name="back" />
             </a>
           )}
-          <label className="search">
-            <Icon name="search" />
-            <input type="tel" inputMode="numeric" aria-label="חיפוש לפי טלפון" placeholder="054-1234567" disabled />
-          </label>
+          {can("clients", "view") && <PhoneSearch />}
           <NotificationBell />
           {/* בנייד אין תפריט צד, ולכן ההגדרות והפרופיל זמינים מכאן */}
           <Link className="icon-btn settings-mobile" href="/settings" aria-label="הגדרות">
@@ -104,15 +108,40 @@ function Shell({ children }: { children: React.ReactNode }) {
         )}
         {!me && <div className="banner">המשתמשת הזו לא רשומה בצוות, ולכן לא יוצגו נתונים.</div>}
         <main className="content">{children}</main>
+        <QuickAdd />
       </div>
 
       <nav className="bottom-nav" aria-label="ניווט">
         {nav.filter((item) => item.mobile).map((item) => (
-          <NavEntry key={item.href} item={item} compact />
+          <NavEntry key={item.href} item={item} compact badge={badgeFor(item)} />
         ))}
       </nav>
     </div>
   );
+}
+
+// באדג' "חדש" ליד קריאות: כמה קריאות בסטטוס "חדשה" משויכות אליי. מתעדכן במעבר מסך וכל דקה.
+function useNewRequestsCount(userId: string | null, pathname: string) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    const load = async () => {
+      const { count: n } = await supabase
+        .from("service_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new")
+        .eq("assigned_to", userId);
+      if (alive) setCount(n ?? 0);
+    };
+    load();
+    const t = setInterval(load, 60000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [userId, pathname]);
+  return count;
 }
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
