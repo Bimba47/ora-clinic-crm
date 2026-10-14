@@ -1,12 +1,13 @@
 "use client";
 // בחירת סיסמה אחרי כניסה מקישור במייל: קבלת הזמנה (/accept-invite) או איפוס סיסמה (/reset-password).
 // Supabase מחבר את המשתמשת לפי הקישור, וכאן היא קובעת סיסמה. מכאן והלאה היא נכנסת רגיל במסך הכניסה.
+// באותה מסגרת כמו מסך הכניסה (AuthShell).
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Brand } from "@/components/Settings";
 import { useAuth } from "@/components/Auth";
+import AuthShell from "@/components/AuthShell";
 
 export default function SetPassword({ intro, invalidText }: { intro: (name: string) => string; invalidText: string }) {
   const router = useRouter();
@@ -30,35 +31,33 @@ export default function SetPassword({ intro, invalidText }: { intro: (name: stri
   };
 
   return (
-    <div className="login-page">
-      <form className="card login-card" onSubmit={submit} noValidate>
-        <h1 className="page-title"><Brand className="login-brand" /></h1>
-        {!ready ? (
-          <div className="skeleton" style={{ height: 120 }} aria-busy="true" />
-        ) : !userId ? (
-          <>
-            <p>{invalidText}</p>
-            <a className="btn block" href="/login">למסך הכניסה</a>
-          </>
-        ) : (
-          <>
-            <p>{intro(me?.full_name ?? "")}</p>
-            <label className={`field${error ? " has-error" : ""}`}>
-              <span>סיסמה חדשה</span>
-              <input type="password" dir="ltr" autoComplete="new-password" autoFocus value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
-            </label>
-            <label className={`field${error ? " has-error" : ""}`}>
-              <span>הקלידי שוב</span>
-              <input type="password" dir="ltr" autoComplete="new-password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
-            </label>
-            {error && <p className="field-error">{error}</p>}
-            <button type="submit" className="btn primary block" disabled={busy || !pw.next}>
-              {busy && <span className="spinner" aria-hidden="true" />}
-              שמירה וכניסה
-            </button>
-          </>
-        )}
-      </form>
-    </div>
+    <AuthShell
+      title="בחירת סיסמה"
+      subtitle={!ready ? undefined : !userId ? invalidText : intro(me?.full_name ?? "")}
+    >
+      {!ready ? (
+        <div className="skeleton" style={{ height: 120 }} aria-busy="true" />
+      ) : !userId ? (
+        <div className="auth-form">
+          <a className="btn block" href="/login">למסך הכניסה</a>
+        </div>
+      ) : (
+        <form className="auth-form" onSubmit={submit} noValidate>
+          <label className={`field${error ? " has-error" : ""}`}>
+            <span>סיסמה חדשה</span>
+            <input type="password" dir="ltr" autoComplete="new-password" autoFocus value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
+          </label>
+          <label className={`field${error ? " has-error" : ""}`}>
+            <span>הקלידי שוב</span>
+            <input type="password" dir="ltr" autoComplete="new-password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
+          </label>
+          {error && <p className="field-error" role="alert">{error}</p>}
+          <button type="submit" className="btn primary block auth-submit" disabled={busy || !pw.next}>
+            {busy && <span className="spinner" aria-hidden="true" />}
+            שמירה וכניסה
+          </button>
+        </form>
+      )}
+    </AuthShell>
   );
 }
