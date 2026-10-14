@@ -32,6 +32,8 @@ export type WidgetConfig = {
   size?: "title" | "normal";
   roles?: string[];            // אילו תפקידים רואים את הווידג'ט (ריק = כולם). מי שעורכת את הלוח רואה הכול
   bar_style?: "gradient";      // עמודות: צבע אחד מדורג, והערך צמוד לסוף העמודה (למשל הכנסות לפי טיפול)
+  colors?: Record<string, string>; // טבעת/עמודות: צבע קבוע לערך קבוצה (למשל סטטוס התור בצבע הסטטוס)
+  compare_period?: boolean;    // טבעת: השוואת הסה"כ לתקופה הקודמת (חודש קודם, או אותו אורך לפני הטווח)
 };
 
 export type Widget = {
@@ -197,6 +199,31 @@ export function resolveToken(v: string, userId: string | null): string {
     if (tok === "now") return israelDate(0);
     return "";
   });
+}
+
+// התקופה של ווידג'ט: טווח התאריכים של הלוח, ואם אין – תנאי "מ"/"עד" של הווידג'ט על שדה התאריך שלו.
+// התקופה הקודמת: חודש קלנדרי שלם → החודש שלפניו; אחרת אותו מספר ימים, צמוד לפני הטווח.
+export function previousPeriod(
+  w: Pick<Widget, "filters" | "config">, dash: DashFilters, dateField: string | undefined, userId: string | null,
+): { date_from: string; date_to: string; label: string } | null {
+  const rule = (op: string) => (w.filters?.rules ?? []).find((r) => r.field === dateField && r.op === op)?.value;
+  const from = dash.date_from || (rule("gte") ? resolveToken(rule("gte")!, userId) : "");
+  const to = dash.date_to || (rule("lte") ? resolveToken(rule("lte")!, userId) : "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || to < from) return null;
+  const day = (s: string) => new Date(`${s}T12:00:00Z`);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const f = day(from);
+  const t = day(to);
+  const monthEnd = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0, 12));
+  if (f.getUTCDate() === 1 && iso(monthEnd) === to && f.getUTCMonth() === t.getUTCMonth()) {
+    const pf = new Date(Date.UTC(f.getUTCFullYear(), f.getUTCMonth() - 1, 1, 12));
+    const pt = new Date(Date.UTC(f.getUTCFullYear(), f.getUTCMonth(), 0, 12));
+    return { date_from: iso(pf), date_to: iso(pt), label: "לעומת החודש הקודם" };
+  }
+  const days = Math.round((t.getTime() - f.getTime()) / 86400000) + 1;
+  const pt = new Date(f.getTime() - 86400000);
+  const pf = new Date(pt.getTime() - (days - 1) * 86400000);
+  return { date_from: iso(pf), date_to: iso(pt), label: days === 1 ? "לעומת היום הקודם" : `לעומת ${days} הימים הקודמים` };
 }
 
 // לחיצה על ווידג'ט: פתיחת רשימת האובייקט עם אותן רשומות (ועוד תנאי קבוצה בלחיצה על עמודה).

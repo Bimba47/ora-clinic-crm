@@ -46,9 +46,20 @@ export function BarChart({ data, suffix, onPick, variant, format }: {
   );
 }
 
-export function DonutChart({ data, onPick }: { data: Datum[]; onPick?: (d: Datum) => void }) {
+// טבעת: הסה"כ במרכז (ומתחתיו שינוי לעומת התקופה הקודמת, אם יש), ובמקרא כל קבוצה עם הערך והאחוז.
+// colorOf: צבע קבוע לקבוצה (למשל סטטוס), אחרת צבעי הגרפים לפי הסדר. format: למשל כסף (₪)
+export function DonutChart({ data, onPick, format, colorOf, change }: {
+  data: Datum[];
+  onPick?: (d: Datum) => void;
+  format?: (v: number) => string;
+  colorOf?: (d: Datum) => string | undefined;
+  change?: { pct: number | null; label: string };
+}) {
   const total = data.reduce((s, d) => s + Math.max(d.value, 0), 0);
   if (data.length === 0 || total === 0) return <p className="muted widget-empty">אין נתונים</p>;
+  const show = (v: number) => (format ? format(v) : fmt(v));
+  const color = (d: Datum, i: number) => colorOf?.(d) ?? CHART_COLORS[i % CHART_COLORS.length];
+  const totalText = show(total);
   const r = 60;
   const stroke = 26;
   const c = 2 * Math.PI * r;
@@ -63,30 +74,40 @@ export function DonutChart({ data, onPick }: { data: Datum[]; onPick?: (d: Datum
               <circle
                 key={d.key ?? `null-${i}`}
                 cx={80} cy={80} r={r} fill="none"
-                stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                stroke={color(d, i)}
                 strokeWidth={stroke}
                 strokeDasharray={`${len} ${c - len}`}
                 strokeDashoffset={-offset}
                 className={onPick ? "chart-hit" : undefined}
                 onClick={onPick ? (e) => { e.stopPropagation(); onPick(d); } : undefined}
               >
-                <title>{`${d.label}: ${fmt(d.value)} (${Math.round((d.value / total) * 100)}%)`}</title>
+                <title>{`${d.label}: ${show(d.value)} (${Math.round((d.value / total) * 100)}%)`}</title>
               </circle>
             );
             offset += len;
             return seg;
           })}
         </g>
-        <text x={80} y={76} textAnchor="middle" className="donut-total">{fmt(total)}</text>
-        <text x={80} y={96} textAnchor="middle" className="donut-caption">סה״כ</text>
+        <text x={80} y={change ? 74 : 76} textAnchor="middle" className={`donut-total${totalText.length > 7 ? " long" : ""}`}>{totalText}</text>
+        {change ? (
+          <>
+            <text x={80} y={93} textAnchor="middle" className={`donut-change${change.pct === null ? "" : change.pct > 0 ? " up" : change.pct < 0 ? " down" : ""}`}>
+              {change.pct === null ? "—" : `${change.pct > 0 ? "▲" : change.pct < 0 ? "▼" : "•"} ${Math.abs(change.pct)}%`}
+            </text>
+            <text x={80} y={107} textAnchor="middle" className="donut-caption small">{change.label}</text>
+          </>
+        ) : (
+          <text x={80} y={96} textAnchor="middle" className="donut-caption">סה״כ</text>
+        )}
       </svg>
       <ul className="legend">
         {data.map((d, i) => (
           <li key={d.key ?? `null-${i}`}>
             <button type="button" className="legend-item" onClick={onPick ? (e) => { e.stopPropagation(); onPick(d); } : undefined} disabled={!onPick}>
-              <span className="legend-dot" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+              <span className="legend-dot" style={{ background: color(d, i) }} />
               <span className="legend-label">{d.label}</span>
-              <span className="legend-pct">{Math.round((d.value / total) * 100)}%</span>
+              <span className="legend-value" dir="ltr">{show(d.value)}</span>
+              <span className="legend-pct">({Math.round((d.value / total) * 100)}%)</span>
             </button>
           </li>
         ))}

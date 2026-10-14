@@ -330,7 +330,10 @@ export default function WidgetBuilder({
                   {d.widget_type === "bar" && (
                     <label className="check-field"><input type="checkbox" checked={d.config.bar_style === "gradient"} onChange={(e) => setCfg({ bar_style: e.target.checked ? "gradient" : undefined })} /><span>עמודות בצבע אחד מדורג, והערך בסוף העמודה</span></label>
                   )}
-                  {(d.widget_type === "bar" || d.widget_type === "metric") && (
+                  {d.widget_type === "pie" && (
+                    <label className="check-field"><input type="checkbox" checked={!!d.config.compare_period} onChange={(e) => setCfg({ compare_period: e.target.checked || undefined })} /><span>השוואה לתקופה הקודמת (במרכז הטבעת)</span></label>
+                  )}
+                  {(d.widget_type === "bar" || d.widget_type === "metric" || d.widget_type === "pie") && (
                     <label className="field wb-full">
                       <span>הסבר מתחת לווידג'ט</span>
                       <input value={d.config.hint ?? ""} onChange={(e) => setCfg({ hint: e.target.value || undefined })} placeholder="למשל: תורים שבוצעו החודש" />

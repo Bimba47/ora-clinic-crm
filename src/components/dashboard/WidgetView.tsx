@@ -11,7 +11,7 @@ import { errorText, pickOptions, type Catalog, type FieldMeta } from "@/lib/view
 import { formatMoneyShort, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 import { recordHref } from "@/lib/records";
 import {
-  greeting, objectByKey, openFiltered, runWidget, todayLong, widgetFields,
+  greeting, objectByKey, openFiltered, previousPeriod, runWidget, todayLong, widgetFields,
   type DashFilters, type Group, type Rule, type Widget, type WidgetResult,
 } from "@/lib/dashboards";
 import { BarChart, DonutChart, type Datum } from "./Charts";
@@ -28,6 +28,8 @@ export default function WidgetView({
   const [res, setRes] = useState<WidgetResult | null>(null);
   const [error, setError] = useState("");
   const [tick, setTick] = useState(0);
+  // טבעת עם השוואה: הסה"כ של התקופה הקודמת (אותו ווידג'ט, עם טווח התאריכים הקודם)
+  const [prev, setPrev] = useState<{ total: number; label: string } | null>(null);
   const key = JSON.stringify([w.widget_type, w.object_name, w.filters, w.group_by, w.date_group, w.aggregate, w.aggregate_field, w.sort, w.limit, w.config, dash]);
 
   useEffect(() => {
@@ -42,6 +44,20 @@ export default function WidgetView({
           else if (r.kind === "metric") onCount?.(Number(r.value));
         })
         .catch((e) => !cancelled && (setError(errorText(e)), setRes(null)));
+      setPrev(null);
+      if (w.widget_type === "pie" && w.config?.compare_period && w.object_name) {
+        const dateField = w.config.date_field
+          ?? widgetFields(catalog, w.object_name).filter((f) => ["date", "datetime"].includes(f.field_type)).sort((a, b) => a.position - b.position)[0]?.field_key;
+        const p = previousPeriod(w, dash, dateField, userId);
+        if (p) {
+          runWidget(w, { ...dash, date_from: p.date_from, date_to: p.date_to })
+            .then((r) => {
+              if (cancelled || r.kind !== "groups") return;
+              setPrev({ total: r.groups.reduce((s, g) => s + Number(g.value), 0), label: p.label });
+            })
+            .catch(() => undefined);
+        }
+      }
     }, preview ? 300 : 0);
     return () => {
       cancelled = true;
@@ -128,10 +144,25 @@ export default function WidgetView({
   if (res.kind === "groups") {
     const gf = fieldOf(w.group_by);
     const data: Datum[] = res.groups.map((g) => ({ key: g.key, label: groupLabel(gf, g.key, g.label), value: Number(g.value) }));
-    if (w.widget_type === "pie") return <DonutChart data={data} onPick={preview ? undefined : (d) => drill(groupRule(d))} />;
+    // סכום/ממוצע של שדה כסף מוצג בשקלים (למשל הכנסות לפי טיפול)
+    const money = ["sum", "avg", "min", "max"].includes(w.aggregate) && fieldOf(w.aggregate_field)?.field_type === "money";
+    if (w.widget_type === "pie") {
+      const total = data.reduce((s, d) => s + d.value, 0);
+      const change = prev ? { pct: prev.total === 0 ? null : Math.round((1000 * (total - prev.total)) / Math.abs(prev.total)) / 10, label: prev.label } : undefined;
+      return (
+        <>
+          <DonutChart
+            data={data}
+            format={money ? formatMoneyShort : undefined}
+            colorOf={cfg.colors ? (d) => (d.key !== null ? cfg.colors![d.key] : undefined) : undefined}
+            change={change}
+            onPick={preview ? undefined : (d) => drill(groupRule(d))}
+          />
+          {cfg.hint && <p className="widget-hint">{cfg.hint}</p>}
+        </>
+      );
+    }
     if (w.widget_type === "bar") {
-      // סכום/ממוצע של שדה כסף מוצג בשקלים (למשל הכנסות לפי טיפול)
-      const money = ["sum", "avg", "min", "max"].includes(w.aggregate) && fieldOf(w.aggregate_field)?.field_type === "money";
       return (
         <>
           <BarChart
