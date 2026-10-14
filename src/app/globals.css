@@ -1081,13 +1081,14 @@ input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 .auth-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--muted); }
 .auth-secure { display: inline-flex; align-items: center; gap: 6px; }
 .auth-secure svg { color: var(--bronze); }
-.auth-panel { flex: 1 1 520px; min-width: 0; margin: 16px; border-radius: 32px; background: var(--soft); position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 48px 48px 0; }
+/* הפאנל השמאלי – בדיוק כמו בעיצוב מ-Claude Design (צבעים, פונטים וגדלים; בקשת ענבל, v32.1) */
+.auth-panel { flex: 1 1 520px; min-width: 0; min-height: 420px; margin: 16px; border-radius: 28px; background: #F1E5DC; border: 1px solid #E6D3C8; color: #5A3F3A; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 56px; font-family: var(--font-assistant), sans-serif; }
 .auth-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
-.auth-tag { position: relative; font-size: 12px; font-weight: 600; letter-spacing: .2em; color: var(--muted); }
-.auth-arch { position: relative; align-self: center; width: 100%; max-width: 460px; flex: 1; margin-top: 32px; padding: 96px 40px; background: var(--bg); border-radius: 999px 999px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; text-align: center; }
-.auth-arch-logo { width: 160px; height: 160px; object-fit: contain; }
-.auth-arch-name { font-size: 30px; font-weight: 700; letter-spacing: .04em; color: var(--text); }
-.auth-arch-line { margin: 0; max-width: 280px; font-size: 18px; line-height: 1.5; color: var(--muted); }
+.auth-tag { position: relative; font-size: 13px; letter-spacing: .2em; color: #765A31; font-weight: 600; }
+.auth-arch { position: relative; align-self: center; width: 100%; max-width: 500px; min-height: 660px; margin-top: 32px; margin-bottom: -57px; padding: 120px 40px; background: #FBF6F1; border-radius: 999px 999px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; text-align: center; }
+.auth-arch-text { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.auth-arch-name { font-family: var(--font-cormorant), serif; font-size: 44px; letter-spacing: .2em; font-weight: 600; color: #8E6A3A; }
+.auth-arch-line { margin: 0; max-width: 290px; font-family: var(--font-frank), serif; font-size: 22px; line-height: 1.5; color: #6E4F48; }
 @media (max-width: 899px) {
   .auth-panel { display: none; }
   .auth-main { padding: 24px 16px; }
