@@ -37,8 +37,12 @@ export default function Dashboards() {
   const [reload, setReload] = useState(0);
   const [error, setError] = useState("");
 
+  // סידור אישי (dashboard_layouts): מי שלא עורכת את הלוח מסדרת אותו לעצמה, בלי לשנות את הלוח המשותף
+  const [layout, setLayout] = useState<Record<string, Box>>({});
+
   const board = boards?.find((b) => b.id === current) ?? null;
   const canEdit = !!board && (isManager || (board.owner_id === userId && !board.is_shared));
+  const canArrange = !!board && !!userId; // גרירה ושינוי גודל: עורכת – בלוח עצמו, אחרת – בסידור האישי
 
   const loadBoards = useCallback(async () => {
     const { data, error } = await supabase
@@ -84,7 +88,22 @@ export default function Dashboards() {
       .order("position_x")
       .then(({ data, error }) => {
         if (error) toast(errorText(error), "err");
-        setWidgets((data as Widget[]) ?? []);
+        const list = (data as Widget[]) ?? [];
+        setWidgets(list);
+        setLayout({});
+        if (list.length === 0) return;
+        // הסידור האישי שלי ללוח הזה (RLS: רק שלי)
+        supabase
+          .from("dashboard_layouts")
+          .select("widget_id, position_x, position_y, width, height")
+          .in("widget_id", list.map((w) => w.id))
+          .then(({ data: rows }) => {
+            const map: Record<string, Box> = {};
+            for (const r of (rows as (Box & { widget_id: string })[]) ?? []) {
+              map[r.widget_id] = { position_x: r.position_x, position_y: r.position_y, width: r.width, height: r.height };
+            }
+            setLayout(map);
+          });
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board?.id]);
@@ -103,7 +122,7 @@ export default function Dashboards() {
   // עומדים על ווידג'ט וגוררים, בלי מצב עריכה. הגרירה מתחילה רק אחרי תזוזה של כמה פיקסלים,
   // כך שלחיצה רגילה עדיין פותחת את הרשימה המסוננת. במסך צר (עמודה אחת) מזיזים מהתפריט.
   const startDrag = (w: Widget, mode: "move" | "resize", e: React.PointerEvent) => {
-    if (!canEdit || !gridRef.current || e.button !== 0) return;
+    if (!canArrange || !gridRef.current || e.button !== 0) return;
     if (window.matchMedia("(max-width: 767px)").matches) return;
     const colW = (gridRef.current.clientWidth + GAP) / COLS;
     const sx = e.clientX;
@@ -133,7 +152,8 @@ export default function Dashboards() {
       // הלחיצה שמגיעה בסוף הגרירה לא פותחת את הרשימה
       window.addEventListener("click", (ce) => { ce.stopPropagation(); ce.preventDefault(); }, { capture: true, once: true });
       setDrag(null);
-      await commit(settle(widgets, w.id, box));
+      if (canEdit) await commit(settle(widgets, w.id, box));
+      else await commitPersonal(settle(shown, w.id, box));
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -161,6 +181,30 @@ export default function Dashboards() {
       setWidgets(before);
     }
   };
+
+  // סידור אישי: שומרים את המיקום של כל הווידג'טים שאני רואה, כדי שהסידור יישאר יציב גם כשנוספים חדשים
+  const commitPersonal = async (placed: Widget[]) => {
+    if (!userId) return;
+    const before = layout;
+    const next: Record<string, Box> = {};
+    for (const p of placed) next[p.id] = { position_x: p.position_x, position_y: p.position_y, width: p.width, height: p.height };
+    setLayout(next);
+    const { error } = await supabase
+      .from("dashboard_layouts")
+      .upsert(placed.map((p) => ({ user_id: userId, widget_id: p.id, ...next[p.id] })), { onConflict: "user_id,widget_id" });
+    if (error) {
+      toast(errorText(error), "err");
+      setLayout(before);
+    }
+  };
+  const resetPersonal = async () => {
+    if (!userId) return;
+    const { error } = await supabase.from("dashboard_layouts").delete().eq("user_id", userId).in("widget_id", widgets.map((w) => w.id));
+    if (error) return toast(errorText(error), "err");
+    setLayout({});
+    toast("הלוח חזר לסידור המקורי");
+  };
+  const hasPersonal = !canEdit && Object.keys(layout).length > 0;
 
   const duplicateWidget = async (w: Widget) => {
     const { id: _id, ...rest } = w;
@@ -199,11 +243,13 @@ export default function Dashboards() {
 
   // ווידג'ט שמוגבל לתפקידים (config.roles) מוצג רק להם. מי שעורכת את הלוח רואה הכול, כדי לסדר ולערוך.
   // כשחלק מהווידג'טים מוסתרים, הלוח מסודר מחדש לתצוגה בלבד (בלי חורים), והסידור השמור לא משתנה.
+  // מי שלא עורכת ויש לה סידור אישי – הסידור שלה (ווידג'ט חדש שעוד אין לו מקום נכנס למקום הפנוי הראשון).
   const shown = useMemo(() => {
     if (canEdit) return widgets;
     const vis = widgets.filter((w) => !w.config?.roles?.length || (!!me?.role_id && w.config.roles.includes(me.role_id)));
-    return vis.length === widgets.length ? vis : reflow(vis);
-  }, [widgets, canEdit, me?.role_id]);
+    const base = vis.length === widgets.length ? vis : reflow(vis);
+    return Object.keys(layout).length ? applyLayout(base, layout) : base;
+  }, [widgets, canEdit, me?.role_id, layout]);
   const roleNames = (ids?: string[]) => (ids ?? []).map((id) => roles.find((r) => r.id === id)?.name).filter(Boolean).join(", ");
   const ordered = useMemo(() => [...shown].sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x), [shown]);
 
@@ -232,6 +278,7 @@ export default function Dashboards() {
               <button type="button" onClick={() => setDialog("new")}>לוח חדש</button>
               {board && <button type="button" onClick={() => setDialog("duplicate")}>שכפול הלוח</button>}
               {canEdit && <button type="button" onClick={() => setDialog("settings")}>הגדרות הלוח</button>}
+              {hasPersonal && <button type="button" onClick={(e) => { (e.currentTarget.closest("details") as HTMLDetailsElement).open = false; resetPersonal(); }}>חזרה לסידור המקורי</button>}
               {canEdit && <button type="button" className="danger" onClick={() => setDialog("delete")}>מחיקת הלוח</button>}
             </div>
           </details>
@@ -277,17 +324,17 @@ export default function Dashboards() {
           {canEdit && <button type="button" className="btn primary" onClick={() => setBuilder("new")}>הוסיפי ווידג'ט</button>}
         </div>
       ) : (
-        <div ref={gridRef} className={`dash-grid${canEdit ? " arrangeable" : ""}`} style={{ gridAutoRows: `${ROW_H}px`, gap: GAP }}>
+        <div ref={gridRef} className={`dash-grid${canArrange ? " arrangeable" : ""}`} style={{ gridAutoRows: `${ROW_H}px`, gap: GAP }}>
           {ordered.map((w) => {
             const box = drag?.id === w.id ? drag.box : w;
             return (
               <section
                 key={w.id}
                 // מחלקת הסוג היא w-type-*, כדי שלא תתנגש בעיצוב התוכן (widget-metric, widget-list...)
-                className={`card widget w-type-${w.widget_type}${drag?.id === w.id ? " dragging" : ""}${canEdit ? " grab" : ""}`}
+                className={`card widget w-type-${w.widget_type}${drag?.id === w.id ? " dragging" : ""}${canArrange ? " grab" : ""}`}
                 style={{ gridColumn: `${box.position_x + 1} / span ${box.width}`, gridRow: `${box.position_y + 1} / span ${box.height}` }}
-                // עומדים על כל מקום בווידג'ט וגוררים
-                onPointerDown={canEdit ? (e) => {
+                // עומדים על כל מקום בווידג'ט וגוררים (מי שלא עורכת את הלוח – לסידור האישי שלה)
+                onPointerDown={canArrange ? (e) => {
                   // תוכן הווידג'ט (מספר, שורות, עמודות) גרירה מתחילה גם ממנו; לחיצה בסוף גרירה לא נחשבת
                   if ((e.target as HTMLElement).closest(".widget-menu, select, input, .widget-resize, .wa-btn")) return;
                   startDrag(w, "move", e);
@@ -296,7 +343,15 @@ export default function Dashboards() {
                 {(w.title || canEdit) && (
                   <div className={`widget-head${w.title ? "" : " floating"}`}>
                     {w.title && <h2 className="widget-title">{widgetTitle(w.title, counts[w.id])}</h2>}
-                    {canEdit && !!w.config?.roles?.length && <span className="widget-roles" title="מוצג רק לתפקידים האלה">{roleNames(w.config.roles)}</span>}
+                    {/* מוגבל לתפקידים: אייקון קטן (השמות במעבר עכבר), כדי שלא יקצר את הכותרת */}
+                    {canEdit && !!w.config?.roles?.length && (
+                      <span className="widget-roles" title={`מוצג רק ל: ${roleNames(w.config.roles)}`} aria-label={`מוצג רק ל: ${roleNames(w.config.roles)}`} role="img">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect x="5" y="11" width="14" height="10" rx="2" />
+                          <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                        </svg>
+                      </span>
+                    )}
                     {canEdit && (
                       <details className="menu widget-menu">
                         <summary className="icon-btn" aria-label={`פעולות: ${widgetTitle(w.title, counts[w.id]) || "ווידג'ט"}`}>⋯</summary>
@@ -312,7 +367,7 @@ export default function Dashboards() {
                 <div className="widget-body">
                   <WidgetView widget={w} catalog={catalog} dash={dash} reloadToken={reload} onCount={(n) => setCounts((c) => (c[w.id] === n ? c : { ...c, [w.id]: n }))} />
                 </div>
-                {canEdit && (
+                {canArrange && (
                   <span className="widget-resize" aria-hidden="true" onPointerDown={(e) => startDrag(w, "resize", e)} title="שינוי גודל" />
                 )}
               </section>
@@ -483,6 +538,22 @@ function SettingsDialog({
       </form>
     </Modal>
   );
+}
+
+// סידור אישי: ווידג'ט עם מקום שמור – במקומו; ווידג'ט בלי (למשל חדש בלוח) – במקום הפנוי הראשון, לפי סדר הקריאה
+function applyLayout(ws: Widget[], layout: Record<string, Box>): Widget[] {
+  const placed: Widget[] = ws.filter((w) => layout[w.id]).map((w) => ({ ...w, ...layout[w.id] }));
+  for (const w of ws.filter((x) => !layout[x.id]).sort((a, b) => a.position_y - b.position_y || a.position_x - b.position_x)) {
+    let spot: Box | null = null;
+    for (let y = 0; !spot; y++) {
+      for (let x = 0; x + w.width <= COLS; x++) {
+        const box = { position_x: x, position_y: y, width: w.width, height: w.height };
+        if (!placed.some((p) => hit(p, box))) { spot = box; break; }
+      }
+    }
+    placed.push({ ...w, ...spot });
+  }
+  return placed;
 }
 
 // סידור לתצוגה כשחלק מהווידג'טים מוסתרים: כל ווידג'ט עולה למקום הפנוי הראשון לפי סדר הקריאה,
