@@ -33,6 +33,13 @@ export function formatMoney(v: unknown) {
   return moneyFmt.format(Number(v));
 }
 
+// כסף בגרפים: סכום שלם בלי אגורות ("1,200 ₪"), ואגורות רק כשיש
+const moneyWholeFmt = new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS", maximumFractionDigits: 0 });
+export function formatMoneyShort(v: unknown) {
+  const n = Number(v);
+  return Number.isInteger(n) ? moneyWholeFmt.format(n) : moneyFmt.format(n);
+}
+
 // קישור לשיחת וואטסאפ: 0541234567 -> https://wa.me/972541234567
 export function whatsappHref(phone: string) {
   return `https://wa.me/972${phone.replace(/\D/g, "").replace(/^0/, "")}`;

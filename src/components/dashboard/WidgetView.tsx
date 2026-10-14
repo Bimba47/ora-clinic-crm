@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import { errorText, pickOptions, type Catalog, type FieldMeta } from "@/lib/views";
-import { formatMoney, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
+import { formatMoneyShort, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 import { recordHref } from "@/lib/records";
 import {
   greeting, objectByKey, openFiltered, runWidget, todayLong, widgetFields,
@@ -138,7 +138,7 @@ export default function WidgetView({
             data={data}
             suffix={cfg.suffix}
             variant={cfg.bar_style}
-            format={money ? formatMoney : undefined}
+            format={money ? formatMoneyShort : undefined}
             onPick={preview ? undefined : (d) => drill(groupRule(d))}
           />
           {cfg.hint && <p className="widget-hint">{cfg.hint}</p>}
