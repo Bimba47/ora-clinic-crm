@@ -740,6 +740,9 @@ a.btn { text-decoration: none; }
 .legend-pct { color: var(--muted); font-weight: 600; }
 .legend-value { font-weight: 600; white-space: nowrap; }
 .donut-total.long { font-size: 17px; }
+/* הסבר מתחת לטבעת: הטבעת מתכווצת כדי שלא תהיה גלילה בכרטיס */
+.widget-body:has(> .widget-hint) .donut { height: calc(100% - 28px); }
+.widget-body:has(> .widget-hint) .donut-svg { max-height: 100%; }
 .donut-change { font-size: 11px; font-weight: 600; fill: var(--muted); font-family: inherit; }
 .donut-change.up { fill: var(--ok); }
 .donut-change.down { fill: var(--err); }
