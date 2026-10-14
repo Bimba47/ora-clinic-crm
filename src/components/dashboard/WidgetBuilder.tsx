@@ -327,6 +327,15 @@ export default function WidgetBuilder({
                       <label className="check-field"><input type="checkbox" checked={d.config.tone === "danger"} onChange={(e) => setCfg({ tone: e.target.checked ? "danger" : undefined })} /><span>המספר באדום כשהוא גדול מ-0</span></label>
                     </>
                   )}
+                  {d.widget_type === "bar" && (
+                    <label className="check-field"><input type="checkbox" checked={d.config.bar_style === "gradient"} onChange={(e) => setCfg({ bar_style: e.target.checked ? "gradient" : undefined })} /><span>עמודות בצבע אחד מדורג, והערך בסוף העמודה</span></label>
+                  )}
+                  {(d.widget_type === "bar" || d.widget_type === "metric") && (
+                    <label className="field wb-full">
+                      <span>הסבר מתחת לווידג'ט</span>
+                      <input value={d.config.hint ?? ""} onChange={(e) => setCfg({ hint: e.target.value || undefined })} placeholder="למשל: תורים שבוצעו החודש" />
+                    </label>
+                  )}
                   {d.widget_type === "list" && choices.length > 0 && (
                     <label className="field">
                       <span>שינוי בלחיצה ברשימה</span>

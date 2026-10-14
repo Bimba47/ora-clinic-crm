@@ -92,6 +92,8 @@ const RELATIVE_DATES = [
   { value: "{{today-1}}", label: "אתמול" },
   { value: "{{week_start}}", label: "תחילת השבוע (ראשון)" },
   { value: "{{week_end}}", label: "סוף השבוע (שבת)" },
+  { value: "{{month_start}}", label: "תחילת החודש" },
+  { value: "{{month_end}}", label: "סוף החודש" },
   { value: "{{today-7}}", label: "לפני 7 ימים" },
   { value: "{{today-30}}", label: "לפני 30 יום" },
 ];

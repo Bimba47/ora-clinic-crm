@@ -31,6 +31,7 @@ export type WidgetConfig = {
   subtext?: string;
   size?: "title" | "normal";
   roles?: string[];            // אילו תפקידים רואים את הווידג'ט (ריק = כולם). מי שעורכת את הלוח רואה הכול
+  bar_style?: "gradient";      // עמודות: צבע אחד מדורג, והערך צמוד לסוף העמודה (למשל הכנסות לפי טיפול)
 };
 
 export type Widget = {
@@ -166,14 +167,29 @@ export function fromViewState(s: Pick<ViewState, "match" | "filters">): Conditio
   return { match: s.match, rules: s.filters.map((f) => ({ field: f.field, op: f.op, value: f.value })) };
 }
 
-// תבניות בצד הלקוח (לתצוגה המסוננת ולטקסט): {{today}}, {{today+N}}, {{now-48h}}, {{user}}
+// תבניות בצד הלקוח (לתצוגה המסוננת ולטקסט): {{today}}, {{today+N}}, {{now-48h}}, {{user}},
+// {{week_start}}/{{week_end}} (ראשון–שבת), {{month_start}}/{{month_end}} – כמו automation_token במסד
 function israelDate(offsetDays = 0) {
   const d = new Date(Date.now() + offsetDays * 86400000);
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(d); // YYYY-MM-DD
 }
+function israelPeriod(tok: string): string | null {
+  const today = israelDate(0);
+  const d = new Date(`${today}T12:00:00Z`);
+  const iso = (x: Date) => x.toISOString().slice(0, 10);
+  if (tok === "week_start" || tok === "week_end") {
+    d.setUTCDate(d.getUTCDate() - d.getUTCDay() + (tok === "week_end" ? 6 : 0));
+    return iso(d);
+  }
+  if (tok === "month_start") return `${today.slice(0, 8)}01`;
+  if (tok === "month_end") return iso(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0, 12)));
+  return null;
+}
 export function resolveToken(v: string, userId: string | null): string {
   return v.replace(/\{\{\s*([^{}]+?)\s*\}\}/g, (_, tok: string) => {
     if (tok === "user") return userId ?? "";
+    const period = israelPeriod(tok);
+    if (period) return period;
     let m = tok.match(/^today([+-]\d+)?$/);
     if (m) return israelDate(Number(m[1] ?? 0));
     m = tok.match(/^now([+-]\d+)h$/);

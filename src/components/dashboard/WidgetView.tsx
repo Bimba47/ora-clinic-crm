@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/Auth";
 import { useToast } from "@/components/Toast";
 import { errorText, pickOptions, type Catalog, type FieldMeta } from "@/lib/views";
-import { formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
+import { formatMoney, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 import { recordHref } from "@/lib/records";
 import {
   greeting, objectByKey, openFiltered, runWidget, todayLong, widgetFields,
@@ -129,7 +129,22 @@ export default function WidgetView({
     const gf = fieldOf(w.group_by);
     const data: Datum[] = res.groups.map((g) => ({ key: g.key, label: groupLabel(gf, g.key, g.label), value: Number(g.value) }));
     if (w.widget_type === "pie") return <DonutChart data={data} onPick={preview ? undefined : (d) => drill(groupRule(d))} />;
-    if (w.widget_type === "bar") return <BarChart data={data} suffix={cfg.suffix} onPick={preview ? undefined : (d) => drill(groupRule(d))} />;
+    if (w.widget_type === "bar") {
+      // סכום/ממוצע של שדה כסף מוצג בשקלים (למשל הכנסות לפי טיפול)
+      const money = ["sum", "avg", "min", "max"].includes(w.aggregate) && fieldOf(w.aggregate_field)?.field_type === "money";
+      return (
+        <>
+          <BarChart
+            data={data}
+            suffix={cfg.suffix}
+            variant={cfg.bar_style}
+            format={money ? formatMoney : undefined}
+            onPick={preview ? undefined : (d) => drill(groupRule(d))}
+          />
+          {cfg.hint && <p className="widget-hint">{cfg.hint}</p>}
+        </>
+      );
+    }
     return (
       <table className="widget-table">
         <thead><tr><th>{gf?.label ?? ""}</th><th className="num">{valueTitle(w)}</th></tr></thead>
