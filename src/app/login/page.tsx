@@ -110,7 +110,7 @@ export default function LoginPage() {
           </button>
 
           {mode === "login" ? (
-            <p className="auth-note">אין לך חשבון? פני למנהלת המערכת, והיא תשלח אלייך הזמנה.</p>
+            <p className="auth-note">אין לך חשבון? <strong>בקשי גישה ממנהלת המערכת</strong></p>
           ) : (
             <button type="button" className="link-btn auth-back" onClick={back}>חזרה לכניסה</button>
           )}

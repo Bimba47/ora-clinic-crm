@@ -1058,29 +1058,44 @@ input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 .api-example pre { margin: 0; padding: 12px 16px; border-radius: 16px; background: var(--text); color: var(--bg); font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
 
 /* ===== מסכי כניסה (v32): לפי העיצוב מ-Claude Design, בצבעי האפיון. AuthShell.tsx ===== */
-.auth { min-height: 100vh; display: flex; background: var(--bg); }
-.auth-main { flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 32px; padding: 40px clamp(24px, 6vw, 96px); }
-.auth-top { display: flex; align-items: center; }
-.auth-brand { font-size: 16px; font-weight: 700; color: var(--text); }
-.auth-brand .brand-logo { height: 36px; max-width: 120px; }
-.auth-body { width: 100%; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+/* בדיוק כמו העיצוב ב-Claude Design (v32.2, בקשת ענבל): צבעים, פונטים וגדלים בשני הצדדים */
+.auth { min-height: 100vh; display: flex; background: #F8F3EE; color: #5A3F3A; font-family: var(--font-assistant), sans-serif; }
+.auth a { color: #8E5D53; }
+.auth a:hover { color: #6E463E; }
+.auth button:focus-visible, .auth a:focus-visible { outline: 2px solid #C8A56A; outline-offset: 3px; }
+.auth-main { flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 48px clamp(24px, 6vw, 96px); }
+.auth-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.auth-brand { display: flex; align-items: center; gap: 10px; }
+.auth-brand-name { font-family: var(--font-cormorant), serif; font-size: 20px; letter-spacing: .18em; font-weight: 600; color: #8E6A3A; }
+.auth-top-meta { font-size: 13px; color: #7A6460; }
+.auth-body { width: 100%; max-width: 400px; margin: 56px auto; display: flex; flex-direction: column; gap: 22px; }
 .auth-head { display: flex; flex-direction: column; gap: 8px; }
-.auth-eyebrow { font-size: 14px; font-weight: 600; letter-spacing: .04em; color: var(--ok); }
-.auth-title { margin: 0; font-size: 30px; font-weight: 700; line-height: 1.2; color: var(--text); }
-.auth-sub { margin: 0; font-size: 14px; color: var(--muted); }
-.auth-form { display: flex; flex-direction: column; gap: 16px; }
-.auth-form .field input { width: 100%; }
-.auth-pw-head { display: flex; justify-content: space-between; align-items: center; }
-.auth-pw-head .link-btn { padding: 0 4px; font-size: 12px; font-weight: 600; }
+.auth-eyebrow { font-size: 14px; font-weight: 600; letter-spacing: .04em; color: #8E5D53; }
+.auth-title { margin: 0; font-family: var(--font-frank), serif; font-weight: 500; font-size: 40px; line-height: 1.15; color: #6F6F6F; }
+.auth-sub { margin: 0; font-size: 16px; color: #7A6460; }
+.auth-form { display: flex; flex-direction: column; gap: 22px; }
+.auth .field { gap: 8px; font-size: 14px; font-weight: 600; color: #5A3F3A; }
+.auth .field > span, .auth .field label { font-size: 14px; font-weight: 600; color: #5A3F3A; }
+.auth .field input { width: 100%; height: 52px; min-height: 52px; padding: 0 16px; border: 1px solid #E2CFC6; border-radius: 26px; background: #FFFCF9; font: inherit; font-size: 16px; font-weight: 400; color: #5A3F3A; text-align: right; }
+.auth .field input::placeholder { color: #A39A93; }
+.auth .field input:focus { outline: none; border: 1px solid #B98276; box-shadow: 0 0 0 3px rgba(185, 130, 118, .22); }
+.auth .field.has-error input { border-color: #B5533C !important; }
+.auth-pw-head { display: flex; justify-content: space-between; align-items: baseline; }
+.auth-pw-head .link-btn { padding: 0; min-height: 0; font-size: 14px; font-weight: 500; color: #8E5D53; text-decoration: none; }
+.auth-pw-head .link-btn:hover { color: #6E463E; }
 .auth-pw { position: relative; }
-.auth-pw input { padding-left: 48px; }
-.auth-eye { position: absolute; left: 0; top: 0; margin: 0; }
-.auth-submit { min-height: 44px; font-size: 14px; box-shadow: 0 4px 14px rgba(227, 191, 168, .45); }
-.auth-note { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
-.auth-back { align-self: center; }
-.auth-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--muted); }
+.auth .auth-pw input { padding: 0 16px 0 56px; }
+.auth-eye { position: absolute; left: 4px; top: 4px; width: 44px; height: 44px; margin: 0; border-radius: 22px; color: #9C7F78; }
+.auth-eye:hover:not(:disabled) { background: transparent; }
+.auth .auth-submit { height: 54px; min-height: 54px; border: 0; border-radius: 27px; background: #B98276; color: #FFFFFF; font: inherit; font-size: 17px; font-weight: 700; gap: 10px; box-shadow: 0 6px 18px rgba(185, 130, 118, .28); }
+.auth .auth-submit .spinner { border-color: #FFFFFF; border-top-color: transparent; }
+.auth .btn:not(.auth-submit) { min-height: 54px; border-radius: 27px; font: inherit; font-size: 16px; font-weight: 600; background: #F1E5DC; color: #5A3F3A; }
+.auth .field-error { font-size: 14px; }
+.auth-note { margin: 4px 0 0; text-align: center; font-size: 14px; color: #7A6460; }
+.auth-note strong { font-weight: 600; color: #8E5D53; }
+.auth-back { align-self: center; font-size: 14px; font-weight: 500; color: #8E5D53; }
+.auth-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 13px; color: #7A6460; }
 .auth-secure { display: inline-flex; align-items: center; gap: 6px; }
-.auth-secure svg { color: var(--bronze); }
 /* הפאנל השמאלי – בדיוק כמו בעיצוב מ-Claude Design (צבעים, פונטים וגדלים; בקשת ענבל, v32.1) */
 .auth-panel { flex: 1 1 520px; min-width: 0; min-height: 420px; margin: 16px; border-radius: 28px; background: #F1E5DC; border: 1px solid #E6D3C8; color: #5A3F3A; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 56px; font-family: var(--font-assistant), sans-serif; }
 .auth-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -1092,4 +1107,6 @@ input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 @media (max-width: 899px) {
   .auth-panel { display: none; }
   .auth-main { padding: 24px 16px; }
+  .auth-body { margin: 32px auto; }
+  .auth-title { font-size: 32px; }
 }
