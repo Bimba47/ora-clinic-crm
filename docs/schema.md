@@ -190,6 +190,7 @@
 - `get_record(object, id)`: רשומה אחת עם תוויות לשדות מקושרים, לפי אותן הרשאות.
 - `save_view`, `create_view`, `set_default_view` (מנהלת בלבד): שמירה, יצירה ושכפול, ברירת מחדל.
 - ערך סינון עם `{{…}}` (היום, `week_start`, `week_end`, `month_start`, `month_end`, `user`) מחושב ב-`view_where` דרך `automation_render` (0019, החודש מ-0029).
+- סינון שדה `datetime` (`private.filter_sql`, 0033): תאריך בלבד (`YYYY-MM-DD`) משווה לפי יום בשעון ישראל; תאריך עם שעה (`YYYY-MM-DDTHH:MI`, בלי אזור זמן = שעון ישראל) או `{{now}}` משווה לרגע עצמו. ערך לא תקין: הודעה בעברית.
 - `private.check_appointment` (טריגר BEFORE על `appointments`, 0019): "בוצע" רק אחרי מועד התור, וחפיפה עם הודעה "ל<שם> יש תור ב-HH:MM עד HH:MM".
 
 ## הגדרות, העדפות ולוגו (`0009_settings_profile_notifications`)

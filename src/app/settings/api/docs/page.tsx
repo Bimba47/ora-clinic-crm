@@ -70,6 +70,13 @@ export default function Page() {
   const examples: [string, string][] = [
     ["רשימה (סינון, מיון ועימוד)", `curl "${base}?${filterField ? `${filterField.field_key}=${encodeURIComponent(String(sample(filterField, objects)))}&` : ""}sort=-created_at&limit=10&page=1" \\\n  ${key}`],
     ["רשומה אחת", `curl "${base}/<id>" \\\n  ${key}`],
+    // התור הבא של לקוחה (שאלה 5 במבחן): הקרוב מעכשיו שאינו מבוטל. את client_id מוצאים קודם ב-GET /clients?phone=...
+    ...(obj.object_key === "appointments" ? ([
+      ["התור הבא של לקוחה", `curl "${base}?client_id=<client_id>&status[neq]=cancelled&starts_at[gte]=%7B%7Bnow%7D%7D&sort=starts_at&limit=1&fields=starts_at,treatment_id,therapist_id" \\\n  ${key}`],
+    ] as [string, string][]) : []),
+    ...(obj.object_key === "clients" ? ([
+      ["חיפוש לקוחה לפי טלפון", `curl "${base}?phone=054-1234567&fields=full_name,phone" \\\n  ${key}`],
+    ] as [string, string][]) : []),
     ...(obj.api_access === "full" ? ([
       ["יצירה", `curl -X POST "${base}" \\\n  ${key} \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(createBody)}'`],
       ["עדכון חלקי", `curl -X PATCH "${base}/<id>" \\\n  ${key} \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(patchBody)}'`],
@@ -91,7 +98,7 @@ export default function Page() {
           <li>המפתח נשלח בכל בקשה בכותרת <code dir="ltr">Authorization: Bearer &lt;key&gt;</code>, לא בכתובת. יוצרים מפתח במסך <Link href="/settings/api" className="ref-link">מפתחות API</Link>.</li>
           <li>המפתח פועל בשם תפקיד, וההרשאות של התפקיד חלות עליו (אובייקטים, רשומות ושדות). היקף &quot;שלי&quot; לא חל על מפתח.</li>
           <li>חמש פעולות לכל אובייקט: <code dir="ltr">GET /{"{object}"}</code>, <code dir="ltr">GET /{"{object}"}/{"{id}"}</code>, <code dir="ltr">POST /{"{object}"}</code>, <code dir="ltr">PATCH /{"{object}"}/{"{id}"}</code>, <code dir="ltr">DELETE /{"{object}"}/{"{id}"}</code>.</li>
-          <li>רשימה: <code dir="ltr">limit</code> (1–100, ברירת מחדל 25), <code dir="ltr">page</code> או <code dir="ltr">offset</code>, <code dir="ltr">sort=field</code> או <code dir="ltr">sort=-field</code>, <code dir="ltr">search</code>, <code dir="ltr">fields=a,b</code>. סינון: <code dir="ltr">field=value</code> או <code dir="ltr">field[op]=value</code>, כש-op אחד מ: <code dir="ltr">eq, neq, contains, not_contains, gt, gte, lt, lte, is_empty, is_not_empty</code>. תאריכים יחסיים: <code dir="ltr">{"{{today}}"}</code>, <code dir="ltr">{"{{today+1}}"}</code>.</li>
+          <li>רשימה: <code dir="ltr">limit</code> (1–100, ברירת מחדל 25), <code dir="ltr">page</code> או <code dir="ltr">offset</code>, <code dir="ltr">sort=field</code> או <code dir="ltr">sort=-field</code>, <code dir="ltr">search</code>, <code dir="ltr">fields=a,b</code>. סינון: <code dir="ltr">field=value</code> או <code dir="ltr">field[op]=value</code>, כש-op אחד מ: <code dir="ltr">eq, neq, contains, not_contains, gt, gte, lt, lte, is_empty, is_not_empty</code>. תאריכים יחסיים: <code dir="ltr">{"{{today}}"}</code>, <code dir="ltr">{"{{today+1}}"}</code>, <code dir="ltr">{"{{month_start}}"}</code>. בשדה תאריך ושעה: תאריך בלבד (<code dir="ltr">2026-10-17</code>) משווה לפי יום, ותאריך עם שעה (<code dir="ltr">2026-10-17T14:30</code>, בשעון ישראל) או <code dir="ltr">{"{{now}}"}</code> משווים לרגע עצמו. טלפון בסינון מנורמל (מקפים ו-+972 לא משנים).</li>
           <li>תשובה: <code dir="ltr">{"{ data, total, limit, offset }"}</code> ברשימה, <code dir="ltr">{"{ data }"}</code> ברשומה. שגיאה: <code dir="ltr">{"{ error: { status, code, message, details: [{ field, code, message }] } }"}</code>.</li>
           <li>האוטומציות רצות גם על שינויים מה-API (הן במסד). &quot;נוצרה על ידי&quot; ריק = פעולת מערכת. כל בקשה נרשמת ב<Link href="/settings/api/log" className="ref-link">לוג הבקשות</Link>.</li>
         </ul>
