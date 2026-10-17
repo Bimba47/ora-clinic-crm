@@ -20,7 +20,7 @@ import {
   createRecord, deleteRecords, errorField, errorText, loadCatalog, loadRefOptions, updateRecords,
   pickOptions,
 } from "@/lib/views";
-import { formatDate, formatDateTime, formatHours, formatPhone, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
+import { appointmentReminder, formatDate, formatDateTime, formatHours, formatPhone, formatTime, formatValue, isLtr, whatsappHref } from "@/lib/format";
 import { adminApi } from "@/lib/adminApi";
 
 type Rec = Record<string, unknown> & { id: string };
@@ -672,6 +672,21 @@ export default function RecordPage({ objectKey, id }: { objectKey: string; id: s
               {phoneField && rec[phoneField.field_key] ? (
                 <a className="btn outline" href={whatsappHref(String(rec[phoneField.field_key]))} target="_blank" rel="noopener noreferrer">וואטסאפ</a>
               ) : null}
+              {/* תור: וואטסאפ ללקוחה של התור. תור עתידי – עם תזכורת מוכנה, כמו בווידג'ט "תורים למחר" */}
+              {objectKey === "appointments" && phones.get(String(rec.client_id)) ? (() => {
+                const phone = phones.get(String(rec.client_id))!;
+                const clientField = byKey.get("client_id");
+                const name = clientField ? labelOf(clientField, rec.client_id) : "";
+                const upcoming = rec.status === "upcoming" && !!rec.starts_at && new Date(String(rec.starts_at)).getTime() > Date.now();
+                const href = upcoming
+                  ? `${whatsappHref(phone)}?text=${encodeURIComponent(appointmentReminder(name, String(rec.starts_at)))}`
+                  : whatsappHref(phone);
+                return (
+                  <a className="btn outline" href={href} target="_blank" rel="noopener noreferrer" title={upcoming ? "פותח שיחה עם תזכורת מוכנה לתור" : undefined}>
+                    וואטסאפ
+                  </a>
+                );
+              })() : null}
               {canCreate && !cfg.noDuplicate && (
                 <button type="button" className="btn outline" onClick={() => router.push(`${cfg.route}new?from=${id}`)}>שכפול</button>
               )}

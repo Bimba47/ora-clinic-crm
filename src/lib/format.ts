@@ -45,6 +45,21 @@ export function whatsappHref(phone: string) {
   return `https://wa.me/972${phone.replace(/\D/g, "").replace(/^0/, "")}`;
 }
 
+// תזכורת לתור בוואטסאפ, בנוסח של האפיון ("היי דנה, תזכורת לתור שלך מחר ב-11:00 בקליניקת אורה, סוקולוב 48 הרצליה. נשמח לאישור").
+// היום / מחר / "ביום ג׳ 21.10", לפי שעון ישראל. אותו נוסח כמו בווידג'ט "תורים למחר".
+export function appointmentReminder(clientName: string, startsAt: string) {
+  const day = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(d);
+  const when = new Date(startsAt);
+  const target = day(when);
+  const today = day(new Date());
+  const tomorrow = day(new Date(Date.now() + 86400000));
+  const weekday = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", weekday: "short" }).format(when);
+  const date = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit" }).format(when).replace("/", ".");
+  // weekday בעברית כבר כולל "יום" ("יום ג׳"), ולכן "ב" לפניו נותן "ביום ג׳"
+  const phrase = target === today ? "היום" : target === tomorrow ? "מחר" : `ב${weekday} ${date}`;
+  return `היי ${clientName}, תזכורת לתור שלך ${phrase} ב-${timeFmt.format(when)} בקליניקת אורה, סוקולוב 48 הרצליה. נשמח לאישור`;
+}
+
 export function choiceLabel(field: FieldMeta, value: unknown) {
   if (value === null || value === undefined) return "";
   return field.options?.find((o) => o.value === String(value))?.label ?? String(value);
