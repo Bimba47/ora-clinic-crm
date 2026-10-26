@@ -1,0 +1,415 @@
+{
+  "name": "אורי · פתיחת קריאת שירות",
+  "nodes": [
+    {
+      "id": "wh",
+      "name": "Receive request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ora-open-ticket",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "v",
+      "name": "Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const b = ($input.first().json.body) || {};\nconst name = String(b.name == null ? '' : b.name).trim();\nconst description = String(b.description == null ? '' : b.description).trim();\nlet d = String(b.phone == null ? '' : b.phone).replace(/\\D/g, '');\nif (d.startsWith('972')) d = '0' + d.slice(3);\nelse if (d && !d.startsWith('0')) d = '0' + d;\nconst phone = (d.length === 9 || d.length === 10) ? d : '';\nconst missing = [];\nif (name.length < 2) missing.push('שם מלא');\nif (!phone) missing.push('מספר טלפון תקין (9 או 10 ספרות, בלי תווים נוספים)');\nif (description.length < 3) missing.push('תיאור הפנייה');\nif (missing.length) {\n  return [{ json: { ok: false, response: { status: 'invalid_request', created: false,\n    summary: 'הפנייה לא נשמרה. חסר או לא תקין: ' + missing.join(', ') + '. יש לבקש מהלקוחה רק את הפרט הזה ולנסות שוב.' } } }];\n}\nreturn [{ json: { ok: true, name, phone, description } }];"
+      }
+    },
+    {
+      "id": "ok1",
+      "name": "Request valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "g1",
+      "name": "Find client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        -80
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://ora-clinic-crm-liart.vercel.app/api/v1/clients",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 20000
+        },
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={{ JSON.stringify({ phone: $json.phone }) }}"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d1",
+      "name": "Client found?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -80
+      ],
+      "parameters": {
+        "jsCode": "const req = $('Validate').first().json;\nconst r = $input.first().json;\nif (!r || r.error || !Array.isArray(r.data)) return [{ json: { fail: true, stage: 'find_client' } }];\nif (r.data.length > 1) return [{ json: { fail: true, stage: 'ambiguous_client' } }];\nif (r.data.length === 1) return [{ json: { fail: false, needCreate: false, clientId: r.data[0].id, ...req } }];\nreturn [{ json: { fail: false, needCreate: true, ...req } }];"
+      }
+    },
+    {
+      "id": "nc",
+      "name": "Need new client?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        -80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.needCreate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "pc",
+      "name": "Create client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        -160
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ora-clinic-crm-liart.vercel.app/api/v1/clients",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 20000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ full_name: $json.name, phone: $json.phone, source: \"other\" }) }}"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "m1",
+      "name": "Resolve client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        -80
+      ],
+      "parameters": {
+        "jsCode": "const d = $('Client found?').first().json;\nif (d.fail) return [{ json: { fail: true, stage: d.stage } }];\nif (!d.needCreate) return [{ json: { fail: false, clientId: d.clientId, description: d.description } }];\nconst c = $('Create client').first().json;\nconst cd = (c && c.data) || {};\nif (!c || c.error || !cd.id) return [{ json: { fail: true, stage: 'create_client' } }];\nreturn [{ json: { fail: false, clientId: cd.id, description: d.description } }];"
+      }
+    },
+    {
+      "id": "hc",
+      "name": "Client ready?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        -80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ !$json.fail }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "pt",
+      "name": "Create ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        -160
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ora-clinic-crm-liart.vercel.app/api/v1/service_requests",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 20000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ client_id: $json.clientId, description: $json.description }) }}"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "r1",
+      "name": "Build response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst t = (raw && raw.data) || {};\nif (raw.fail || raw.error || !t.id || t.status !== 'new') {\n  return [{ json: { response: { status: 'error', created: false,\n    summary: 'לא הצלחתי לשמור את הפנייה במערכת. הפנייה לא נפתחה.' } } }];\n}\nreturn [{ json: { response: { status: 'created', created: true, ticket_id: t.id,\n  ticket_ref: String(t.id).slice(0, 8),\n  summary: 'הפנייה נשמרה במערכת.' } } }];"
+      }
+    },
+    {
+      "id": "rsp",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2640,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.response }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Receive request": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "Request valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request valid?": {
+      "main": [
+        [
+          {
+            "node": "Find client",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find client": {
+      "main": [
+        [
+          {
+            "node": "Client found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Client found?": {
+      "main": [
+        [
+          {
+            "node": "Need new client?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Need new client?": {
+      "main": [
+        [
+          {
+            "node": "Create client",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resolve client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create client": {
+      "main": [
+        [
+          {
+            "node": "Resolve client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve client": {
+      "main": [
+        [
+          {
+            "node": "Client ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Client ready?": {
+      "main": [
+        [
+          {
+            "node": "Create ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create ticket": {
+      "main": [
+        [
+          {
+            "node": "Build response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Jerusalem",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true
+  },
+  "active": false,
+  "pinData": {}
+}
